@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050507">
+  <title>La Bruja</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="fondo"></div>
+  <div id="velo"></div>
+  <div id="negro"></div>
+  <div id="pov-cartel" title="Clic para continuar"><img id="pov-ficha" alt=""><span id="pov-nombre"></span><span id="pov-subtitulo"></span></div>
+
+  <header id="cabecera">
+    <h1 id="titulo-juego">La Bruja</h1>
+    <div id="estado">
+      <div id="pov-bloque">
+        <div id="pov-avatar" title="Personaje en control" role="button" tabindex="0"></div>
+        <button id="btn-detalles" type="button">Ver detalles</button>
+      </div>
+      <button id="btn-saltar" type="button" title="Mostrar todo el texto de la escena">⏭</button>
+      <button id="btn-musica" type="button" title="Sonido" aria-pressed="true">♪</button>
+      <button id="btn-menu" type="button" title="Menú" aria-expanded="false" aria-controls="menu">☰</button>
+    </div>
+    <div id="detalles" class="oculto">
+      <div id="detalles-cabecera"><span id="detalles-nombre"></span><span id="detalles-subtitulo"></span></div>
+      <div id="barras"></div>
+      <div id="social-titulo" class="etiqueta">Con los demás</div>
+      <div id="social"></div>
+    </div>
+    <nav id="menu" class="oculto" aria-label="Menú">
+      <button id="menu-auto" type="button">Lectura automática: desactivada</button>
+      <button id="menu-historial" type="button">Historial</button>
+      <button id="menu-sonido" type="button">Sonido: activado</button>
+      <button id="menu-inicio" type="button">Pantalla de inicio</button>
+      <button id="menu-reiniciar" type="button">Empezar de nuevo</button>
+      <div id="reinicio-confirmar" class="oculto">¿Seguro? Se perderá la partida.
+        <button id="btn-reiniciar-si" type="button">Sí</button>
+        <button id="btn-reiniciar-no" type="button">No</button>
+      </div>
+      <p class="menu-ayuda">Clic o espacio: leer. Mantener pulsado: avanzar. Flecha abajo: todo. A: automático. H: historial.</p>
+    </nav>
+  </header>
+
+  <div id="app">
+    <main id="escena">
+      <h2 id="escena-titulo"></h2>
+      <div id="escena-meta" class="oculto"></div>
+      <div id="escena-texto" aria-live="polite"></div>
+      <div id="pista">▾</div>
+      <div id="personajes"></div>
+      <div id="opciones"></div>
+    </main>
+    <footer id="pie">
+      <select id="ir-a" title="Saltar a una escena (modo prueba)"><option value="">Ir a…</option></select>
+      <span id="aviso-guardado"></span>
+    </footer>
+  </div>
+
+  <aside id="historial" class="oculto" aria-label="Historial">
+    <div id="historial-cabecera"><span>Historial</span><button id="btn-historial-cerrar" type="button">Cerrar</button></div>
+    <div id="historial-lista"></div>
+  </aside>
+
+  <section id="inicio" class="oculto">
+    <div id="inicio-panel">
+      <p id="inicio-sobre">Una cabaña. Cuatro amigos. Una noche.</p>
+      <h1 id="inicio-titulo">La Bruja</h1>
+      <p id="inicio-sub">Prólogo</p>
+      <p id="inicio-donde"></p>
+      <button id="btn-continuar" type="button" class="oculto">Continuar</button>
+      <button id="btn-nueva" type="button">Empezar</button>
+      <button id="btn-inicio-sonido" type="button" class="secundario">Sonido activado</button>
+      <p id="inicio-nota">Mejor con auriculares y sin prisa.</p>
+    </div>
+  </section>
+
+  <audio id="audio-a" loop preload="auto"></audio>
+  <audio id="audio-b" loop preload="auto"></audio>
+
+  <script src="js/story.js"></script>
+  <script src="js/story_fase2.js"></script>
+  <script src="js/story_fase4.js"></script>
+  <script src="js/story_fase5.js"></script>
+  <script src="js/engine.js"></script>
+</body>
+</html>
