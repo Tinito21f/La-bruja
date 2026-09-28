@@ -51,7 +51,7 @@
     aviso: $("aviso-guardado"), escena: $("escena"),
     audioA: $("audio-a"), audioB: $("audio-b"),
     inicio: $("inicio"), btnContinuar: $("btn-continuar"), btnNueva: $("btn-nueva"), btnInicioSonido: $("btn-inicio-sonido"),
-    inicioDonde: $("inicio-donde"),
+    inicioDonde: $("inicio-donde"), btnMusicaLocal: $("btn-musica-local"), menuMusicaLocal: $("menu-musica-local"),
     btnMenu: $("btn-menu"), menu: $("menu"), menuAuto: $("menu-auto"), menuHistorial: $("menu-historial"),
     menuInicio: $("menu-inicio"), menuSonido: $("menu-sonido"), menuReiniciar: $("menu-reiniciar"),
     reinicioConfirmar: $("reinicio-confirmar"), reiniciarSi: $("btn-reiniciar-si"), reiniciarNo: $("btn-reiniciar-no"),
@@ -221,6 +221,75 @@
   };
   const resolver = (v) => (typeof v === "function" ? v(api) : v);
 
+  // ---------- Música local: la carpeta de canciones del jugador ----------
+  // La versión pública no lleva canciones. Quien juega elige una vez la carpeta con las pistas
+  // (mismos nombres que en assets/musica) y el motor las usa en lugar de las rutas del servidor.
+
+  const musicaLocal = {
+    urls: new Map(), handle: null,
+    abrirDB() {
+      return new Promise((res, rej) => {
+        const r = indexedDB.open("labruja-musica", 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("kv");
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+    },
+    async guardarHandle(h) {
+      try { const db = await this.abrirDB(); const tx = db.transaction("kv", "readwrite"); tx.objectStore("kv").put(h, "carpeta"); await new Promise((r) => { tx.oncomplete = r; tx.onerror = r; }); } catch (e) { /* nada */ }
+    },
+    async leerHandle() {
+      try { const db = await this.abrirDB(); const tx = db.transaction("kv", "readonly"); const req = tx.objectStore("kv").get("carpeta"); return await new Promise((res) => { req.onsuccess = () => res(req.result || null); req.onerror = () => res(null); }); } catch (e) { return null; }
+    },
+    registrar(archivos) {
+      let n = 0;
+      for (const f of archivos) {
+        if (!/\.(mp3|ogg|m4a|wav|webm)$/i.test(f.name)) continue;
+        const clave = f.name.toLowerCase();
+        if (this.urls.has(clave)) URL.revokeObjectURL(this.urls.get(clave));
+        this.urls.set(clave, URL.createObjectURL(f)); n++;
+      }
+      return n;
+    },
+    async desdeHandle(h) {
+      const archivos = [];
+      for await (const [, entrada] of h.entries()) { if (entrada.kind === "file") archivos.push(await entrada.getFile()); }
+      return this.registrar(archivos);
+    },
+    async elegir() {
+      if (window.showDirectoryPicker) {
+        try {
+          const h = await window.showDirectoryPicker({ mode: "read" });
+          this.handle = h; await this.guardarHandle(h);
+          this.avisar(await this.desdeHandle(h)); return;
+        } catch (e) { if (e && e.name === "AbortError") return; }
+      }
+      const inp = document.createElement("input");
+      inp.type = "file"; inp.multiple = true; inp.webkitdirectory = true; inp.accept = "audio/*";
+      inp.addEventListener("change", () => this.avisar(this.registrar([...inp.files])));
+      inp.click();
+    },
+    async restaurar() {
+      const h = await this.leerHandle(); if (!h) return "sin_carpeta";
+      this.handle = h;
+      try {
+        const p = await h.queryPermission({ mode: "read" });
+        if (p === "granted") { this.avisar(await this.desdeHandle(h)); return "cargada"; }
+      } catch (e) { /* nada */ }
+      this.pintar("pendiente"); return "pendiente";
+    },
+    async reactivar() {
+      if (!this.handle) return this.elegir();
+      try { const p = await this.handle.requestPermission({ mode: "read" }); if (p === "granted") this.avisar(await this.desdeHandle(this.handle)); } catch (e) { this.elegir(); }
+    },
+    resolver(src) { return this.urls.get(String(src).split("/").pop().toLowerCase()) || null; },
+    avisar(n) { this.pintar(n ? "cargada" : "sin_carpeta", n); if (n) musica.reponer(); },
+    pintar(estado, n) {
+      const texto = estado === "cargada" ? `Música cargada: ${n} pistas` : estado === "pendiente" ? "Reactivar la música de la carpeta" : "Cargar música desde una carpeta";
+      [ui.btnMusicaLocal, ui.menuMusicaLocal].forEach((b) => { if (b) { b.textContent = texto; b.classList.toggle("cargada", estado === "cargada"); } });
+    },
+    activar() { if (this.handle && !this.urls.size) this.reactivar(); else this.elegir(); },
+  };
+
   // ---------- Música (archivos, con volumen por clave) ----------
 
   const musica = {
@@ -228,8 +297,13 @@
     def(clave) {
       const d = clave ? MUSICA[clave] : null;
       if (!d) return null;
-      return typeof d === "string" ? { src: d, vol: 0.5 } : Object.assign({ vol: 0.5 }, d);
+      const def = typeof d === "string" ? { src: d, vol: 0.5 } : Object.assign({ vol: 0.5 }, d);
+      const local = musicaLocal.resolver(def.src);
+      if (local) def.src = local;
+      return def;
     },
+    // Vuelve a poner la pista actual (por ejemplo, cuando acaba de cargarse la carpeta de música)
+    reponer() { const c = this.claveActual; if (!c) return; this.claveActual = null; this.poner(c); },
     poner(clave) {
       if (clave === undefined || clave === this.claveActual) return;
       const def = this.def(clave);
@@ -1026,6 +1100,9 @@
   });
   ui.btnInicioSonido.addEventListener("click", (e) => { e.stopPropagation(); desbloquearAudio(); ajustarSonido(!prefs.sonido); });
   ui.inicio.addEventListener("click", (e) => e.stopPropagation());
+  if (ui.btnMusicaLocal) ui.btnMusicaLocal.addEventListener("click", (e) => { e.stopPropagation(); desbloquearAudio(); musicaLocal.activar(); });
+  if (ui.menuMusicaLocal) ui.menuMusicaLocal.addEventListener("click", (e) => { e.stopPropagation(); desbloquearAudio(); cerrarMenu(); musicaLocal.activar(); });
+  musicaLocal.restaurar();
 
   // ---------- Saltos de prueba: selector "Ir a…" y #id en la URL ----------
 
@@ -1086,6 +1163,6 @@
     estado: () => estado, api, ir: (id) => { ocultarInicio(); mostrarEscena(id, true); },
     nueva: () => { borrarGuardado(); estado = estadoInicial(); fondoActual = null; povAnterior = null; relPrev = null; ocultarInicio(); mostrarEscena(estado.escena, true); },
     traza: () => (estado.traza || []).map((f) => f.escena + "  N" + f.nora.join("/") + "  M" + f.marcos.join("/") + "  A" + f.alex.join("/") + "  I" + f.irene.join("/")).join("\n"),
-    sfx, musica, ambiente,
+    sfx, musica, ambiente, musicaLocal,
   };
 })();

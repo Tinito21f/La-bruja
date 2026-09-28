@@ -30,7 +30,8 @@ Una línea sola entre corchetes dentro del texto dispara un efecto al llegar a e
 ## Música y ambiente
 - El ambiente (chimenea, viento, zumbido, goteo) se sintetiza en el navegador y suena siempre por debajo, por zona: `interior`, `exterior`, `arriba`, `bano`, `cocina`, `almacen`.
 - La música va por claves en `HISTORIA.musica` con volumen por clave: `fiesta`, `fiesta_southbound`, `fiesta_prnstar`, `fiesta_runrunrun`, `fiesta_seven`, `fiesta_baja`, `terror`, `terror_suave`. Fiesta hasta el final de la botella o el póker; después el terror ambiental, en dos volúmenes, con cortes donde la escena lo pide.
-- Las pistas actuales son canciones comerciales: valen para jugar en local y para enviar la carpeta `dist` a alguien, pero **no deben publicarse en un sitio público**. Por eso `assets/musica/*.mp3` está en `.gitignore`: la versión de GitHub Pages suena solo con el ambiente sintetizado hasta que haya pistas libres de derechos.
+- Las pistas actuales son canciones comerciales: valen para jugar en local y para enviar la carpeta `dist` a alguien, pero **no deben publicarse en un sitio público**. Por eso `assets/musica/*.mp3` está en `.gitignore`.
+- **Música desde la carpeta del jugador.** La versión pública no lleva canciones. En la pantalla de inicio (o en el menú), «Cargar música desde una carpeta» abre un selector: se elige la carpeta con las pistas, con los mismos nombres que en `assets/musica`, y el juego las usa en lugar de las del servidor. En Chrome y Edge la carpeta se recuerda entre sesiones y solo hay que reactivarla con un clic; en otros navegadores se vuelve a elegir al abrir el juego. Sin carpeta, suena solo el ambiente sintetizado.
 
 ## Distribución
 `bash build.sh` genera `dist/`: `LaBruja.html` (CSS, JS e imágenes incrustadas) y `assets/musica/` al lado. Para enviar el juego, comprime la carpeta `dist` entera. Para publicar, sube el proyecto tal cual (`index.html` en la raíz).
