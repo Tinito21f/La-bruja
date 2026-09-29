@@ -20,6 +20,7 @@
  *     alEntrar: (api) => {},          sólo la primera vez
  *     personajes: [ { id, descripcion, a, si, efecto, auto } ],   cartas (elección de POV)
  *     opciones:   [ { texto, a, si, efecto, pov, lucida, impulsiva } ],
+ *                 (si el texto lleva «…», la frase se guarda en estado.dichos[pov]: la casa recuerda lo dicho)
  *     final:    true | (api) => bool
  *   }
  *
@@ -88,7 +89,7 @@
       escena: HISTORIA.inicio, pov: null, fase: HISTORIA.faseInicial || "I", horror: 0,
       anomaliasFase: [], personajes,
       relaciones: JSON.parse(JSON.stringify(HISTORIA.relacionesIniciales || {})),
-      conocimiento: {}, banderas: {}, evidencias: {}, visitadas: {},
+      conocimiento: {}, banderas: {}, evidencias: {}, visitadas: {}, dichos: {},
       lugar: null, hora: null, historial: [],
     };
   }
@@ -118,6 +119,7 @@
         if (typeof v !== "object" || v === null) m.evidencias[e] = { quien: typeof v === "string" ? v : null, lugar: null, tipo: "objeto", escena: null, hora: null };
       }
       if (!Array.isArray(m.historial)) m.historial = [];
+      if (!m.dichos || typeof m.dichos !== "object") m.dichos = {};
       if (!HISTORIA.escenas[m.escena]) m.escena = HISTORIA.inicio;
       return m;
     } catch (e) { return null; }
@@ -178,6 +180,10 @@
     cree: (id, h) => { const k = (estado.conocimiento[id] || {})[h]; return Boolean(k && k.cree); },
     bandera: (n) => estado.banderas[n],
     marcar: (n, v = true) => { estado.banderas[n] = v; },
+    // La casa recuerda lo dicho: frases entre «…» que el jugador eligió, por personaje (Biblia §23.2)
+    decir: (id, frase) => { estado.dichos = estado.dichos || {}; (estado.dichos[id] = estado.dichos[id] || []).push(String(frase)); if (estado.dichos[id].length > 60) estado.dichos[id].shift(); },
+    dichos: (id) => ((estado.dichos || {})[id] || []).slice(),
+    dicho: (id, n) => { const l = (estado.dichos || {})[id] || []; if (!l.length) return null; if (n === undefined) return l[l.length - 1]; return l[((n % l.length) + l.length) % l.length]; },
     evidencia: (id, quien = null, lugar = null, tipo = "objeto") => {
       estado.evidencias[id] = { quien, lugar: lugar || estado.lugar || null, tipo, escena: estado.escena, hora: estado.hora || null };
     },
@@ -1048,6 +1054,7 @@
     registrarEnHistorial(op);
     ui.escena.classList.add("saliendo");
     setTimeout(() => {
+      const dicho = String(resolver(op.texto) || "").match(/«([^»]+)»/); if (dicho && (op.pov || estado.pov)) api.decir(op.pov || estado.pov, dicho[1]);
       if (typeof op.efecto === "function") op.efecto(api);
       if (escenaActual && Array.isArray(escenaActual.personajes)) {
         escenaActual.personajes

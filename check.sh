@@ -3,8 +3,8 @@ export LC_ALL=C
 # Verificador estático: banderas leídas que nadie escribe, y escritas que nadie lee.
 cd "$(dirname "$0")"
 files="js/story.js $(ls js/story_*.js 2>/dev/null)"
-escritas=$(grep -oh 'marcar("[a-zA-Z0-9_]*"' $files | sed 's/marcar("//;s/"//' | sort -u)
-leidas=$(grep -oh 'bandera("[a-zA-Z0-9_]*"' $files | sed 's/bandera("//;s/"//' | sort -u)
+escritas=$(grep -oh 'marcar("[a-zA-Z0-9_]*"' $files | sed 's/marcar("//;s/"//' | grep -v '_$' | sort -u)
+leidas=$(grep -oh 'bandera("[a-zA-Z0-9_]*"' $files | sed 's/bandera("//;s/"//' | grep -v '_$' | sort -u)
 # claves escritas por el motor
 motor="marcos_setas alex_setas irene_setas nora_setas fascinacion_rota nora_perdido marcos_perdido alex_perdido irene_perdido"
 echo "== Banderas leídas que nadie escribe =="

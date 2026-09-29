@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 mkdir -p dist/assets
 out=dist/LaBruja.html
 
-js=$(cat js/story.js js/story_fase2.js js/story_fase4.js js/story_fase5.js)
+js=$(cat js/story.js js/story_fase2.js js/story_fase4.js js/story_fase5.js js/story_reglas.js js/story_fase6.js)
 for f in assets/fondos/*.webp assets/fondos/*.jpg assets/personajes/fichas/*.webp; do
   [ -f "$f" ] || continue
   case "$f" in *.webp) mime="image/webp";; *.jpg) mime="image/jpeg";; esac
