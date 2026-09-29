@@ -7,7 +7,7 @@ Arranca el servidor de vista previa y abre `http://localhost:8123/`:
 
     powershell -NoProfile -ExecutionPolicy Bypass -File .claude\servir.ps1
 
-Saltos de prueba: `index.html#o1_ouija` (ouija), `index.html#v1_necesidades` (dispersión), `index.html#vi1_pasos` (evidencia compartida), `index.html#vii1_apagon` (ruptura), `index.html#viii1_ausencia` (desaparición), `index.html#ix1_nivel3` (huésped a nivel tres). Añade `?debug` a la dirección para ver el selector «Ir a…» con todas las escenas.
+Saltos de prueba: `index.html#o1_ouija` (ouija), `index.html#v1_necesidades` (dispersión), `index.html#vi1_pasos` (evidencia compartida), `index.html#vii1_apagon` (ruptura), `index.html#viii1_ausencia` (desaparición), `index.html#ix1_nivel3` (huésped a nivel tres), `index.html#x1_hostil` (casa hostil), `index.html#xi1_puerta` (la niña), `index.html#xii1_cuaderno` (Nora sola y los finales). Añade `?debug` a la dirección para ver el selector «Ir a…» con todas las escenas.
 
 ## Cómo se juega
 - **Pantalla de inicio**: Continuar (con la hora y el lugar donde se quedó), Nueva partida, sonido. El primer clic desbloquea el audio.
@@ -19,7 +19,7 @@ Saltos de prueba: `index.html#o1_ouija` (ouija), `index.html#v1_necesidades` (di
 - `docs/BIBLIA_PROLOGO.md` — diseño consolidado. **Referencia única para escribir la historia.**
 - `docs/diseno-original/` — capturas del material original del autor.
 - `js/story.js` — Fase I (escenas, personajes, estados iniciales, relaciones, catálogo de música).
-- `js/story_fase2.js` — Fases II y III. `js/story_fase4.js` — Fase IV (la ouija). `js/story_fase5.js` — Fase V (la dispersión, con el eje de Nora y los que se quedan). `js/story_reglas.js` — reglas compartidas de las fases VI a XII (huésped, heridas, objetos, ofrendas, condenas, voces). `js/story_fase6.js` — Fase VI (la evidencia compartida). `js/story_fase7.js` — Fase VII (la ruptura). `js/story_fase8.js` — Fase VIII (la desaparición, las condenas y el hallazgo). `js/story_fase9.js` — Fase IX (el huésped a nivel tres y la súplica).
+- `js/story_fase2.js` — Fases II y III. `js/story_fase4.js` — Fase IV (la ouija). `js/story_fase5.js` — Fase V (la dispersión, con el eje de Nora y los que se quedan). `js/story_reglas.js` — reglas compartidas de las fases VI a XII (huésped, heridas, objetos, ofrendas, condenas, voces). `js/story_fase6.js` — Fase VI (la evidencia compartida). `js/story_fase7.js` — Fase VII (la ruptura). `js/story_fase8.js` — Fase VIII (la desaparición, las condenas y el hallazgo). `js/story_fase9.js` — Fase IX (el huésped a nivel tres y la súplica). `js/story_fase10.js` — Fase X (segunda muerte y casa hostil). `js/story_fase11.js` — Fase XI (la niña, la anomalía espacial y la tercera muerte). `js/story_fase12.js` — Fase XII (Nora sola, la ouija, el sótano, los dos finales y el epílogo ensamblado).
 - `js/engine.js` — el motor: estados, relaciones, conocimiento, evidencias, HORROR_STAGE, POV, texto por golpes, directivas de escena, música, ambiente sintetizado, efectos, historial, guardado.
 - `assets/fondos/` — escenarios (JPEG por espacio y por nivel de horror). `assets/personajes/fichas/` — cartas de personaje. `assets/musica/` — pistas (no se suben al repositorio público).
 
@@ -37,7 +37,7 @@ Una línea sola entre corchetes dentro del texto dispara un efecto al llegar a e
 `bash build.sh` genera `dist/`: `LaBruja.html` (CSS, JS e imágenes incrustadas) y `assets/musica/` al lado. Para enviar el juego, comprime la carpeta `dist` entera. Para publicar, sube el proyecto tal cual (`index.html` en la raíz).
 
 ## Estado
-- Fases I a IX escritas y probadas. Fase X (segunda muerte y casa hostil) en adelante: pendiente. La X arranca de los vivos (`muerto_*`), el portador del huésped (puede haber cambiado de cuerpo), el segundo marcado, las heridas y el resultado de la súplica (ver Biblia, secciones 5 y 26).
+- Fases I a XII escritas y probadas (29-09-2026): el prólogo se juega de principio a fin, con los dos finales (NORA_DEAD / NORA_UNKNOWN según las ofrendas y si Nora baja con luz) y el epílogo «Diez años después» montado con lo que quedó. Pendiente: la revisión del autor escena a escena.
 - Reglas fijas de las fases VI a XII (29-09-2026): Biblia, secciones 14 a 26; cada fase detallada en la 5; presupuesto y orden de escritura en la 25.
 - Fondos reservados para las fases siguientes: `pasillo_hostil`, `pasillo_horror`, `bano_agua`, `bano_rojo`, `bano_sangre`, `bano_sucio`, `bano_horror`, `buhardilla_soga`, `salon_apagon`, `salon_gris`, `bosque_fuego`, `sotano_escalera`, `cobertizo`, `coche`, `dormitorio_nora`.
 - `check.sh` verifica banderas y referencias entre escenas.

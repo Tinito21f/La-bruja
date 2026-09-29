@@ -909,11 +909,9 @@ ${modo(api, "nora", {
   normal: "~ Veintidós minutos. Y luego luz. Y luego el camino. Y luego nadie va a creerse nada de esto. Bien.",
 })}
 
-...
-
-Fin de la Fase IX. La segunda muerte y la casa hostil se escriben en la siguiente entrega.`;
+...`;
     },
-    final: true,
+    opciones: [{ texto: "Continuar", a: "x1_hostil" }],
   },
 
   });

@@ -188,6 +188,8 @@
       estado.evidencias[id] = { quien, lugar: lugar || estado.lugar || null, tipo, escena: estado.escena, hora: estado.hora || null };
     },
     hayEvidencia: (id) => Boolean(estado.evidencias[id]),
+    evidencias: () => JSON.parse(JSON.stringify(estado.evidencias || {})),
+    conocimientos: (id) => Object.keys(estado.conocimiento[id] || {}),
     lugar: (l) => { if (l !== undefined) estado.lugar = l; return estado.lugar; },
     hora: (h) => { if (h !== undefined) estado.hora = h; return estado.hora; },
     horror: (n) => { if (n > estado.horror) estado.horror = n; },

@@ -500,7 +500,7 @@ Nivel 3 por defecto aquí; antes si se alimentó (§18). Violencia: mutilación.
 5. **La casa aprieta**: la sartén humea sola (templada → placa → humo, cumplido), el grifo
    de arriba corre y nadie lo abrió, el arrastre ya no está detrás de la estantería.
 
-### Fase X — Segunda muerte y casa hostil (HORROR 4 → 5) · bloque 3 · 8 escenas
+### Fase X — Segunda muerte y casa hostil (HORROR 4 → 5) · `js/story_fase10.js` (escrita 29-09-2026) · 8 escenas
 Violencia: mutilación. Anomalías: 6.
 
 1. **La segunda condena se cobra**, o el huésped mata si el jugador lo permitió (a solas,
@@ -513,7 +513,7 @@ Violencia: mutilación. Anomalías: 6.
 4. Si el cuerpo del huésped murió, el huésped ya está en otro (§18): el jugador lo lee por
    señales desde fuera, sin que nadie lo diga.
 
-### Fase XI — La niña, la anomalía espacial y la tercera muerte (HORROR 5) · bloque 3 · 10 escenas
+### Fase XI — La niña, la anomalía espacial y la tercera muerte (HORROR 5) · `js/story_fase11.js` (escrita 29-09-2026) · 6 escenas
 Violencia: lo grotesco. Anomalías: 6.
 
 1. **La niña, clara.** Requiere las semillas (§4) y al menos cinco ofrendas (§23.1). El
@@ -528,7 +528,7 @@ Violencia: lo grotesco. Anomalías: 6.
    aliento va a Nora (§18).
 4. Lo de abajo ya está debajo de la mesa. La sartén paga (§3).
 
-### Fase XII — Nora (HORROR 6) · bloque 3 · 8 escenas
+### Fase XII — Nora (HORROR 6) · `js/story_fase12.js` (escrita 29-09-2026) · 8 escenas
 Sin presupuesto de anomalías.
 
 1. **Nora sola, y no sola**: el huésped está en ella. Sus pensamientos `~` ya no son todos
