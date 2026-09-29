@@ -22,6 +22,13 @@
   const N = { nora: "Nora", marcos: "Marcos", alex: "Álex", irene: "Irene" };
   const fem = (id) => id === "nora" || id === "irene";
   const U = (api) => R().ultimo(api) || "marcos";
+  // Lo que Nora recuerda de cada uno: lo de siempre, y lo de la V solo si pasó con ella
+  const recuerdo = (api, u) => {
+    const con = api.bandera("v_nora_con");
+    if (u === "marcos") return "Marcos. El del primer domingo con la boca abierta. El de la rodilla debajo de la mesa. " + (con === "marcos" ? "El que me sujetó por la cintura en los dos últimos peldaños." : api.bandera("v_marcos_libre") ? "El que bajó al almacén a las tres y media a arreglar la luz para que no nos quedáramos a oscuras." : "El que dijo «madera vieja» cuando se movió el péndulo.");
+    if (u === "irene") return "Irene. La que se ahogó en la mesa. La que va descalza desde las doce. " + (con === "irene" ? "La que me dijo lo de la camisa. La que gritó «hay alguien debajo» conmigo en la buhardilla." : "La que me leía como se lee un libro, y acertaba.");
+    return "Álex. El que contó la leyenda con la boca llena de cerveza. El que llevó el vaso toda la noche y no eligió las palabras. " + (con === "alex" ? "El de «tú no eres una lámpara»." + (api.bandera("nora_pregunta") === "manipula" ? " El que me contó lo de Rubén en el porche, como quien no quiere la cosa." : "") : "El que me dijo «confía en mí» y lo decía en serio.");
+  };
 
   Object.assign(HISTORIA.presupuestoAnomalias, { XI: 6 });
   Object.assign(HISTORIA.deriva, { XI: { estres: 1, miedo: 0.8 } });
@@ -439,7 +446,7 @@ Y paras.
 
 ${N[u]} en el suelo del almacén. Con la cabeza en el escalón de piedra. Con la cara hacia arriba. Con la cara suya, por fin, la de siempre, sin nada dentro. Con los ojos abiertos.
 
-~ ${u === "marcos" ? "Marcos. El del primer domingo con la boca abierta. El de la rodilla debajo de la mesa. El que me sujetó por la cintura en los dos últimos peldaños." : u === "irene" ? "Irene. La que me dijo lo de la camisa. La que se ahogó en la mesa. La que gritó «hay alguien debajo» conmigo en la buhardilla." : "Álex. El de «tú no eres una lámpara». El que me contó lo de Rubén. El que se cayó de una mesa hace cinco años."} Le he matado yo. Con esto. Y tengo la mano llena de lo suyo.
+~ ${recuerdo(api, u)} Le he matado yo. Con esto. Y tengo la mano llena de lo suyo.
 
 Y algo sale.
 

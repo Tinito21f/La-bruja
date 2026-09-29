@@ -687,7 +687,7 @@ Dos. Tú y ${N[u]}. En la mesa. Con las manos en la madera. Y la casa, que se ha
 
 Las siete menos dos.
 
-~ La voz de la buhardilla contaba hasta tres. Uno, dos, tres. Y paraba. Van dos. Y el tres no soy yo, porque a mí me han dicho «todavía no». El tres es ${N[u]}. Y yo soy lo que viene después del tres.
+~ ${api.sabe("nora", "voz_nina") ? "La voz de la buhardilla contaba hasta tres. Uno, dos, tres. Y paraba." : "Uno. Dos. Como se cuenta para saltar."} Van dos. Y el tres no soy yo, porque a mí me han dicho «todavía no». El tres es ${N[u]}. Y yo soy lo que viene después del tres.
 
 ${modo(api, "nora", {
   lucido: `~ Dos. Yo y ${N[u]}. Y ${N[u]} lleva dentro lo que ha matado a los otros, o lo que los ha llamado. Y es la única persona que me queda en el mundo.`,
@@ -741,7 +741,7 @@ Tú. Y ${N[u]}. ${R().vivo(api, h) && h === u ? (api.bandera("suplica_resultado"
 
 Las siete menos dos.
 
-~ La voz de la buhardilla contaba hasta tres. Uno, dos, tres. Y paraba. Van dos. Y el tres no soy yo, porque a mí me han dicho «todavía no». El tres es ${N[u]}. Y yo soy lo que viene después del tres.
+~ ${api.sabe("nora", "voz_nina") ? "La voz de la buhardilla contaba hasta tres. Uno, dos, tres. Y paraba." : "Uno. Dos. Como se cuenta para saltar."} Van dos. Y el tres no soy yo, porque a mí me han dicho «todavía no». El tres es ${N[u]}. Y yo soy lo que viene después del tres.
 
 ${modo(api, "nora", {
   lucido: `~ Dos. Yo y ${N[u]}. Y ${N[u]} lleva dentro lo que ha matado a los otros, o lo que los ha llamado, o lo que ha sonreído mientras. Y es la única persona que me queda en el mundo.`,

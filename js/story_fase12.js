@@ -23,6 +23,7 @@
   // El último: el tercero, el que llevaba el huésped hasta la puerta del almacén
   const U = (api) => { const a = api.bandera("huesped_anterior"); if (a && a !== "nora" && api.bandera("muerto_" + a)) return a; const o = porOrden(api); return o[o.length - 1] || "marcos"; };
   const cam = (api) => api.bandera("video_final_movil") || "irene";
+  const enLetra = (n) => ["cero", "una", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve", "veinte"][n] || String(n);
   const hayLuz = (api) => ["linterna", "vela"].includes(api.bandera("xii3_luz")) && api.bandera("xii5_nora") !== "apaga";
   const linternaDisponible = (api) => { const q = R().quienLleva(api, "linterna"); return !q || q === "nora"; };
   const lugarCuerpo = (api, p) => {
@@ -140,7 +141,7 @@
 
     const q = [];
     const nCuaderno = lineasCuaderno(api).length + (E.cuaderno_final ? 1 : 0) + (E.cuaderno_otra_letra ? 1 : 0);
-    q.push(`El cuaderno de Nora. ${nCuaderno} líneas con hora, de una noche.${E.cuaderno_alda && !api.bandera("pagina_alda_arrancada") ? " Y una palabra que nadie ha sabido explicar." : ""}${E.cuaderno_ajoba ? " Y otra, con jota." : ""}`);
+    q.push(`El cuaderno de Nora. ${enLetra(nCuaderno).charAt(0).toUpperCase() + enLetra(nCuaderno).slice(1)} líneas con hora, de una noche.${E.cuaderno_alda && !api.bandera("pagina_alda_arrancada") ? " Y una palabra que nadie ha sabido explicar." : ""}${E.cuaderno_ajoba ? " Y otra, con jota." : ""}`);
     q.push(`El vídeo de la mesa. El móvil de Irene: la broma, el ahogo, el apagón, el rescate. Nunca el frío. Y al final, ${c === "irene" ? "en el mismo móvil" : "en el de Marcos"}, veintidós minutos de una mesa vacía, con una voz que sube desde abajo y un ruido de vidrio fuera de plano.`);
     if (E.video_marcos_ouija) q.push("El móvil de Marcos: la ouija desde el otro lado. Se ve a Álex empujar. En la palabra que Nora apuntó, no empuja.");
     if (E.video_cobertizo) q.push("El vídeo del cobertizo. El generador. Los golpes en la chapa desde fuera.");

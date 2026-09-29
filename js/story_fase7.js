@@ -172,10 +172,12 @@ Nora: Cuatro.
 Marcos: Con cuatro velas y sin nevera y sin saber qué hay arriba.` : vn === "linterna" ? `
 Nora ha vuelto del almacén con la linterna grande. La de verdad, la de pilas, la que estaba en la estantería al lado de la garrafa. La deja en la mesa. Marcos la mira como se mira una decisión ya tomada.` : `
 Nora se ha sentado al lado de Irene. Le ha cogido la mano que no tiene en Álex. Irene no la ha apartado. Irene, que aparta las manos, no ha apartado esa.`;
+      const marcosSubio = api.bandera("v_nora_con") === "marcos" || ["marcos", "nora_marcos"].includes(api.bandera("vi_sube"));
+      const marcosHizo = (marcosSubio ? "ha subido a la buhardilla y " : "") + (api.bandera("v_marcos_libre") ? "ha bajado al almacén y arreglado una bombilla y un diferencial" : "ha arreglado una bombilla y ha aguantado la escalera");
       const marcosLinea = h === "marcos" ? `
 Marcos no se ofrece.
 
-Marcos, que se ofrece para todo lo que tiene solución, que ha subido a la buhardilla y bajado al almacén y arreglado una bombilla y un diferencial, está sentado con las manos en la mesa y mira la puerta como quien mira una pared.
+Marcos, que se ofrece para todo lo que tiene solución, que ${marcosHizo}, está sentado con las manos en la mesa y mira la puerta como quien mira una pared.
 
 Álex: ¿Marcos?
 

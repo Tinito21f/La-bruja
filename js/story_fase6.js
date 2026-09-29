@@ -50,7 +50,7 @@
     const alexQuiere = api.valor("alex", "eje") >= 70 && !api.bandera("alex_cruzo");
     if (marcosPuede && noraQuiere) cartas.push({ id: "nora", config: "nora_marcos", desc: "Subir con Marcos. La linterna, la escalera. Y él delante, que es donde quieres que esté." });
     if (marcosPuede) cartas.push({ id: "marcos", config: "marcos", desc: h === "marcos" ? "Subir solo. Con el atizador. Sin que nadie te vea la cara mientras subes." : "Subir solo. Con el atizador. Que se queden los tres juntos abajo." });
-    if (ireneConNora) cartas.push({ id: "irene", config: "irene_nora", desc: h === "irene" ? "Subir con Nora. Otra vez. Donde no os oye nadie." : "Subir con Nora. Las dos. Como antes, pero ahora sabiendo lo que hay." });
+    if (ireneConNora) cartas.push({ id: "irene", config: "irene_nora", desc: api.bandera("v_nora_con") === "irene" ? (h === "irene" ? "Subir con Nora. Otra vez. Donde no os oye nadie." : "Subir con Nora. Las dos. Como antes, pero ahora sabiendo lo que hay.") : (h === "irene" ? "Subir con Nora. Las dos. Donde no os oye nadie." : "Subir con Nora. Las dos. Que los hombres se queden abajo.") });
     if (alexQuiere && cartas.length < 3) cartas.push({ id: "alex", config: "alex", desc: "Subir tú. Con el móvil. Que los cadáveres son tuyos desde la leyenda." });
     if (!cartas.length) cartas.push({ id: "marcos", config: "marcos", desc: "Subir solo. Que se queden los tres juntos abajo." });
     return cartas.slice(0, 3);
@@ -127,7 +127,7 @@ Nora: No.
 
 Se te ha escapado. Con la voz que no usas.
 
-Álex: Son las de la buhardilla. Las ha despertado Nora.
+Álex: Son las de la buhardilla. ${api.bandera("v_nora_con") === "alex" ? "Las ha despertado la ouija." : "Las ha despertado Nora."}
 
 Nadie se ríe. Ni él.
 
