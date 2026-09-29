@@ -350,7 +350,7 @@ estado, no de un menú**, y las parejas no solo caben: son donde se planta el hu
 - Sin niña, sin mujer. Semillas dejadas: huellas pequeñas y objeto de niña (dos de las
   cinco que exige GIRL_APPEARANCE), arañazos bajo el suelo, mirada al techo.
 
-### Fase V — Retoque (29-09-2026): el eje de Nora y los que se quedan · bloque 1 · +6 escenas
+### Fase V — Retoque (29-09-2026, aplicado): el eje de Nora y los que se quedan · +5 escenas (`vb4_irene_nora`, `vq1_dormitorio`, `vq2_almacen_dos`, `vq3_porche_reto`, `vq4_cruce`)
 La fase escrita se mantiene. Se rehace el reparto y se añaden unas seis escenas.
 
 - **Nora decide con quién sube, no si sube.** `v1_necesidades` pasa a cuatro salidas con
@@ -406,7 +406,7 @@ La fase escrita se mantiene. Se rehace el reparto y se añaden unas seis escenas
 - Nombres orientativos de escenas nuevas: `vq1_dormitorio` (Irene y Álex),
   `vq2_almacen_dos` y `vq3_porche_reto` (Álex y Marcos), `vb4_irene_nora` (buhardilla).
 
-### Fase VI — Evidencia compartida (HORROR 2 → 3) · bloque 1 · 8 escenas
+### Fase VI — Evidencia compartida (HORROR 2 → 3) · `js/story_fase6.js` (escrita 29-09-2026) · 8 escenas
 Huésped a nivel 2 (§18). Violencia: heridas leves (§20). Anomalías: 4.
 
 1. **Los pasos.** En el techo, encima de la mesa, en la buhardilla que Nora acaba de
@@ -435,7 +435,7 @@ Semillas: la voz de la niña (`CHILD_VOICE`) puede sonar en la buhardilla si hay
 semillas previas; de la mujer, polvo que cae y miradas arriba. Necesidades (§23.5) fijadas
 al salir: quién tiene frío, quién sangra, quién quiere fumar.
 
-### Fase VII — Ruptura (HORROR 3) · bloque 2 · 8 escenas
+### Fase VII — Ruptura (HORROR 3) · `js/story_fase7.js` (escrita 29-09-2026) · 8 escenas
 Violencia: primera sangre. Anomalías: 4.
 
 1. **Apagón.** No es el diferencial (Marcos ya lo subió): es el generador, en el cobertizo,
@@ -459,7 +459,7 @@ Violencia: primera sangre. Anomalías: 4.
 8. Si hubo cruce en la V, aquí cae la **primera muerte** (la desaparición del que entró por
    el porche) y el generador es el segundo cruce.
 
-### Fase VIII — Primera desaparición, búsqueda y primera muerte confirmada (HORROR 3 → 4) · bloque 2 · 10 escenas
+### Fase VIII — Primera desaparición, búsqueda y primera muerte confirmada (HORROR 3 → 4) · `js/story_fase8.js` (escrita 29-09-2026) · 12 escenas, con las dos condenas (Álex: el bosque; Marcos: el coche) y las dos búsquedas
 Violencia: primera sangre y el primer hallazgo. Anomalías: 5.
 
 1. **La ruta de condena del marcado** (§22), vivida desde dentro si el jugador la elige con
@@ -481,7 +481,7 @@ Violencia: primera sangre y el primer hallazgo. Anomalías: 5.
    deja de leer a la gente o se agarra a Marcos; Álex, si vive, agresivo y desafiante.
 7. **Las voces devuelven la primera frase dicha** (§16, §23.2), con la voz del muerto.
 
-### Fase IX — El huésped a nivel tres y la súplica (HORROR 4) · bloque 2 · 10 escenas
+### Fase IX — El huésped a nivel tres y la súplica (HORROR 4) · `js/story_fase9.js` (escrita 29-09-2026) · 8 escenas
 Nivel 3 por defecto aquí; antes si se alimentó (§18). Violencia: mutilación. Anomalías: 5.
 
 1. **El ataque.** A solas con alguien, el huésped pierde el control: sujeta, golpea, ahoga,

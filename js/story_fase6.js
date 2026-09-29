@@ -975,11 +975,9 @@ ${modo(api, "marcos", {
   normal: "~ Todo el mundo se queda aquí. Ya está dicho. Ahora, que sea verdad.",
 })}
 
-...
-
-Fin de la Fase VI. La ruptura, el apagón y el generador se escriben en la siguiente entrega.`;
+...`;
     },
-    final: true,
+    opciones: [{ texto: "Continuar", a: "vii1_apagon" }],
   },
 
   });
