@@ -524,8 +524,21 @@ html, body {
   #historial { width: 100vw; }
 }
 @media (max-width: 520px) {
+  #cabecera { padding: 10px 12px; }
+  #estado { gap: 10px; }
+  #detalles, #menu { right: 12px; top: 70px; max-width: calc(100vw - 24px); }
+  #app { padding: 0 12px 10px; }
   #escena { padding: 16px 16px 12px; max-height: 70vh; }
   #escena-texto { font-size: 1rem; }
-  #pov-nombre { font-size: 2rem; }
+  #pov-nombre { font-size: 2rem; letter-spacing: 0.3em; padding-left: 0.3em; }
+  #inicio-titulo { font-size: 2rem; letter-spacing: 0.35em; padding-left: 0.35em; }
+  #inicio-panel { margin: 0 12px 5vh; }
   #personajes { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+  #historial-lista { padding: 12px 16px 30px; }
+}
+/* Pantallas bajas (móvil apaisado): el cuadro puede ocupar casi todo el alto y el título del juego se retira */
+@media (max-height: 460px) {
+  #escena { max-height: 82vh; }
+  #cabecera { padding: 8px 12px; }
+  #titulo-juego { display: none; }
 }

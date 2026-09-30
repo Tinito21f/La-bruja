@@ -17,15 +17,22 @@
   const modo = (api, id, m) => m[api.modo(id)] || m.normal;
   const N = { nora: "Nora", marcos: "Marcos", alex: "Álex", irene: "Irene" };
   const fem = (id) => id === "nora" || id === "irene";
+  const y = (id) => (id === "irene" ? "e " : "y ") + N[id];
+  const Y = (id) => (id === "irene" ? "E " : "Y ") + N[id];
+  const cita = (s) => String(s || "").replace(/[.!?…]+$/, "");
   const M = (api, p) => R().muerte(api, p) || {};
   // Los muertos en el orden en que murieron
   const porOrden = (api) => R().muertos(api).filter((p) => p !== "nora").slice().sort((a, b) => (M(api, a).orden || 0) - (M(api, b).orden || 0));
   // El último: el tercero, el que llevaba el huésped hasta la puerta del almacén
-  const U = (api) => { const a = api.bandera("huesped_anterior"); if (a && a !== "nora" && api.bandera("muerto_" + a)) return a; const o = porOrden(api); return o[o.length - 1] || "marcos"; };
+  const U = (api) => { const um = api.bandera("ultimo_muerto"); if (um && api.bandera("muerto_" + um)) return um; const a = api.bandera("huesped_anterior"); if (a && a !== "nora" && api.bandera("muerto_" + a) && (M(api, a).fase === "XI")) return a; const o = porOrden(api); return o[o.length - 1] || "marcos"; };
   const cam = (api) => api.bandera("video_final_movil") || "irene";
+  // La voz de Nora que devuelve la casa: algo que dijo en voz alta, nunca una línea del cuaderno (las opciones «07:12. …» también se guardan como dichas)
+  const vozNora = (api) => { const l = (typeof api.dichos === "function" ? api.dichos("nora") : []).filter((d) => !/^\d\d:\d\d/.test(d)); return l.length ? l[0] : R().voz(api, "nora", 0); };
   const enLetra = (n) => ["cero", "una", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve", "veinte"][n] || String(n);
   const hayLuz = (api) => ["linterna", "vela"].includes(api.bandera("xii3_luz")) && api.bandera("xii5_nora") !== "apaga";
   const linternaDisponible = (api) => { const q = R().quienLleva(api, "linterna"); return !q || q === "nora"; };
+  // Con qué abre Nora el candado: lo que ya lleva del almacén (XI), o la llave inglesa de la caja, o el martillo si alguien se llevó la llave
+  const herramienta = (api) => { const m = R().mano(api, "nora"); if (m === "llave" || m === "martillo") return m; const q = R().quienLleva(api, "llave"); return q && q !== "nora" ? "martillo" : "llave"; };
   const lugarCuerpo = (api, p) => {
     const m = M(api, p);
     if (m.como === "bosque") return m.fase === "X" ? "en la grava, a diez metros del porche" : "en el bosque, en " + (m.donde || "el terraplén bajo los pinos");
@@ -55,7 +62,7 @@
       api.marcar("fase_actual", "X");
       R().matar(api, s, s === "irene" ? "banera" : s === "alex" ? "bosque" : "coche", s === "irene" ? "la bañera del baño de arriba" : s === "alex" ? "el borde de los pinos" : "el camino, contra el pino grande", "nora"); api.marcar("segundo_muerte", s); api.marcar("cuerpo_" + s, s === "irene" ? "banera" : s === "alex" ? "bosque" : "coche");
       api.marcar("fase_actual", "XI"); api.marcar("xi_final", "nina");
-      R().matar(api, h, "nina", "la puerta del almacén", "nora"); api.marcar("cuerpo_" + h, "almacen");
+      R().matar(api, h, "nina", "la puerta del almacén", "nora"); api.marcar("cuerpo_" + h, "almacen"); api.marcar("ultimo_muerto", h);
       if (api.bandera("huesped") !== "nora") { api.marcar("huesped_anterior", h); api.marcar("huesped", "nora"); }
       api.marcar("huesped_nivel", 3);
       if (!api.hayEvidencia("video_mesa")) api.evidencia("video_mesa", "irene", "mesa", "video");
@@ -70,12 +77,13 @@
     if (/^xii[6-8]/.test(id)) decidirFinal(api);
   };
 
-  // El final: A si la casa está alimentada (cinco ofrendas o más) o si bajó sin luz; B si bajó con luz y con menos.
+  // El final: A si bajó sin luz o si se entrega (decir el nombre, apagar la luz, coger la campanilla: la séptima ofrenda es ella);
+  // B si bajó con luz y no se entrega. Las seis ofrendas anteriores no deciden solas: la séptima siempre es una decisión.
   function decidirFinal(api) {
     if (api.bandera("final")) return;
     const luz = hayLuz(api);
-    const entrega = ["nombre", "apaga", "campanilla"].includes(api.bandera("xii5_nora"));   // la séptima ofrenda es ella
-    const A = !luz || entrega || R().ofrendas(api) >= 7;
+    const entrega = ["nombre", "apaga", "campanilla"].includes(api.bandera("xii5_nora"));
+    const A = !luz || entrega;
     api.marcar("final", A ? "A" : "B");
     api.marcar("nora_final", A ? "NORA_DEAD" : "NORA_UNKNOWN");
     api.marcar("nora_bajo_con_luz", luz);
@@ -96,22 +104,39 @@
     const p2 = api.bandera("segundo_muerte") || orden[1] || "irene";
     const u = U(api);
     const hIX = orden.find((p) => M(api, p).como === "amigo" && M(api, p).fase === "IX") || u;
+    const B = (k) => api.bandera(k);
     const L = [];
-    if (E.cuaderno_triada) L.push(`${hora("cuaderno_triada", "02:35")}. Espino, pelo negro, diente de leche.`);
-    if (E.cuaderno_alda) L.push(`${hora("cuaderno_alda", "03:10")}. ALDA.`);
+    if (E.cuaderno_triada) L.push(`${hora("cuaderno_triada", "02:30")}. Espino, pelo negro, diente de leche.`);
+    if (E.cuaderno_alda) L.push(`${hora("cuaderno_alda", "03:15")}. ALDA.`);
     if (E.cuaderno_ajoba) L.push(`${hora("cuaderno_ajoba", "03:15")}. AJOBA. Con jota.`);
-    if (E.cuaderno_reparto) L.push(`${hora("cuaderno_reparto", "03:35")}. Álex fuera. Irene arriba. Marcos en el cuadro. Yo con la tabla.`);
-    if (E.cuaderno_buhardilla) L.push(`${hora("cuaderno_buhardilla", "03:50")}. Buhardilla. Huellas pequeñas. Descalzas. Siete marcas en la viga. Una muñeca con los ojos cosidos. He contado solo lo de la trampilla.`);
-    if (E.cuaderno_dispersion) L.push(`${hora("cuaderno_dispersion", "04:00")}. Nos hemos separado. He apuntado quién con quién. No sirve de nada.`);
+    // La V: el reparto tal como fue (vn1_mesa: Nora se queda con la tabla; Irene sube, sola o con Marcos; Álex sale)
+    if (E.cuaderno_reparto) L.push(`${hora("cuaderno_reparto", "03:35")}. Álex fuera. ${B("v_irene_con") === "marcos" ? "Irene y Marcos arriba." : "Irene arriba. Marcos en el cuadro."} Yo con la tabla.`);
+    if (E.cuaderno_buhardilla) L.push(`${hora("cuaderno_buhardilla", "03:50")}. Buhardilla. Huellas pequeñas. Descalzas. Siete marcas en la viga. ${B("nora_toma_muneca") ? "Una muñeca con los ojos cosidos. La he bajado." : "Una muñeca con los ojos cosidos."} He contado solo lo de la trampilla.`);
+    // La nota fija de v9_regreso: lo que contó cada uno, tal como se escribió
+    if (E.cuaderno_dispersion) {
+      const q = B("v_quedan"), ic = B("v_irene_con"), nc = B("v_nora_con");
+      const a = B("alex_oyo_irene_fuera") && B("alex_cuenta") ? "Álex: Irene en los árboles." : q === "irene_alex" && B("alex_cuenta") ? "Álex: el armario." : q === "alex_marcos" && B("alex_cuenta") ? "Álex: una puerta con candado." : "Álex: nada.";
+      const i = B("irene_oyo_alex_puerta") && B("irene_cuenta") ? "Irene: Álex en la puerta." : B("irene_vio_sombra") && B("irene_cuenta") ? "Irene: un grifo." : "Irene: nada.";
+      const m = B("v_marcos_libre") || q === "alex_marcos" ? (B("marcos_cuenta_puerta") ? "Marcos: una puerta." : "Marcos: el diferencial. Y algo que no cuenta.") : ic === "marcos" ? "Marcos: el grifo." : "Marcos: la trampilla.";
+      const yo = B("nora_vio_gente") ? "gente entre los árboles." : B("huellas_vistas") ? (nc === "irene" ? "huellas. Siete marcas. La cuerda. Irene lo vio." : "huellas. Siete marcas.") : "nada.";
+      L.push(`${hora("cuaderno_dispersion", "04:00")}. ${a} ${i} ${m} Yo: ${yo}`);
+    }
     if (E.cuaderno_pasos) L.push(`${hora("cuaderno_pasos", "04:05")}. Pasos arriba. Los he contado. Van hacia la trampilla.`);
     if (E.cuaderno_imposible) L.push(`${hora("cuaderno_imposible", "04:28")}. Alguien ha subido. Le hemos visto los cuatro.`);
     if (E.cuaderno_generador) L.push("04:53. Han salido. Han vuelto. Sangre en la chapa.");
-    L.push(`05:30. ${N[p1]}. ${p1 === "alex" ? "El terraplén. Cuatro marcas en el cuello." : "El coche. La curva del pino. Cuatro marcas en el cuello."}${api.bandera("vaso_en_video") ? " El vaso se mueve solo en el vídeo." : ""}`);
+    if (E.cuaderno_muerte1) L.push(`${hora("cuaderno_muerte1", "05:24")}. ${N[p1]}. Las marcas. Cuatro.${B("vaso_en_video") ? " El vaso se mueve solo en el vídeo. Nadie lo rozó." : " Los dos vídeos, guardados."}`);
+    // La nota fija de viii9_cierre
+    L.push(`05:30. ${N[p1]}. ${p1 === "alex" ? "El terraplén. Cuatro metros. Cuatro marcas en el cuello." : "El coche. La curva del pino. Cuatro marcas en el cuello."}${B("vaso_en_video") ? " El vaso se mueve solo en el vídeo." : ""}${B("voz_devuelta") ? " Su voz desde el porche. Sus palabras." : ""} Quedamos tres.`);
     if (E.cuaderno_ataque) L.push(`${hora("cuaderno_ataque", "06:10")}. ${N[hIX]}. Las manos. «Todavía no.»`);
+    // La nota fija de ix8_cierre: el ataque, tal como se escribió (el huésped de la IX y su víctima)
+    const ar = B("ataque_resultado");
+    const vIX = B("ataque_victima") || Object.keys(N).find((k) => B("mato_" + k) === hIX) || orden.find((p) => M(api, p).como === "huesped") || (hIX === "marcos" ? "irene" : "alex");
     const enIX = orden.filter((p) => M(api, p).fase === "IX");
-    L.push(`06:38. ${enIX.length ? "Dos. " + N[enIX[0]] + ". Arriba." : "Uno."}${api.bandera("sarten_humo") ? " La sartén humea sola." : ""}${api.bandera("arrastre_mesa") ? " Lo de abajo está debajo de la mesa." : ""} Quedamos ${enIX.length ? "dos" : "tres"}.`);
+    const ataque = ar === "mata" ? `${N[hIX]}. Arriba. Lo hice yo. O lo hizo ${N[vIX]}.` : ar === "muere" ? `${N[vIX]}. La bañera. ${N[hIX]} con las manos mojadas.` : ar === "todavia" ? `${N[hIX]}. La cocina. Mi mano. «Todavía no.»` : ar === "hiere" ? `${N[hIX]}. Le abrieron la cabeza. Se despertó. O no.` : ar === "huye" ? `${N[hIX]}. El baño. ${N[vIX]} salió corriendo.` : `${N[hIX]}. Paró. Cerró por fuera.`;
+    L.push(`06:38. ${enIX.length ? "Dos." : "Uno."} ${ataque}${B("sarten_humo") ? " La sartén humea sola." : ""}${B("arrastre_mesa") ? " Lo de abajo está debajo de la mesa." : ""} Quedamos ${enIX.length ? "dos" : "tres"}.`);
     if (E.cuaderno_puerta) L.push("06:45. La puerta no abre. Nadie la sujeta.");
-    L.push(`07:08. No amanece. La puerta no abre. ${N[p2]}. Quedamos dos.`);
+    // La nota fija de x8_cierre
+    L.push(`07:08. No amanece. La puerta no abre. ${B("segundo_muerte") ? N[p2] + ". " : ""}Quedamos dos. ${B("huesped_anterior") === u ? N[u] + " tiene frío." : "El frío no está en nadie. O está en alguien que no lo sabe."}`);
     if (E.cuaderno_puerta_arriba) L.push("07:12. La puerta da arriba.");
     return L;
   }
@@ -133,18 +158,19 @@
       if (m.como === "banera") d += " Con el pelo mojado. Sin una gota en el suelo.";
       if (m.como === "huesped") d += ` El informe dice que fue ${N[u]}. ${N[u]} no está para decir que no.`;
       if (m.como === "amigo" && m.fase !== "XI") d += ` El informe dice que fue ${N[Object.keys(N).find((k) => api.bandera("mato_" + k) === p) || "otro"]}. Defensa propia, dice.`;
-      if (m.como === "amigo" && m.fase === "XI") d += " Con " + (R().OBJETOS[api.bandera("arma_xi")] || (api.bandera("arma_xi") === "martillo" ? "un martillo" : "una llave inglesa")) + " al lado, con las huellas de Nora. Eso el informe sí lo dice.";
+      if (m.como === "amigo" && m.fase === "XI") d += (api.bandera("arma_xi") && api.bandera("mano_nora") === api.bandera("arma_xi") ? " Lo que le abrió la cabeza apareció abajo, al pie de la escalera, con las huellas de Nora." : " Con " + (R().OBJETOS[api.bandera("arma_xi")] || "la llave inglesa") + " al lado, con las huellas de Nora.") + " Eso el informe sí lo dice.";
       if (m.como === "nina") d += " Lo que le faltaba no lo encontraron.";
       return d;
     });
+    const armaSotano = R().OBJETOS[api.bandera("mano_nora")] || "la llave inglesa";
     const nora = A
-      ? "Y a Nora, abajo. Al pie de una escalera de piedra que no estaba en ningún plano de la casa. Con una cadena en el tobillo que nadie supo de dónde había salido, porque el hierro tenía trescientos años y el cierre estaba nuevo."
-      : `Y a Nora no la encontraron. Ni abajo, ni en el bosque, ni en la carretera. La puerta del sótano abierta, ${luz ? (api.bandera("xii3_luz") === "vela" ? "una vela consumida hasta la piedra en el último escalón" : "una linterna encendida en el último escalón, todavía con pila") : "la llave inglesa en el último escalón"}, y nada. Diez años. Nada.`;
+      ? "Y a Nora, abajo. Al pie de una escalera de piedra que no estaba en ningún plano de la casa. Con una cadena en el tobillo. El hierro, viejo. El cierre, nuevo. Eso el informe lo dice y no lo explica."
+      : `Y a Nora no la encontraron. Ni abajo, ni en el bosque, ni en la carretera. La puerta del sótano abierta, ${luz ? (api.bandera("xii3_luz") === "vela" ? "una vela consumida hasta la piedra en el último escalón" : "una linterna encendida en el último escalón, todavía con pila") : armaSotano + " en el último escalón"}, y nada. Diez años. Nada.`;
 
     const q = [];
-    const nCuaderno = lineasCuaderno(api).length + (E.cuaderno_final ? 1 : 0) + (E.cuaderno_otra_letra ? 1 : 0);
-    q.push(`El cuaderno de Nora. ${enLetra(nCuaderno).charAt(0).toUpperCase() + enLetra(nCuaderno).slice(1)} líneas con hora, de una noche.${E.cuaderno_alda && !api.bandera("pagina_alda_arrancada") ? " Y una palabra que nadie ha sabido explicar." : ""}${E.cuaderno_ajoba ? " Y otra, con jota." : ""}`);
-    q.push(`El vídeo de la mesa. El móvil de Irene: la broma, el ahogo, el apagón, el rescate. Nunca el frío. Y al final, ${c === "irene" ? "en el mismo móvil" : "en el de Marcos"}, veintidós minutos de una mesa vacía, con una voz que sube desde abajo y un ruido de vidrio fuera de plano.`);
+    const nCuaderno = lineasCuaderno(api).length + (E.cuaderno_final ? 1 : 0);
+    q.push(`El cuaderno de Nora. ${enLetra(nCuaderno).charAt(0).toUpperCase() + enLetra(nCuaderno).slice(1)} líneas con hora, de una noche.${E.cuaderno_alda && !api.bandera("pagina_alda_arrancada") ? " Y una palabra que nadie ha sabido explicar." : ""}${E.cuaderno_ajoba ? " Y otra, con jota." : ""}${E.cuaderno_otra_letra ? " Y en la última página, con otra letra, ABAJO. Y debajo, con la suya: vale." : ""}`);
+    q.push(`El vídeo de la mesa. El móvil de Irene: la broma, el ahogo, el apagón, el rescate. Nunca el frío. Y al final, ${c === "irene" ? "en el mismo móvil" : "en el de Marcos"}, veinte minutos de una mesa vacía, con una voz que sube desde abajo${A ? " y, al final, una voz de mujer que dice «ya», bajo, como se dice al colgar" : " y un ruido de vidrio fuera de plano, cinco veces, con pausas"}.`);
     if (E.video_marcos_ouija) q.push("El móvil de Marcos: la ouija desde el otro lado. Se ve a Álex empujar. En la palabra que Nora apuntó, no empuja.");
     if (E.video_cobertizo) q.push("El vídeo del cobertizo. El generador. Los golpes en la chapa desde fuera.");
     if (E.video_coche_luz) q.push("El coche con la luz de dentro encendida, grabado desde el porche, con nadie dentro.");
@@ -181,9 +207,11 @@
     let alda;
     if (api.bandera("pagina_alda_arrancada") && A) alda = "Y en el bolsillo de Nora, doblada en cuatro, una página del cuaderno. Danna la desdobla. Una hora. Y una palabra.\n\nALDA.";
     else if (api.bandera("pagina_alda_arrancada")) alda = "Al cuaderno le falta una página. Se ve el borde. Danna pasa el dedo por la siguiente, marcada de apretar el boli, y la pone contra la luz de la ventana.\n\nALDA.";
-    else if (E.cuaderno_alda) alda = `Danna se para en una línea. ${(E.cuaderno_alda && E.cuaderno_alda.hora) || "01:41"}. Cuatro letras. Subrayadas una vez, con la regla del cuaderno.\n\nALDA.`;
-    else if (api.bandera("cuaderno_letra_otra")) alda = "Y en la última página, con una letra que no es la de Nora. Más redonda. Como de alguien que aprende a escribir.\n\nALDA.";
+    else if (E.cuaderno_alda) alda = `Danna se para en una línea. ${(E.cuaderno_alda && E.cuaderno_alda.hora) || "03:15"}. Cuatro letras. Subrayadas una vez, con la regla del cuaderno.\n\nALDA.`;
     else alda = `Y en la foto del sótano, la número treinta y uno, detrás del poste, a la altura de una niña. Danna la acerca a la cara.\n\nALDA.${A ? "\n\nY debajo, más clara, cortada hace menos: una N." : ""}`;
+    // Cuántos cuerpos llevaban las cuatro marcas: los de la casa y el bosque; no el que abrió Nora ni el que abrió la niña
+    const conMarcas = orden.filter((p) => ["bosque", "coche", "banera", "huesped"].includes(M(api, p).como)).length;
+    const marcas = conMarcas === orden.length ? "Y en los tres, cuatro marcas en el cuello." : conMarcas === 2 ? "Y en dos de ellos, cuatro marcas en el cuello." : conMarcas === 1 ? "Y en uno, cuatro marcas en el cuello." : "";
 
     return `
 DIEZ AÑOS DESPUÉS
@@ -202,7 +230,7 @@ ${cuerpos.join("\n\n")}
 
 ${nora}
 
-Agus: El informe dice hipotermia. Dice caída. ${M(api, "marcos").como === "coche" ? "Dice un coche a cuarenta por hora contra un pino. " : ""}Y en los tres, cuatro marcas en el cuello. Eso el informe no lo dice. Eso lo dicen las fotos.
+Agus: El informe dice hipotermia. Dice caída. ${M(api, "marcos").como === "coche" ? "Dice un coche a cuarenta por hora contra un pino. " : ""}${marcas ? marcas + " Eso el informe no lo dice. Eso lo dicen las fotos." : ""}
 
 Danna: ¿Y qué quedó?
 
@@ -368,7 +396,7 @@ Y el vaso está frío. Como el vidrio a las tres. Como todo lo de esta noche: fr
     titulo: "Nora · El candado",
     alEntrar: (api) => {
       R().tick(api);
-      api.marcar("candado_abierto", "llave");
+      api.marcar("candado_abierto", herramienta(api));
       api.presenciar("nora", 2);
       api.est("nora", "estres", 4);
     },
@@ -376,6 +404,14 @@ Y el vaso está frío. Como el vidrio a las tres. Como todo lo de esta noche: fr
       const p = api.bandera("xii2_pregunta");
       const u = U(api);
       const obj = R().mano(api, "nora");
+      const hta = herramienta(api);
+      const qLlave = R().quienLleva(api, "llave");
+      // Con qué se abre el candado: lo que Nora ya tiene en la mano desde el almacén, o lo que queda en la caja
+      const conQue = obj === "llave" || obj === "martillo"
+        ? `${R().OBJETOS[obj].charAt(0).toUpperCase() + R().OBJETOS[obj].slice(1)}. En tu mano. La cogiste de la mesa al levantarte, sin pensarlo, como se coge el mechero.`
+        : hta === "martillo"
+          ? `La llave inglesa. No está en la caja: ${qLlave && api.bandera("cuerpo_" + qLlave) === "almacen" ? "está en el bolsillo de " + N[qLlave] + ", a un metro de ti, y no la buscas" : "se la llevó " + N[qLlave] + " en el bolsillo, y está donde está"}. El martillo, sí. De la misma caja.${obj ? " Sueltas " + R().OBJETOS[obj] + "." : ""}`
+          : `La llave inglesa. En la caja de herramientas, en el estante, ${R().lleva(api, "nora", "linterna") ? "donde estaba la linterna que llevas" : "al lado de donde estaba la linterna"}.${obj ? " Sueltas " + R().OBJETOS[obj] + "." : ""}`;
       const respuesta = p === "quien" ? "Nora: ¿Quién eres?\n\nY el vaso va.\n\nSin que lo empujes. Miras tus manos: quietas, encima, sin peso. Y el vaso va.\n\nA.\n\nL.\n\nD.\n\nA.\n\nLo sabías. Lo has leído antes de que llegara a la D.\n\nY sin preguntar, sin soltar, el vaso sigue:\n\nA. B. A. J. O."
         : p === "irme" ? "Nora: ¿Puedo irme?\n\nY el vaso va. A la esquina. Rápido, como se contesta a una tontería.\n\nNO.\n\nY vuelve al centro. Y sigue. Despacio. Como quien escribe con la mano de otro.\n\nA. B. A. J. O."
         : p === "nada" ? "No preguntas.\n\nY el vaso va igual. Como quien contesta a una pregunta que se hizo a las tres.\n\nSin que lo empujes. Miras tus manos: quietas, encima, sin peso. Y el vaso va.\n\nA. B. A. J. O."
@@ -397,7 +433,7 @@ Te levantas. Dejas el vaso donde está: en la O. Dejas el móvil grabando. Dejas
 
 El arco de la cocina. La sartén ${api.bandera("sarten_tirada") ? "en el fregadero, humeando bajo el agua" : "en el fuego apagado, humeando"}. La puerta del almacén.
 
-Y ${N[u]}.
+${Y(u)}.
 
 En el suelo. Con la cabeza en el escalón de piedra. ${api.bandera("xi_final") === "mata" ? "Con la cara que le dejaste." : "Con lo que le dejó."} Pasas por encima. Como se pasa por encima de un charco. Y no te perdonas y no te paras.
 
@@ -411,7 +447,7 @@ Lo dejaste abierto hace media hora, colgando, y ella bajó por esta puerta. Ahor
 
 ~ Abajo.
 
-La llave inglesa. ${obj === "llave" ? "La tienes en la mano desde antes. Pesa lo que pesa." : (R().quienLleva(api, "llave") && R().quienLleva(api, "llave") !== "nora" ? "No está en la caja: se la llevó " + N[R().quienLleva(api, "llave")] + " en el bolsillo, y está donde está. El martillo, sí. De la misma caja." : "En la caja de herramientas, en el estante, al lado de donde estaba la linterna.") + (obj ? " Sueltas " + R().OBJETOS[obj] + "." : "")}
+${conQue}
 
 Un golpe. Dos. El arco salta al cuarto, con un ruido que se oye en toda la casa y que no le importa a nadie.
 
@@ -421,7 +457,7 @@ La escalera. De piedra. Bajando. Negra a partir del tercer escalón.
 
 ${modo(api, "nora", {
   lucido: "~ Un sótano que no está en los planos, debajo de una casa levantada donde quemaron a alguien. Todo lo de esta noche ha subido de aquí. Y yo voy a bajar a verlo, porque he venido a eso, porque a las doce y cuarenta dije «quería pruebas» y esto es la prueba.",
-  asustado: "~ Negro a partir del tercero. Y abajo, la campanilla. Y yo con una llave inglesa.",
+  asustado: `~ Negro a partir del tercero. Y abajo, la campanilla. Y yo con ${hta === "martillo" ? "un martillo" : "una llave inglesa"}.`,
   tenso: "~ Luz. Lo primero, luz. Lo que sea. Y bajar.",
   ido: "~ El frío que sube huele a lo que hay en el armario, en la buhardilla, en la boca de la niña. Es el mismo. Todo viene de aquí.",
   perdido: "~ Abajo. Ya casi. Ya casi estoy donde me quieren.",
@@ -429,14 +465,14 @@ ${modo(api, "nora", {
 })}`;
     },
     opciones: [
-      { texto: "La linterna grande. Del estante. Bajar con ella por delante.", a: "xii4_escalera", si: (api) => linternaDisponible(api),
+      { texto: (api) => R().lleva(api, "nora", "linterna") ? "La linterna grande. La tuya, la del almacén. Bajar con ella por delante." : "La linterna grande. Del estante. Bajar con ella por delante.", a: "xii4_escalera", si: (api) => linternaDisponible(api),
         efecto: (api) => { api.marcar("xii3_luz", "linterna"); api.marcar("nora_luz", true); R().coger(api, "nora", "linterna"); api.est("nora", "lucidez", 2); } },
       { texto: "Una vela. De la mesa. Encenderla con el mechero y bajar con la mano delante de la llama.", a: "xii4_escalera",
         efecto: (api) => { api.marcar("xii3_luz", "vela"); api.marcar("nora_luz", true); R().soltar(api, "nora"); api.est("nora", "eje", 1); } },
-      { texto: "El mechero. Solo el mechero. Y la llave inglesa en la otra mano.", a: "xii4_escalera",
-        efecto: (api) => { api.marcar("xii3_luz", "mechero"); api.marcar("nora_luz", false); R().coger(api, "nora", "llave"); api.est("nora", "estres", 2); } },
+      { texto: (api) => "El mechero. Solo el mechero. Y " + R().OBJETOS[herramienta(api)] + " en la otra mano.", a: "xii4_escalera",
+        efecto: (api) => { api.marcar("xii3_luz", "mechero"); api.marcar("nora_luz", false); R().coger(api, "nora", herramienta(api)); api.est("nora", "estres", 2); } },
       { texto: "A oscuras. Con las manos en la piedra. Como bajó ella.", a: "xii4_escalera", impulsiva: true,
-        efecto: (api) => { api.marcar("xii3_luz", "nada"); api.marcar("nora_luz", false); R().coger(api, "nora", "llave"); R().alimentar(api, 1); api.est("nora", "miedo", 6); } },
+        efecto: (api) => { api.marcar("xii3_luz", "nada"); api.marcar("nora_luz", false); R().coger(api, "nora", herramienta(api)); R().alimentar(api, 1); api.est("nora", "miedo", 6); } },
     ],
   },
 
@@ -454,10 +490,12 @@ ${modo(api, "nora", {
       const [o1, o2, o3] = [orden[0] || "alex", orden[1] || "irene", orden[2] || "marcos"];
       const inicio = luz === "linterna" ? "La linterna grande. El haz por delante. Piedra. Piedra. Un escalón, y otro, cortados a mano, gastados en el centro por pies que no eran de nadie de esta noche."
         : luz === "vela" ? "La vela. La mano delante de la llama. Y la llama se inclina hacia abajo, hacia donde vas, como si tirara de ella el aire de allí."
-        : luz === "mechero" ? "El mechero. La llama pequeña. Se apaga en el tercer escalón. Lo enciendes. Se apaga en el séptimo. No lo enciendes más. La llave inglesa en la otra mano, pesando lo que pesa."
-        : "A oscuras. Las manos en la piedra de las paredes, que suda. El pie buscando el borde de cada escalón antes de fiarse. La llave inglesa contra la pierna.";
+        : luz === "mechero" ? `El mechero. La llama pequeña. Se apaga en el tercer escalón. Lo enciendes. Se apaga en el séptimo. No lo enciendes más. ${R().OBJETOS[herramienta(api)].charAt(0).toUpperCase() + R().OBJETOS[herramienta(api)].slice(1)} en la otra mano, pesando lo que pesa.`
+        : `A oscuras. Las manos en la piedra de las paredes, que suda. El pie buscando el borde de cada escalón antes de fiarse. ${R().OBJETOS[herramienta(api)].charAt(0).toUpperCase() + R().OBJETOS[herramienta(api)].slice(1)} contra la pierna.`;
       return `
 ${inicio}
+
+${api.bandera("nora_bajo_antes") ? "Los cuatro primeros ya los conoces. Los bajaste hace media hora, huyendo, y los subiste para mirar. Ahora no hay nadie arriba que mirar." : ""}
 
 Cuentas. El primero. El segundo. El tercero.
 
@@ -475,7 +513,7 @@ ${N[o3]}: ${R().voz(api, o3, 2)}
 
 Y luego la cuarta.
 
-Nora: ${R().voz(api, "nora", 0)}
+Nora: ${vozNora(api)}
 
 Tu voz. Desde abajo. Diciendo lo que dijiste tú.
 
@@ -525,7 +563,7 @@ Tin. Abajo. Cerca.`;
       const luz = hayLuz(api);
       const c = cam(api);
       const v = api.bandera("xii4_voz");
-      const contesto = v && v !== "ninguna" ? `Has contestado a ${N[v]}. Y ${N[v]} no ha contestado más. Es lo que hacen las voces cuando consiguen lo que querían: callarse.` : "No has contestado. Has contado. Diecinueve.";
+      const contesto = v && v !== "ninguna" ? `Has contestado a ${N[v]}. ${Y(v)} no ha contestado más. Es lo que hacen las voces cuando consiguen lo que querían: callarse.` : "No has contestado. Has contado. Diecinueve.";
       return `
 ${contesto}
 
@@ -655,9 +693,9 @@ Y esto no lo ves tú.
 
 Lo ve el móvil de ${N[c]}. Apoyado contra la caja de la ouija, con la cámara hacia la mesa. Batería: cinco por ciento. Grabando.
 
-En el encuadre: la mitad de la mesa. La tabla, con las letras hacia una silla vacía. Tu silla. El cuaderno${api.bandera("cuaderno_cerrado") ? ", cerrado" : ", abierto"}. El arco de la cocina, al fondo, sin foco. El vaso, no. El vaso queda fuera, a la izquierda.
+En el encuadre: la mitad de la mesa. La mitad de la tabla, con las letras hacia una silla vacía. Tu silla. El cuaderno${api.bandera("cuaderno_cerrado") ? ", cerrado" : ", abierto"}. El arco de la cocina, al fondo, sin foco. El vaso, no. El vaso queda fuera, a la izquierda, en la otra mitad.
 
-07:58. Por el arco, de lejos, desde abajo, tu voz. Dice «${R().voz(api, "nora", 0)}». Y luego dice «Alda». Y luego, más bajo, algo que la cámara no coge.
+07:58. Por el arco, de lejos, desde abajo, tu voz. Dice «${cita(vozNora(api))}». Y luego, más bajo, algo que la cámara no coge.
 
 07:59. La campanilla. Sube.
 

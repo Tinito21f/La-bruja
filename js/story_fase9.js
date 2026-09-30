@@ -134,7 +134,7 @@
       const d = api.bandera("desaparecido");
       const seg = api.bandera("segundo_marcado");
       const necO = o ? R().necesidad(api, o) : null;
-      const salidaV = v === "irene" ? (R().herido(api, "irene", "cojera") ? "Irene se levanta. Con el pie como esté. Dice que va a lavarse la cara. Al de arriba, porque el de abajo huele a lo que huele. Sube la escalera cojeando, agarrada a la barandilla, sin mirar atrás." : "Irene se levanta. Dice que va a lavarse la cara. Al de arriba, porque el de abajo huele a lo que huele. Sube la escalera descalza, sin mirar atrás.") : v === "nora" ? "Tienes sed. Una sed de horas. Y la mano, la del paño, que late. El grifo de la cocina está a cuatro pasos." : (o === "alex" ? "Álex se levanta. Dice que necesita mear y fumar y no en ese orden. Irene le dice que ni se le ocurra. Álex dice que arriba, al baño de arriba, con la ventana, que es fumar sin salir. Y sube. Con el pie como esté." : "Marcos se levanta. Dice que va a mear. Al de arriba, que el de abajo huele a lo que huele. Sube la escalera con el atizador de bastón, sin mirar atrás.");
+      const salidaV = v === "irene" ? (R().herido(api, "irene", "cojera") ? "Irene se levanta. Con el pie como esté. Dice que va a lavarse la cara. Al de arriba, porque el de abajo huele a lo que huele. Sube la escalera cojeando, agarrada a la barandilla, sin mirar atrás." : "Irene se levanta. Dice que va a lavarse la cara. Al de arriba, porque el de abajo huele a lo que huele. Sube la escalera descalza, sin mirar atrás.") : v === "nora" ? "Tienes sed. Una sed de horas. " + (R().herido(api, "nora", "mano") ? "Y la mano, la de la trampilla, que late. " : "") + "El grifo de la cocina está a cuatro pasos." : (o === "alex" ? "Álex se levanta. Dice que necesita mear y fumar y no en ese orden. Irene le dice que ni se le ocurra. Álex dice que arriba, al baño de arriba, con la ventana, que es fumar sin salir. Y sube. " + (R().herido(api, "alex", "cojera") ? "Con el pie a rastras, un escalón y una pausa." : "De dos en dos, como si todavía fuera Álex.") : "Marcos se levanta. Dice que va a mear. Al de arriba, que el de abajo huele a lo que huele. Sube la escalera " + (R().herido(api, "marcos", "cojera") ? "cojeando, agarrado a la barandilla" : R().lleva(api, "marcos", "atizador") ? "sin el atizador, que deja en la silla" : "despacio, como quien cuenta los escalones") + ", sin mirar atrás.");
       return `
 Las seis y dos minutos. Cincuenta y ocho para las siete. Los cuentas hacia atrás ahora. Es lo único que sabes hacer con la boca cerrada.
 
@@ -175,9 +175,7 @@ ${modo(api, "nora", {
   normal: "~ Vale. Vale. Nadie a solas. Voy detrás. O no voy. Una de las dos y rápido.",
 })}
 
-Dos cosas pasan a la vez. ${v === "nora" ? "En la cocina, contigo. Y dentro de " + N[h] + "." : "Arriba, con " + N[v] + ". Y dentro de " + N[h] + "."}
-
-¿Desde dónde quieres verlo?`;
+Dos cosas pasan a la vez. ${v === "nora" ? "En la cocina, contigo. Y dentro de " + N[h] + "." : "Arriba, con " + N[v] + ". Y dentro de " + N[h] + "."}`;
     },
     opciones: [{ texto: "Continuar", a: "ix2_cartas" }],
   },
@@ -286,12 +284,12 @@ ${N[h]}: Nada.
 
 Y se pone detrás de ti. A un paso. Lo ves en el espejo. Con la cara. Con algo en la cara que no es ${fem(h) ? "suya" : "suyo"}, y lo ves, y se te va el color.
 
-${yaMarcada ? "Lo has visto antes. En " + (v === "irene" ? "el pasillo, con la mano en tu brazo" : v === "marcos" ? "la cocina, con la mano bajo el agua" : "la buhardilla, con la mano en tu muñeca") + ". Es la misma cara. Y ahora sabes lo que viene después de esa cara." : "Es la cara de la mesa. La de cuando no respirabas, o la de cuando sopló. La misma."}` : `
-La cocina. La luz de tubo. El grifo. La mano bajo el agua fría, la del paño, y el agua llevándose lo que llevaba el paño, rosa por el desagüe.
+${yaMarcada ? "Lo has visto antes. En " + (v === "irene" ? "el pasillo, con la mano en tu brazo" : v === "marcos" ? "la cocina, con la mano bajo el agua" : "la buhardilla, con la mano en tu muñeca") + ". Es la misma cara. Y ahora sabes lo que viene después de esa cara." : "Es la cara de la mesa. " + (v === "irene" ? (api.bandera("marcos_accion") === "rescate" ? "La de cuando se agachó sobre ti y te sopló dentro." : "La de cuando volvió la luz y te miró como si no te conociera.") : "La de cuando dejó de respirar y volvió con otra cara puesta.") + " La misma."}` : `
+La cocina. La luz de tubo. El grifo. ${R().herido(api, "nora", "mano") ? "La mano bajo el agua fría, la de la trampilla, y el agua llevándose la costra, rosa por el desagüe." : "Las manos bajo el agua fría, como quien se lava algo que no se ve."}
 
 Y ${N[h]} en el arco. Y luego no en el arco: a un paso, detrás. No le has oído dar el paso.
 
-Te giras. La cara. Su cara. Y algo en la cara que no es ${fem(h) ? "suyo" : "suyo"}: los ojos en otro sitio, la boca a medio decir una cosa que no dice.
+Te giras. La cara. Su cara. Y algo en la cara que no es suyo: los ojos en otro sitio, la boca a medio decir una cosa que no dice.
 
 ${yaMarcada ? "Lo has visto antes. Es la cara de la escalera. La de «todavía no». Y ahora sabes lo que viene después." : "Es la cara de la mesa. La de la ouija. La misma."}`;
 
@@ -313,7 +311,7 @@ Y no entra aire. Como en la mesa. Como a Irene. Una puerta cerrada en la gargant
 
 Y ${fem(h) ? "ella" : "él"} lo sabe. Se le ve saberlo. Y aprieta.
 
-${objTxt ? `${objTxt.charAt(0).toUpperCase() + objTxt.slice(1)}. ${obj === "sarten" ? "En el suelo, al lado de la encimera, donde la dejaste." : obj === "atizador" ? "Apoyado en la pared, donde lo dejaste." : obj === "llave" ? "En el bolsillo de atrás." : obj === "botella" ? "En la encimera, a un palmo de la mano." : obj === "linterna" ? "En el bolsillo, larga, de pilas, con peso." : "A mano."} Lo notas antes de pensarlo.` : "Nada a mano. Las manos. Las uñas. Los pies. Lo que hay."}
+${objTxt ? `${objTxt.charAt(0).toUpperCase() + objTxt.slice(1)}. ${obj === "sarten" ? (lugar === "bano" ? "En el suelo del baño, donde la has dejado al entrar, porque ya no la sueltas." : "En el suelo, al lado de la encimera, donde la dejaste.") : obj === "atizador" ? "Apoyado en la pared, donde lo dejaste." : obj === "llave" ? "En el bolsillo de atrás." : obj === "botella" ? (lugar === "bano" ? "En el borde del lavabo, donde la has dejado." : "En la encimera, a un palmo de la mano.") : obj === "linterna" ? "En el bolsillo, larga, de pilas, con peso." : "A mano."} Lo notas antes de pensarlo.` : "Nada a mano. Las manos. Las uñas. Los pies. Lo que hay."}
 
 ${modo(api, v, {
   lucido: `~ ${N[h]} pesa lo que pesa. Yo no puedo con ${fem(h) ? "ella" : "él"} de frente. Puedo con lo que tengo a mano, o puedo con la puerta, o puedo no poder. Tres cosas. Una.`,
@@ -398,7 +396,7 @@ ${N[h0]}: Todavía no.
 
 Y sale de la cocina. Sin correr. Como se sale de una habitación donde ya has hecho lo que venías a hacer.
 
-Te miras la mano. ${R().herido(api, "nora", "mano") ? "La del paño. Y no es el paño: es la muñeca" : "La muñeca"}, hinchada, torcida, con los dedos que no cierran. Te la ha roto al soltar, o al apretar, o en medio.
+Te miras la mano. ${R().herido(api, "nora", "mano") ? "La de la trampilla. Y ahora también la muñeca" : "La muñeca"}, hinchada, torcida, con los dedos que no cierran. Te la ha roto al soltar, o al apretar, o en medio.
 
 ~ Todavía no. A mí no. A mí todavía no. Me guarda. Me guarda para el final.
 
@@ -540,8 +538,8 @@ ${modo(api, "nora", {
         efecto: (api) => { api.marcar("ix4_nora", "mesa"); } },
       { texto: (api) => "Sacar" + (fem(V(api)) ? "la" : "le") + " del agua. Aunque no sirva.", a: "ix5_suplica", si: (api) => api.bandera("ataque_resultado") === "muere",
         efecto: (api) => { api.marcar("ix4_nora", "saca"); api.est("nora", "estres", 6); api.marcar("cuerpo_" + V(api), "banera_fuera"); } },
-      { texto: (api) => "Coger " + (objeto(api, V(api)) ? R().OBJETOS[objeto(api, V(api))] : "lo primero que haya") + " y no soltarlo en lo que queda de noche.", a: "ix5_suplica", si: (api) => api.bandera("ataque_resultado") === "hiere" || api.bandera("ataque_resultado") === "huye" || api.bandera("ataque_resultado") === "todavia",
-        efecto: (api) => { const v = V(api); api.marcar("ix4_nora", "arma"); if (!objeto(api, v)) R().coger(api, v, lugarAtaque(api) === "cocina" ? "sarten" : "botella"); api.est(v, "eje", 2); } },
+      { texto: (api) => "Coger " + (objeto(api, V(api)) ? R().OBJETOS[objeto(api, V(api))] : lugarAtaque(api) === "cocina" ? "la sartén de hierro" : R().quienLleva(api, "atizador") ? "la botella de la mesa" : "el atizador de abajo") + " y no soltarlo en lo que queda de noche.", a: "ix5_suplica", si: (api) => api.bandera("ataque_resultado") === "hiere" || api.bandera("ataque_resultado") === "huye" || api.bandera("ataque_resultado") === "todavia",
+        efecto: (api) => { const v = V(api); api.marcar("ix4_nora", "arma"); if (!objeto(api, v)) { const obj = lugarAtaque(api) === "cocina" ? "sarten" : R().quienLleva(api, "atizador") ? "botella" : "atizador"; R().coger(api, v, obj); if (obj === "atizador") api.marcar("atizador_silla", false); } api.est(v, "eje", 2); } },
       { texto: "Escribir. La hora. Lo que ha pasado. Con la mano que quede.", a: "ix5_suplica", lucida: true,
         efecto: (api) => { api.marcar("ix4_nora", "escribe"); api.evidencia("cuaderno_ataque", "nora", "cuaderno de Nora", "nota"); api.est("nora", "lucidez", 1); } },
       { texto: "Lavarte las manos. Mucho rato. Hasta que el agua salga fría otra vez.", a: "ix5_suplica", si: (api) => api.bandera("ataque_resultado") === "mata",
@@ -626,7 +624,7 @@ Y bajáis. Y en la mesa, ${fem(h) ? "ella" : "él"} se sienta lejos, al otro lad
 ${N[h]}: No sé qué ha pasado ahí arriba. Sé que he parado. Sé que he cerrado. ${N[dest]}. Mírame.`;
 
       const suplica = h === "marcos" ? `
-Marcos: Piénsalo. Piénsalo como lo pensarías tú. Llevo desde las tres con un frío que no es mío. Con lapsos. Con palabras que no son mías. Lo sabes: me lo has visto. Y ahora he ${res === "muere" ? "hecho eso" : "hecho eso"} y no me acuerdo. No me acuerdo, ${N[dest]}. Y no me acuerdo porque no era yo, y si no era yo, ahora sí soy yo, porque ${res === "hiere" ? "el golpe me ha despertado" : "ha parado"}. Es lógico. Es lo único lógico de toda la noche.
+Marcos: Piénsalo. Piénsalo como lo pensarías tú. Llevo desde las tres con un frío que no es mío. Con lapsos. Con palabras que no son mías. Lo sabes: me lo has visto. Y ahora he ${res === "muere" ? "hecho eso, ahí arriba," : "hecho eso"} y no me acuerdo. No me acuerdo, ${N[dest]}. Y no me acuerdo porque no era yo, y si no era yo, ahora sí soy yo, porque ${res === "hiere" ? "el golpe me ha despertado" : "ha parado"}. Es lógico. Es lo único lógico de toda la noche.
 
 Y es lógico. Eso es lo peor. Marcos, con la cara rota, construyendo un argumento. Como en la contrahistoria. Como siempre.
 
@@ -697,7 +695,7 @@ ${modo(api, dest, {
       const h = H(api), o = O(api), sr = api.bandera("suplica_resultado");
       const vivos = R().vivos(api);
       const puede = api.bandera("ix6_puede_salir");
-      const estadoH = sr === "atado" ? `${N[h]} en la silla, con las manos a la espalda, atad${fem(h) ? "a" : "o"} con ${R().vivo(api, "alex") ? "el cinturón de Álex" : h === "marcos" ? "su propio cinturón" : "el cinturón de Marcos"}. Sin decir nada. Mirando la mesa.` : sr === "encerrado" ? `${N[h]} en el almacén. Con el cerrojo echado por fuera. Se oye, de vez en cuando, un golpe. Una vez. Como un nudillo. Y luego nada.` : sr === "cree" ? `${N[h]} al lado de ${N[destinatario(api)]}. Con la mano cogida. Con la cara puesta. Y frío. Se le ve el frío.` : sr === "no_cree" ? `${N[h]} al otro lado de la mesa. Lejos. Con las manos encima de la madera, a la vista. Y ${N[destinatario(api)]} con ${objeto(api, destinatario(api)) ? R().OBJETOS[objeto(api, destinatario(api))] : "las manos"} sin soltar.` : !R().vivo(api, h) || api.bandera("huesped_anterior") ? `Dos. O tres. Los que quedan. Y ${N[h]} con frío, frotándose el pecho.` : `${N[h]} en su silla.`;
+      const estadoH = sr === "atado" ? `${N[h]} en la silla, con las manos a la espalda, atad${fem(h) ? "a" : "o"} con ${R().vivo(api, "alex") ? "el cinturón de Álex" : h === "marcos" ? "su propio cinturón" : "el cinturón de Marcos"}. Sin decir nada. Mirando la mesa.` : sr === "encerrado" ? `${N[h]} en el almacén. Con el cerrojo echado por fuera. Se oye, de vez en cuando, un golpe. Una vez. Como un nudillo. Y luego nada.` : sr === "cree" ? `${N[h]} al lado de ${N[destinatario(api)]}. Con la mano cogida. Con la cara puesta. Y frío. Se le ve el frío.` : sr === "no_cree" ? `${N[h]} al otro lado de la mesa. Lejos. Con las manos encima de la madera, a la vista. Y ${N[destinatario(api)]} con ${objeto(api, destinatario(api)) ? R().OBJETOS[objeto(api, destinatario(api))] : "las manos"} sin soltar.` : !R().vivo(api, h) || api.bandera("huesped_anterior") ? `${vivos.length === 2 ? "Dos." : "Tres."} Los que quedan. Y ${N[h]} con frío, frotándose el pecho.` : `${N[h]} en su silla.`;
       const sale = puede ? (o === "alex" ? `
 Y Álex se levanta.
 
@@ -714,7 +712,7 @@ Nora: Con la puerta abierta. Y yo en la puerta.
 Álex: Con la puerta abierta.` : `
 Y Marcos se levanta.
 
-Marcos: El coche. Si a las siete no arranca, quiero saberlo ahora. El mando de casa se quedó en la guantera, y el cargador. Quiero saber si arranca. Quiero saber algo.
+Marcos: El coche. Si a las siete no arranca, quiero saberlo ahora. Quiero saber si arranca. Quiero saber algo.
 
 Nora: Marcos.
 
@@ -741,11 +739,11 @@ ${N[o]}: Nora.
 
 Nora: ¿Qué?
 
-${N[o]}: ${o === "alex" ? "¿Oyes eso?" : "Los faros. Los ves ahora. Abajo. Los ves."}
+${N[o]}: ${o === "alex" ? "¿Oyes eso?" : "Hay un coche. Abajo. En el camino. Con las luces. ¿Lo ves?"}
 
 Nora: No.
 
-${N[o]}: ${o === "alex" ? "Alguien me ha llamado. Con tu voz." : "Están ahí. En el camino. Me esperan."}
+${N[o]}: ${o === "alex" ? "Alguien me ha llamado. Con tu voz." : "Está parado. Me está esperando."}
 
 Y no te ha mirado al decirlo. Mira los pinos. ${o === "alex" ? "Y da un paso. Hacia el escalón." : "Y da un paso. Hacia el escalón."}
 
@@ -798,7 +796,7 @@ ${modo(api, "nora", {
       const pov = R().vivo(api, "irene") && "irene" !== h ? "irene" : (o && o !== h ? o : "nora");
       const salio = api.bandera("ix6_salio");
       const in6 = api.bandera("ix6_nora");
-      const inicio = in6 === "tira" ? `Nora ha salido al escalón. Le ha cogido del brazo a ${N[o]}. Ha tirado. Y ${N[o]} ha vuelto, con la cara de quien despierta, y ha dicho «¿qué?» como si no hubiera pasado nada. Y no ha pasado nada. Está dentro.` : in6 === "grita" ? (salio ? `Nora ha gritado desde el marco. Y ${N[o]} ha bajado a la grava con la mano levantada. Y se ha ido de la luz. Y ha vuelto, dos minutos después, con las zapatillas mojadas y la cara de otro, diciendo «solo era el coche», «solo era un cigarro».` : `Nora ha gritado desde el marco. Y ${N[o]} se ha quedado en el escalón. Y ha vuelto. Con la cara de quien despierta.`) : in6 === "cierra" ? `Nora ha cerrado la puerta. Con llave. Con ${N[o]} fuera. Un minuto. Y a los tres, ${N[o]} ha llamado, y Nora ha abierto, y ${N[o]} ha entrado con las zapatillas mojadas hasta el cordón y la cara de otro, sin preguntar por qué la llave.` : in6 === "almacen" ? `Nora ha ido al almacén. Ha pegado la oreja. Y ha vuelto con la cara de haber oído algo que no va a decir.` : `Nadie ha salido. Todos en la mesa. Con las manos en la madera.`;
+      const inicio = in6 === "tira" ? `Nora ha salido al escalón. Le ha cogido del brazo a ${N[o]}. Ha tirado. Y ${N[o]} ha vuelto, con la cara de quien despierta, y ha dicho «¿qué?» como si no hubiera pasado nada. Y no ha pasado nada. Está dentro.` : in6 === "grita" ? (salio ? `Nora ha gritado desde el marco. Y ${N[o]} ha bajado a la grava con la mano levantada. Y se ha ido de la luz. Y ha vuelto, dos minutos después, con las zapatillas mojadas y la cara de otro, diciendo «${o === "alex" ? "solo era un cigarro" : "solo era el coche"}».` : `Nora ha gritado desde el marco. Y ${N[o]} se ha quedado en el escalón. Y ha vuelto. Con la cara de quien despierta.`) : in6 === "cierra" ? `Nora ha cerrado la puerta. Con llave. Con ${N[o]} fuera. Un minuto. Y a los tres, ${N[o]} ha llamado, y Nora ha abierto, y ${N[o]} ha entrado con las zapatillas mojadas hasta el cordón y la cara de otro, sin preguntar por qué la llave.` : in6 === "almacen" ? `Nora ha ido al almacén. Ha pegado la oreja. Y ha vuelto con la cara de haber oído algo que no va a decir.` : `Nadie ha salido. Todos en la mesa. Con las manos en la madera.`;
       const sarten = api.bandera("sarten_humo") ? `
 Y en la cocina, la sartén.
 
@@ -886,7 +884,7 @@ ${inicio}
 
 Las seis y treinta y ocho. Veintidós minutos para las siete.
 
-${vivos.length === 3 ? "Tres." : "Dos."} ${vivos.map((p) => N[p]).join(", ")}. ${muertos.map((p) => N[p] + (api.bandera("muerte_" + p) && api.bandera("muerte_" + p).como === "amigo" ? ", arriba, en el suelo" : api.bandera("muerte_" + p) && api.bandera("muerte_" + p).como === "huesped" ? ", en la bañera" : api.bandera("muerte_" + p) && api.bandera("muerte_" + p).como === "coche" ? ", en el coche" : ", en la zanja")).join(". ")}.
+${vivos.length === 3 ? "Tres." : "Dos."} ${vivos.map((p) => N[p]).join(", ")}. ${muertos.map((p) => { const m = api.bandera("muerte_" + p) || {}; return N[p] + (m.como === "amigo" ? ", arriba, en el suelo" : m.como === "huesped" ? (api.bandera("cuerpo_" + p) === "banera_fuera" ? ", en el suelo del baño, mojad" + (fem(p) ? "a" : "o") : ", en la bañera") : m.como === "coche" ? ", en el coche" : ", en la zanja"); }).join(". ")}.
 
 ${R().vivo(api, h) ? (sr === "encerrado" ? N[h] + " en el almacén. Con el cerrojo. Ya no golpea." : sr === "atado" ? N[h] + " en la silla, atad" + (fem(h) ? "a" : "o") + ". Con la cabeza baja. Con frío." : N[h] + (sr === "cree" ? " al lado de quien le ha creído. Con la mano cogida. Con frío." : " al otro lado de la mesa. Con las manos a la vista. Con frío.")) : ""}
 

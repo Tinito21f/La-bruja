@@ -178,7 +178,8 @@
       const l = (ids || R.vivos(api)).filter((p) => p !== salvo).map((p) => R.nombre[p]);
       if (!l.length) return "nadie";
       if (l.length === 1) return l[0];
-      return l.slice(0, -1).join(", ") + " y " + l[l.length - 1];
+      const ult = l[l.length - 1];
+      return l.slice(0, -1).join(", ") + (/^I/.test(ult) ? " e " : " y ") + ult;   // «Marcos e Irene», no «y Irene»
     },
     // Con quién está Nora cuando quedan dos
     ultimo: (api) => R.vivos(api).find((p) => p !== "nora") || null,

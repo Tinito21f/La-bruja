@@ -21,8 +21,16 @@
   const H = (api) => api.bandera("huesped");
   const N = { nora: "Nora", marcos: "Marcos", alex: "Álex", irene: "Irene" };
   const fem = (id) => id === "nora" || id === "irene";
+  const y = (id) => (id === "irene" ? "e " : "y ") + N[id];
+  const Y = (id) => (id === "irene" ? "E " : "Y ") + N[id];
   const U = (api) => R().ultimo(api) || "marcos";
+  // El tercero una vez muerto: lo que registró terceraMuerte; si no, el último aliento; si no, el último por orden de muerte
+  const UM = (api) => api.bandera("ultimo_muerto") || api.bandera("huesped_anterior") || porOrden(api)[porOrden(api).length - 1] || "marcos";
+  const porOrden = (api) => R().muertos(api).slice().sort((a, b) => ((R().muerte(api, a) || {}).orden || 0) - ((R().muerte(api, b) || {}).orden || 0));
   const llaveFuera = (api) => { const q = R().quienLleva(api, "llave"); return Boolean(q && q !== "nora"); };   // alguien se llevó la llave inglesa en el bolsillo
+  const armaAlmacen = (api) => R().mano(api, "nora") || (llaveFuera(api) ? "martillo" : "llave");   // con qué se defiende Nora en el almacén
+  // Lo que Nora puede coger en el salón: el atizador, salvo que lo tenga el último en la mano (o con herida en la mano, la sartén no: §23.4)
+  const armaSalon = (api) => { const q = R().quienLleva(api, "atizador"); return q && q !== "nora" && R().vivo(api, q) ? "sarten" : "atizador"; };
   // Lo que Nora recuerda de cada uno: lo de siempre, y lo de la V solo si pasó con ella
   const recuerdo = (api, u) => {
     const con = api.bandera("v_nora_con");
@@ -69,6 +77,7 @@
     R().matar(api, u, como, "la puerta del almacén", "nora");
     if (f === "mata") api.marcar("mato_nora", u);
     api.marcar("cuerpo_" + u, "almacen");
+    api.marcar("ultimo_muerto", u);   // el tercero, por su nombre: huesped_anterior puede venir de la IX si el aliento ya cambió de cuerpo
     // El último aliento va a Nora, siempre (regla oculta, §18). Si R.matar no lo pasó, se pasa.
     if (H(api) !== "nora") { api.marcar("huesped_anterior", H(api)); api.marcar("huesped", "nora"); }
     R().subirNivel(api, 3);
@@ -141,7 +150,7 @@ Das el paso.
 
 Porque es lo que hay. Porque detrás no hay nada y delante hay algo, aunque sea esto. La alfombra bajo el pie. Se hunde. Es la alfombra. Roja. Húmeda. Con el hilo de agua que baja desde el baño.
 
-Y ${N[u]} detrás. ${h === u ? "Sin que tires. Entra como quien vuelve a su casa." : "Porque le tiras de la mano."}
+${Y(u)} detrás. ${h === u ? "Sin que tires. Entra como quien vuelve a su casa." : "Porque le tiras de la mano."}
 
 Y la puerta, detrás, se cierra. Sola. Y cuando te giras no es la puerta principal: es la puerta del baño. Cerrada. Con la luz por debajo.
 
@@ -233,11 +242,11 @@ Lo dice. Con voz de niña. Con voz de niña que lleva mucho tiempo sin usarla. Y
 
 Ayúdame.
 
-Con la voz de ${N[R().muertos(api)[0]]}. Exacta. Con su ritmo.
+Con la voz de ${N[porOrden(api)[0]]}. Exacta. Con su ritmo.
 
 Ayúdame.
 
-Con la voz de ${N[R().muertos(api)[1] || R().muertos(api)[0]]}.
+Con la voz de ${N[porOrden(api)[1] || porOrden(api)[0]]}.
 
 Y da otro paso. Y otro. Y huele. A dulce. A lo del armario y la buhardilla y el almacén. A lo que fue fruta. A lo que se quedó mucho tiempo en un sitio cerrado.
 
@@ -272,7 +281,7 @@ ${modo(api, u, {
       { texto: "Huir. Escalera abajo. Tirando de Nora.", a: "xi3_huida",
         efecto: (api) => { const u = U(api); api.marcar("xi2_ultimo", "huye"); api.est(u, "estres", 6); if (api.bandera("nina_muerde")) R().herir(api, u, "mano", "mordisco"); } },
       { texto: "Cogerla. Es una niña. Cogerla en brazos.", a: "xi3_huida", impulsiva: true,
-        efecto: (api) => { const u = U(api); api.marcar("xi2_ultimo", "coge"); R().herir(api, u, "mano", "mordisco"); api.est(u, "miedo", 10); api.presenciar(u, 2); } },
+        efecto: (api) => { const u = U(api); api.marcar("xi2_ultimo", "coge"); if (api.bandera("nina_muerde")) R().herir(api, u, "mano", "mordisco"); api.est(u, "miedo", 10); api.presenciar(u, 2); } },
       { texto: "«Aquí está.» Señalar a Nora. Con la mano que te queda.", a: "xi3_huida", si: (api) => H(api) === U(api), impulsiva: true,
         efecto: (api) => { const u = U(api); api.marcar("xi2_ultimo", "ofrece"); R().alimentar(api, 3); api.rel("nora", u, "confianza", -30); api.saber("nora", u + "_me_ofrecio"); api.est("nora", "miedo", 10); if (api.bandera("nina_muerde")) R().herir(api, u, "mano", "mordisco"); } },
     ],
@@ -290,7 +299,7 @@ ${modo(api, u, {
       const h = H(api);
       const x2 = api.bandera("xi2_ultimo");
       const mord = R().herido(api, u, "mano");
-      const inicio = x2 === "delante" ? `${N[u]} te aparta. Con el brazo. Se pone delante. Entre tú y ella. ${mord ? "Con la mano que ya no es una mano, goteando en la alfombra." : "Con las manos abiertas, como se para un coche."}\n\nY la niña le huele. Y sonríe. Y no le mira a él: te mira a ti por encima de su hombro.` : x2 === "huye" ? `${N[u]} tira de ti. Hacia la escalera. El primer escalón. El segundo. ${mord ? "Con la mano que ya no es una mano dejando un rastro en la barandilla." : ""}\n\nY la niña no corre. Anda. Detrás. Al ritmo de la campanilla.` : x2 === "coge" ? `${N[u]} la coge. En brazos. Como se coge a una niña. Y la niña se deja. Y le rodea el cuello con los brazos de dos colores. Y le muerde.\n\nEn el cuello. Donde estaban las cuatro marcas de los otros. Y ${N[u]} la suelta, y la niña cae de pie, y sonríe con la boca roja.` : `${N[u]}: Aquí está.\n\nLo dice señalándote. Con la mano. Con su voz. Mirándote. Y la niña te mira. Y da un paso hacia ti.\n\nY se para. A un palmo. Te huele. Y sonríe. Y dice, con la voz de ${N[u]}:\n\nTodavía no.`;
+      const inicio = x2 === "delante" ? `${N[u]} te aparta. Con el brazo. Se pone delante. Entre tú y ella. ${mord ? "Con la mano que ya no es una mano, goteando en la alfombra." : "Con las manos abiertas, como se para un coche."}\n\nY la niña le huele. Y sonríe. Y no le mira a él: te mira a ti por encima de su hombro.` : x2 === "huye" ? `${N[u]} tira de ti. Hacia la escalera. El primer escalón. El segundo. ${mord ? "Con la mano que ya no es una mano dejando un rastro en la barandilla." : ""}\n\nY la niña no corre. Anda. Detrás. Al ritmo de la campanilla.` : x2 === "coge" ? (mord ? `${N[u]} la coge. En brazos. Como se coge a una niña. Y la niña se deja. Y le rodea el cuello con los brazos de dos colores. Y le muerde.\n\nLa mano. La que la sujeta por debajo. Hasta el hueso. ${Y(u)} la suelta, y la niña cae de pie, y sonríe con la boca roja.` : `${N[u]} la coge. En brazos. Como se coge a una niña. Y la niña se deja. Y le rodea el cuello con los brazos de dos colores. Y le huele. El cuello. Donde estaban las cuatro marcas de los otros.\n\nY se descuelga. Como se descuelga un gato. Cae de pie. Y sonríe.`) : `${N[u]}: Aquí está.\n\nLo dice señalándote. Con la mano. Con su voz. Mirándote. Y la niña te mira. Y da un paso hacia ti.\n\nY se para. A un palmo. Te huele. Y sonríe. Y dice, con la voz de ${N[u]}:\n\nTodavía no.`;
       return `
 ${inicio}
 
@@ -312,7 +321,7 @@ El salón. La mesa. Las sillas vacías. La tabla en su caja. ${api.bandera("nora
 
 Y la niña se para. En el techo. Encima de la lámpara. Exactamente encima. Donde se pararon los pasos a las cuatro. Y se queda ahí, boca abajo, mirándoos con los párpados cosidos, sonriendo.
 
-Y ${N[u]} no corre.
+${Y(u)} no corre.
 
 Se ha parado. En mitad del salón. Mirando el arco de la cocina. La puerta del almacén, al fondo, al lado de la nevera.
 
@@ -333,7 +342,7 @@ ${N[u]}: Es la única que no ha cambiado. Es la única puerta de esta casa que s
 Y tiene razón. Eso es lo peor: que tiene razón.`}
 
 ${modo(api, "nora", {
-  lucido: `~ En el techo. Como los pasos. Como la mujer. Todo lo de esta noche tiene el mismo sitio: arriba. Y ${N[u]} mira abajo. Es lo único que queda: abajo.`,
+  lucido: `~ En el techo. Como los pasos. Como la mujer. Todo lo de esta noche tiene el mismo sitio: arriba. ${Y(u)} mira abajo. Es lo único que queda: abajo.`,
   asustado: "~ Está encima de la lámpara. Mirándonos como se mira un fuego. Y sonríe porque sabe cuál es el tres.",
   tenso: "~ La ventana de la cocina. La del almacén. Cualquier hueco. Cualquiera que no sea abajo.",
   ido: "~ La campanilla suena al ritmo de mi nombre. No-ra. No-ra. Como el vaso. Como todo.",
@@ -344,8 +353,8 @@ ${modo(api, "nora", {
     opciones: [
       { texto: (api) => "Cogerle la cara a " + N[U(api)] + ". Con las dos manos. «Mírame.»", a: "xi4_ultimo",
         efecto: (api) => { const u = U(api); api.marcar("xi3_nora", "cara"); R().contacto(api, "nora", u, 2); api.est(u, "lucidez", 3); } },
-      { texto: (api) => "Coger " + (R().mano(api, "nora") ? R().OBJETOS[R().mano(api, "nora")] : "el atizador de la chimenea") + ". Y no soltarlo.", a: "xi4_ultimo",
-        efecto: (api) => { api.marcar("xi3_nora", "arma"); if (!R().mano(api, "nora")) R().coger(api, "nora", "atizador"); api.est("nora", "eje", 2); } },
+      { texto: (api) => "Coger " + (R().mano(api, "nora") ? R().OBJETOS[R().mano(api, "nora")] : armaSalon(api) === "sarten" ? "la sartén. Del fregadero, del fuego, de donde esté" : "el atizador de la chimenea") + ". Y no soltarlo.", a: "xi4_ultimo",
+        efecto: (api) => { api.marcar("xi3_nora", "arma"); if (!R().mano(api, "nora")) R().coger(api, "nora", armaSalon(api)); api.est("nora", "eje", 2); } },
       { texto: "Ir a la ventana de la cocina. Con la silla. Con la cabeza. Con lo que sea.", a: "xi4_ultimo",
         efecto: (api) => { api.marcar("xi3_nora", "ventana"); api.est("nora", "estres", 6); api.saber("nora", "ventanas_cerradas"); } },
       { texto: "Mirar a la niña. A los párpados. Y decirle su nombre. El que sabes.", a: "xi4_ultimo", lucida: true, si: (api) => api.bandera("alda_visto"),
@@ -366,7 +375,7 @@ ${modo(api, "nora", {
       const h = H(api);
       const x3 = api.bandera("xi3_nora");
       const obj = R().mano(api, "nora");
-      const inicio = x3 === "cara" ? `Le has cogido la cara. Con las dos manos. «Mírame.» Y te ha mirado. Un segundo. Con su cara. Con ${u === "marcos" ? "la cara del primer domingo" : u === "irene" ? "la cara de debajo de la cara" : "la cara de sin cámara"}. Y luego la cara se ha ido a otro sitio, detrás de los ojos, y lo que ha quedado mirándote no era.` : x3 === "arma" ? `Tienes ${R().OBJETOS[obj] || "el atizador"} en la mano. Pesa lo que pesa. Y ${N[u]} lo ha visto y no ha dicho nada.` : x3 === "ventana" ? `La ventana de la cocina no se rompe. Ninguna. Ya lo sabías. Lo has hecho igual, con la silla, con la cabeza, hasta que ${N[u]} te ha cogido del brazo.` : `Le has dicho el nombre. Alda. A la niña del techo. Y la niña ha dejado de sonreír. Un segundo. Y luego ha sonreído más, con más dientes, y ha bajado un palmo.`;
+      const inicio = x3 === "cara" ? `Le has cogido la cara. Con las dos manos. «Mírame.» Y te ha mirado. Un segundo. Con su cara. Con ${u === "marcos" ? "la cara del primer domingo" : u === "irene" ? "la cara de debajo de la cara" : "la cara de sin cámara"}. Y luego la cara se ha ido a otro sitio, detrás de los ojos, y lo que ha quedado mirándote no era.` : x3 === "arma" ? `Tienes ${R().OBJETOS[obj] || "el atizador"} en la mano. Pesa lo que pesa. ${Y(u)} lo ha visto y no ha dicho nada.` : x3 === "ventana" ? `La ventana de la cocina no se rompe. Ninguna. Ya lo sabías. Lo has hecho igual, con la silla, con la cabeza, hasta que ${N[u]} te ha cogido del brazo.` : `Le has dicho el nombre. Alda. A la niña del techo. Y la niña ha dejado de sonreír. Un segundo. Y luego ha sonreído más, con más dientes, y ha bajado un palmo.`;
       return `
 ${inicio}
 
@@ -410,13 +419,13 @@ ${modo(api, "nora", {
 })}`;
     },
     opciones: [
-      { texto: (api) => "Herir" + (R().mano(api, "nora") ? ". Con " + R().OBJETOS[R().mano(api, "nora")] + "." : llaveFuera(api) ? ". Con el martillo." : ". Con la llave inglesa.") + " Hasta que no se levante.", a: "xi5_tercera",
-        efecto: (api) => { api.marcar("xi_final", "mata"); api.marcar("nora_mato", true); api.marcar("arma_xi", R().mano(api, "nora") || (llaveFuera(api) ? "martillo" : "llave")); api.est("nora", "estres", 15); api.est("nora", "lucidez", -6); } },
-      { texto: (api) => "Herir" + (R().mano(api, "nora") ? ". Con " + R().OBJETOS[R().mano(api, "nora")] + "." : llaveFuera(api) ? ". Con el martillo." : ". Con la llave inglesa.") + " Lo justo. Que suelte.", a: "xi5_tercera",
-        efecto: (api) => { api.marcar("xi_final", "hiere"); api.marcar("arma_xi", R().mano(api, "nora") || (llaveFuera(api) ? "martillo" : "llave")); api.est("nora", "estres", 10); } },
-      { texto: "Huir. Por la escalera de piedra. Abajo. Donde " + "no llegue.", a: "xi5_tercera", impulsiva: true,
+      { texto: (api) => "Herir. Con " + R().OBJETOS[armaAlmacen(api)] + ". Hasta que no se levante.", a: "xi5_tercera",
+        efecto: (api) => { const a = armaAlmacen(api); api.marcar("xi_final", "mata"); api.marcar("nora_mato", true); api.marcar("arma_xi", a); R().coger(api, "nora", a); api.est("nora", "estres", 15); api.est("nora", "lucidez", -6); } },
+      { texto: (api) => "Herir. Con " + R().OBJETOS[armaAlmacen(api)] + ". Lo justo. Que suelte.", a: "xi5_tercera",
+        efecto: (api) => { const a = armaAlmacen(api); api.marcar("xi_final", "hiere"); api.marcar("arma_xi", a); R().coger(api, "nora", a); api.est("nora", "estres", 10); } },
+      { texto: "Huir. Por la escalera de piedra. Abajo. Donde no llegue.", a: "xi5_tercera", impulsiva: true,
         efecto: (api) => { api.marcar("xi_final", "huye"); api.marcar("nora_bajo_antes", true); api.est("nora", "miedo", 10); } },
-      { texto: "No defenderte. Mirarle. Es " + "la última persona que te queda.", a: "xi5_tercera",
+      { texto: (api) => "No defenderte. Mirar" + (fem(U(api)) ? "la" : "le") + ". Es la última persona que te queda.", a: "xi5_tercera",
         efecto: (api) => { api.marcar("xi_final", "quieta"); api.est("nora", "estres", 8); api.est("nora", "eje", -4); } },
     ],
   },
@@ -428,10 +437,10 @@ ${modo(api, "nora", {
     hora: "07:25",
     alEntrar: (api) => { R().tick(api); terceraMuerte(api); api.presenciar("nora", 3); },
     texto: (api) => {
-      const u = api.bandera("huesped_anterior") || U(api);
+      const u = UM(api);
       const f = api.bandera("xi_final");
-      const obj = R().mano(api, "nora");
-      const arma = obj ? R().OBJETOS[obj] : llaveFuera(api) ? "el martillo" : "la llave inglesa";
+      const arma = R().OBJETOS[api.bandera("arma_xi") || armaAlmacen(api)];
+      const la = fem(u) ? "la" : "le";
       if (f === "mata") return `
 ${arma.charAt(0).toUpperCase() + arma.slice(1)}. En la mano. Y la levantas, y baja.
 
@@ -447,7 +456,7 @@ Y paras.
 
 ${N[u]} en el suelo del almacén. Con la cabeza en el escalón de piedra. Con la cara hacia arriba. Con la cara suya, por fin, la de siempre, sin nada dentro. Con los ojos abiertos.
 
-~ ${recuerdo(api, u)} Le he matado yo. Con esto. Y tengo la mano llena de lo suyo.
+~ ${recuerdo(api, u)} ${fem(u) ? "La" : "Le"} he matado yo. Con esto. Y tengo la mano llena de lo suyo.
 
 Y algo sale.
 
@@ -468,7 +477,7 @@ Tin.
 Y ya.
 
 ${modo(api, "nora", {
-  lucido: "~ Tres. Le he matado yo. Y lo que llevaba ha entrado en mí, y lo sé porque lo he notado entrar, y porque ahora sé una palabra que no sabía: aliento. Es lo último que voy a aprender de esta casa. No. Es lo penúltimo.",
+  lucido: `~ Tres. ${fem(u) ? "La" : "Le"} he matado yo. Y lo que llevaba ha entrado en mí, y lo sé porque lo he notado entrar, y porque ahora sé una palabra que no sabía: aliento. Es lo último que voy a aprender de esta casa. No. Es lo penúltimo.`,
   asustado: "~ Lo tengo. Debajo del esternón. Frío. Y sé lo que viene porque lo he visto en los otros: primero los lapsos, después las manos.",
   tenso: "~ Tres. Y yo. Y la niña abajo. Y esto dentro. Vale. Vale. Vale.",
   ido: "~ Ha entrado como entra el agua en un vaso: despacio, con el nivel justo. Ahora estoy llena.",
@@ -514,8 +523,8 @@ Y la niña pasa a tu lado. Rozándote. Y entra por la puerta antigua, y baja, co
 Tin.
 
 ${modo(api, "nora", {
-  lucido: "~ Tres. Se lo ha comido delante de mí, despacio, y me ha dejado mirar. Y lo que llevaba ha entrado en mí. Ahora lo sé: se ha estado aguantando toda la noche para esto.",
-  asustado: "~ Le ha dicho corre. Con la cara comida. Y yo con esto en la mano y sin correr.",
+  lucido: `~ Tres. Se ${fem(u) ? "la" : "lo"} ha comido delante de mí, despacio, y me ha dejado mirar. Y lo que llevaba ha entrado en mí. Ahora lo sé: se ha estado aguantando toda la noche para esto.`,
+  asustado: "~ Me ha dicho corre. Con la cara comida. Y yo con esto en la mano y sin correr.",
   tenso: "~ Tres. Tres. Y abajo. Y yo. Vale. Vale.",
   ido: "~ El aire ha entrado como entra el agua en un vaso. Ahora estoy llena. Ahora lo entiendo todo y no sirve de nada.",
   perdido: "~ Me lo ha dado. Al morir. Y la niña me ha dejado mirar para que supiera lo que tengo.",
@@ -527,17 +536,17 @@ Te sueltas. Con las rodillas, con la cabeza, con lo que hay. Y no vas hacia el s
 
 Tres escalones. Cuatro. La piedra fría, mojada. Y arriba, en el almacén, el ruido.
 
-No lo ves. Lo oyes. Los pasos descalzos y pequeños. La campanilla. Y ${N[u]}, que no baja detrás de ti, que se ha parado, que dice tu nombre con su voz, la de siempre, la de antes de todo:
+No lo ves. Lo oyes. Los pasos descalzos y pequeños. La campanilla. ${Y(u)}, que no baja detrás de ti, que se ha parado, que dice tu nombre con su voz, la de siempre, la de antes de todo:
 
 ${N[u]}: Nora.
 
-Y luego no dice nada. Y luego el ruido de la boca. El que hace una boca con demasiados dientes cuando come sin prisa. Y ${N[u]} que no grita, porque para gritar hace falta lo que le está quitando.
+Y luego no dice nada. Y luego el ruido de la boca. El que hace una boca con demasiados dientes cuando come sin prisa. ${Y(u)} que no grita, porque para gritar hace falta lo que le está quitando.
 
 Subes. No lo decides. Subes los cuatro escalones.
 
 Y lo ves. Lo que queda. En el suelo del almacén, con la cabeza en el escalón y la niña encima, con el vestido rojo hasta las costuras.
 
-Y ${N[u]} te mira. Con el ojo. Y algo sale de lo que queda de la boca. Un aire. Sube. Y entra en ti.
+${Y(u)} te mira. Con el ojo. Y algo sale de lo que queda de la boca. Un aire. Sube. Y entra en ti.
 
 Frío. Debajo del esternón.
 
@@ -551,7 +560,7 @@ Tin.
 
 ${modo(api, "nora", {
   lucido: "~ He huido hacia abajo y he vuelto arriba para verlo. Como las huellas: bajan y vuelven. Y lo que llevaba ha entrado en mí en el sitio exacto donde no estaba.",
-  asustado: "~ Le he dejado. Con ella. Y he subido a mirar. Y me ha mirado con el ojo.",
+  asustado: `~ ${fem(u) ? "La" : "Le"} he dejado. Con la niña. Y he subido a mirar. Y me ha mirado con el ojo.`,
   tenso: "~ Tres. Y yo. Y la niña abajo, donde iba a esconderme. Vale.",
   ido: "~ El frío ha entrado por la boca abierta. Como entra el agua. Ahora estoy llena.",
   perdido: "~ Me lo ha dado. Al morir. Y he tenido que subir a recogerlo, como se recoge un paquete.",
@@ -564,7 +573,7 @@ No te defiendes.
 
 Le miras. Con las manos en la estantería, con los tarros rotos, con el aire que no entra. Le miras a la cara, a la suya, la de debajo de lo otro, y la buscas, y la encuentras un segundo.
 
-Y ${N[u]} suelta.
+${Y(u)} suelta.
 
 ${N[u]}: Todavía no.
 
@@ -578,7 +587,7 @@ Y va.
 
 Como se va a un sitio al que ya has ido. Sin mirar atrás. Un paso. Y la niña levanta las manos, la grande y la pequeña, y le coge la cara. Como se coge la cara a alguien para soplarle dentro.
 
-Y lo que hace después no se puede mirar y lo miras. La boca. Los dientes. Sin prisa. Como se come. Y ${N[u]} no grita, porque para gritar hace falta lo que le está quitando, y te mira mientras, con el ojo que le queda, y no dice nada, porque ya lo ha dicho: todavía no.
+Y lo que hace después no se puede mirar y lo miras. La boca. Los dientes. Sin prisa. Como se come. ${Y(u)} no grita, porque para gritar hace falta lo que le está quitando, y te mira mientras, con el ojo que le queda, y no dice nada, porque ya lo ha dicho: todavía no.
 
 Y algo sale. De lo que queda de la boca. Un aire. Sube. Y tú tienes la boca abierta de no gritar, y entra.
 
@@ -594,7 +603,7 @@ Tin.
 
 ${modo(api, "nora", {
   lucido: "~ Todavía no. Me lo ha dicho por tercera vez y ha ido a que se lo comieran para decírmelo. Tres. Y lo que llevaba ha entrado en mí. Ahora sé lo que quería decir todavía no: quería decir después.",
-  asustado: "~ Ha ido solo. A la niña. Como se va cuando te llaman. Y me ha dejado esto dentro.",
+  asustado: `~ Ha ido sol${fem(u) ? "a" : "o"}. A la niña. Como se va cuando te llaman. Y me ha dejado esto dentro.`,
   tenso: "~ Tres. Y esto. Y la escalera. Vale. Vale.",
   ido: "~ El frío ha entrado como entra el agua en un vaso. Ahora estoy llena. Ahora sé lo que sabían todos al final.",
   perdido: "~ Me lo ha dado. Como se da un abrigo. Y la niña me ha dejado mirar para que supiera que ahora es mío.",
@@ -619,8 +628,8 @@ ${modo(api, "nora", {
       api.est("nora", "lucidez", -4);
     },
     texto: (api) => {
-      const u = api.bandera("huesped_anterior") || "marcos";
-      const muertos = R().muertos(api);
+      const u = UM(api);
+      const muertos = porOrden(api);
       return `
 Sola.
 
@@ -642,7 +651,7 @@ No es extrañeza. Ya no. Es como llega el hambre: sabes lo que es aunque no lo h
 
 Y la casa, alrededor, se ha quedado quieta. Sin sartén. Sin grifo. Sin arrastre. Como se queda quieta una habitación cuando ya ha pasado lo que tenía que pasar en ella.
 
-${muertos.map((p) => N[p]).join(". ")}. Tres. ${muertos.filter((p) => p !== u).map((p) => N[p] + " en " + ((R().muerte(api, p) || {}).donde || "su sitio")).join(". ")}. Y ${N[u]} en el almacén, con la puerta antigua abierta detrás.
+${muertos.map((p) => N[p]).join(". ")}. Tres. ${muertos.filter((p) => p !== u).map((p) => N[p] + " en " + ((R().muerte(api, p) || {}).donde || "su sitio")).join(". ")}. ${Y(u)} en el almacén, con la puerta antigua abierta detrás.
 
 ~ Los tres salieron. De una manera u otra. Y yo no he salido. Yo llevo toda la noche dentro, con el cuaderno. Y por eso sigo. Y por eso me han guardado.
 

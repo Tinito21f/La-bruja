@@ -107,20 +107,40 @@
           if (viejo) { o = JSON.parse(viejo); localStorage.removeItem(prefijo + v); }
         }
       }
-      if (!o) return null;
-      const base = estadoInicial();
-      const m = Object.assign(base, o);
-      for (const id in PJS) m.personajes[id] = Object.assign({}, base.personajes[id], (o.personajes || {})[id] || {});
-      for (const id in m.conocimiento) for (const h in m.conocimiento[id]) {
-        if (m.conocimiento[id][h] === true) m.conocimiento[id][h] = { como: "visto", de: null, cree: true, escena: null };
+      if (!o || typeof o !== "object") return null;
+      const base = estadoInicial();                 // referencia intacta para rellenar lo que falte
+      const m = Object.assign(estadoInicial(), o);
+      // Partidas antiguas: cada campo que falte o venga mal formado vuelve a su forma actual
+      const esObj = (v) => v && typeof v === "object" && !Array.isArray(v);
+      ["conocimiento", "banderas", "evidencias", "visitadas", "dichos", "relaciones", "socialVisto"].forEach((k) => { if (!esObj(m[k])) m[k] = k === "socialVisto" ? undefined : {}; });
+      if (!esObj(m.personajes)) m.personajes = {};
+      for (const id in PJS) m.personajes[id] = Object.assign({}, base.personajes[id], (esObj(o.personajes) && esObj(o.personajes[id])) ? o.personajes[id] : {});
+      for (const id in m.conocimiento) {
+        if (!esObj(m.conocimiento[id])) { delete m.conocimiento[id]; continue; }
+        for (const h in m.conocimiento[id]) {
+          if (m.conocimiento[id][h] === true) m.conocimiento[id][h] = { como: "visto", de: null, cree: true, escena: null };
+          else if (!esObj(m.conocimiento[id][h])) delete m.conocimiento[id][h];
+        }
       }
       for (const e in m.evidencias) {
         const v = m.evidencias[e];
-        if (typeof v !== "object" || v === null) m.evidencias[e] = { quien: typeof v === "string" ? v : null, lugar: null, tipo: "objeto", escena: null, hora: null };
+        if (!v) { delete m.evidencias[e]; continue; }
+        if (typeof v !== "object") m.evidencias[e] = { quien: typeof v === "string" ? v : null, lugar: null, tipo: "objeto", escena: null, hora: null };
       }
+      for (const k in m.relaciones) if (!esObj(m.relaciones[k])) delete m.relaciones[k];
+      for (const id in m.dichos) if (!Array.isArray(m.dichos[id])) delete m.dichos[id];
       if (!Array.isArray(m.historial)) m.historial = [];
-      if (!m.dichos || typeof m.dichos !== "object") m.dichos = {};
-      if (!HISTORIA.escenas[m.escena]) m.escena = HISTORIA.inicio;
+      if (!Array.isArray(m.anomaliasFase)) m.anomaliasFase = [];
+      if (!Array.isArray(m.traza)) m.traza = [];
+      if (!esObj(m.consumo)) m.consumo = {};
+      for (const id in m.consumo) {
+        if (!Array.isArray(m.consumo[id])) { delete m.consumo[id]; continue; }
+        m.consumo[id] = m.consumo[id].filter((x) => esObj(x) && typeof x.tipo === "string");
+      }
+      if (typeof m.fase !== "string") m.fase = HISTORIA.faseInicial || "I";
+      if (typeof m.horror !== "number") m.horror = 0;
+      if (m.pov !== null && !PJS[m.pov]) m.pov = null;
+      if (typeof m.escena !== "string" || !HISTORIA.escenas[m.escena]) m.escena = HISTORIA.inicio;
       return m;
     } catch (e) { return null; }
   }
@@ -313,8 +333,11 @@
     // Vuelve a poner la pista actual (por ejemplo, cuando acaba de cargarse la carpeta de música)
     reponer() { const c = this.claveActual; if (!c) return; this.claveActual = null; this.poner(c); },
     poner(clave) {
-      if (clave === undefined || clave === this.claveActual) return;
+      if (clave === undefined) return;
+      if (clave === "silencio") clave = null;   // «silencio» como clave: la música se funde y no entra otra
+      if (clave === this.claveActual) return;
       const def = this.def(clave);
+      if (clave && !def && DEBUG) console.warn("Clave de música sin definir en HISTORIA.musica:", clave);
       this.claveActual = clave;
       const vol = def ? def.vol : this.volumen;
       // Misma pista con otro volumen: no se reinicia, se funde
@@ -328,8 +351,14 @@
       this.fundir(sal, 0, () => { sal.pause(); sal.removeAttribute("src"); sal.load(); });
       if (!def) return;
       this.volumen = vol;
+      // Un «loadedmetadata» pendiente de una pista anterior no debe recolocar la nueva
+      if (ent._alAleatorio) { ent.removeEventListener("loadedmetadata", ent._alAleatorio); ent._alAleatorio = null; }
       ent.src = def.src; ent.volume = 0;
-      if (def.aleatorio) ent.addEventListener("loadedmetadata", () => { if (ent.duration && isFinite(ent.duration)) ent.currentTime = Math.random() * ent.duration * 0.8; }, { once: true });
+      if (def.aleatorio) {
+        ent._alAleatorio = () => { ent._alAleatorio = null; if (ent.duration && isFinite(ent.duration)) ent.currentTime = Math.random() * ent.duration * 0.8; };
+        ent.addEventListener("loadedmetadata", ent._alAleatorio, { once: true });
+      }
+      // Si el archivo no existe (versión sin canciones), el navegador avisa por «error»: no hay nada que romper
       if (this.desbloqueada && !this.silenciada) { ent.play().catch(() => {}); this.fundir(ent, vol); }
     },
     // Corte en seco: la música se va de golpe. La escena siguiente puede volver a ponerla.
@@ -528,11 +557,31 @@
 
   // ---------- Fondo, negro y POV ----------
 
+  // Fondo: se funde a negro, se espera a que la imagen esté cargada (o falle) y se funde con la nueva.
+  // Si la imagen no existe, el fondo queda en el color base y la escena sigue.
+  const fondosCargados = new Set();
+  function precargarFondo(ruta) {
+    if (!ruta || typeof ruta !== "string" || fondosCargados.has(ruta)) return;
+    fondosCargados.add(ruta);
+    const img = new Image(); img.src = ruta;
+  }
   function ponerFondo(ruta) {
-    if (!ruta || ruta === fondoActual) return;
+    if (!ruta || typeof ruta !== "string" || ruta === fondoActual) return;
     fondoActual = ruta;
     ui.fondo.classList.add("cambiando");
-    setTimeout(() => { ui.fondo.style.backgroundImage = `url("${ruta}")`; ui.fondo.classList.remove("cambiando"); }, 700);
+    let listo = false, tiempo = false, aplicado = false;
+    const aplicar = () => {
+      if (aplicado || fondoActual !== ruta) return;
+      aplicado = true;
+      ui.fondo.style.backgroundImage = `url("${ruta}")`;
+      ui.fondo.classList.remove("cambiando");
+    };
+    const img = new Image();
+    img.onload = () => { fondosCargados.add(ruta); listo = true; if (tiempo) aplicar(); };
+    img.onerror = () => { if (DEBUG) console.warn("Fondo no encontrado:", ruta); listo = true; if (tiempo) aplicar(); };
+    img.src = ruta;
+    setTimeout(() => { tiempo = true; if (listo || img.complete) aplicar(); }, 700);
+    setTimeout(aplicar, 4000);   // red lenta: la escena no se queda a oscuras
   }
   const DURACION_CARTEL = 2600;
   let cartelTimer = null;
@@ -557,7 +606,14 @@
     const f = cartelPendiente; cartelPendiente = null;
     if (f) f();
   }
+  // Al cambiar de escena, un cartel que siguiera abierto se cierra sin ejecutar lo que tenía pendiente
+  function anularCartel() {
+    clearTimeout(cartelTimer); cartelPendiente = null;
+    ui.povCartel.classList.remove("visible");
+  }
   ui.povCartel.addEventListener("click", (e) => { e.stopPropagation(); cerrarCartel(); });
+  // Si la ficha no carga, el cartel vuelve a mostrar el nombre en letras
+  ui.povFicha.addEventListener("error", () => { ui.povFicha.style.display = "none"; ui.povCartel.classList.remove("con-ficha"); });
 
   function pintarCara(el, pj) {
     el.style.backgroundImage = pj.imagen ? `url("${pj.imagen}")` : "";
@@ -568,7 +624,7 @@
   function renderEstado() {
     const pj = PJS[estado.pov];
     // Viñeta según el miedo del POV: se cierra un poco cuando tiene miedo
-    const miedo = pj ? (estado.personajes[estado.pov].miedo || 0) / 100 : 0;
+    const miedo = pj ? ((estado.personajes[estado.pov] || {}).miedo || 0) / 100 : 0;
     document.documentElement.style.setProperty("--miedo", miedo.toFixed(2));
     if (!pj) {
       ui.povAvatar.classList.add("vacio"); ui.btnDetalles.classList.add("vacio");
@@ -634,12 +690,12 @@
       normal: "Como siempre. Por ahora.",
     };
     ui.detallesSubtitulo.textContent = (pj.subtitulo || "") + " · " + FRASES_MODO[api.modo(id)];
-    const p = estado.personajes[id];
+    const p = estado.personajes[id] || {};
     ui.barras.innerHTML = "";
     BARRAS.forEach(([k, et]) => {
       const b = document.createElement("div");
       b.className = "barra " + (k === "intox" ? "intoxicacion" : k);
-      b.innerHTML = `<span class="etiqueta">${et}</span><div class="pista-barra"><div class="relleno" style="width:${p[k]}%"></div></div>`;
+      b.innerHTML = `<span class="etiqueta">${et}</span><div class="pista-barra"><div class="relleno" style="width:${clamp(Math.round(p[k] || 0), 0, 100)}%"></div></div>`;
       ui.barras.appendChild(b);
     });
     ui.social.innerHTML = "";
@@ -844,6 +900,8 @@
   function terminarTexto() {
     clearTimeout(autoTimer);
     ui.pista.classList.add("oculto");
+    // Ya estaba terminado (⏭ o flecha abajo con todo leído): no se vuelven a pintar las opciones
+    if (ui.escena.classList.contains("sin-mas") && (ui.opciones.children.length || ui.personajes.children.length)) return;
     ui.escena.classList.add("sin-mas");
     if (!escenaActual) return;
     let r = renderPersonajes(escenaActual, 0.2);
@@ -893,7 +951,8 @@
 
   function renderPersonajes(escena, retraso) {
     ui.personajes.innerHTML = "";
-    const lista = (escena.personajes || []).filter((c) => !c.si || c.si(api));
+    const cartas = Array.isArray(escena.personajes) ? escena.personajes : [];
+    const lista = cartas.filter((c) => { try { return c && (!c.si || Boolean(c.si(api))); } catch (e) { console.error("Error en «si» de una carta:", e); return false; } });
     lista.forEach((c, i) => {
       const cid = resolver(c.id); const base = PJS[cid] || {};
       const btn = document.createElement("button");
@@ -921,21 +980,41 @@
       const btn = document.createElement("button");
       btn.className = "opcion"; btn.type = "button"; btn.textContent = "Volver al principio";
       btn.style.animationDelay = retraso + "s";
-      btn.addEventListener("click", (e) => { e.stopPropagation(); reiniciar(); });
+      btn.addEventListener("click", (e) => { e.stopPropagation(); volverAlPrincipio(); });
       ui.opciones.appendChild(btn); return;
     }
     const povId = estado.pov;
-    const visibles = (escena.opciones || []).filter((op) => {
-      if (op.si && !op.si(api)) return false;
+    const todas = Array.isArray(escena.opciones) ? escena.opciones : [];
+    const pasaSi = (op) => { try { return !op.si || Boolean(op.si(api)); } catch (e) { console.error("Error en «si» de una opción:", e); return false; } };
+    const filtrar = (porTono) => todas.filter((op) => {
+      if (!op || typeof op !== "object") return false;
+      if (!pasaSi(op)) return false;
+      if (!porTono) return true;
       if (op.lucida && povId && !api.lucido(povId)) return false;
-      if (op.impulsiva && povId) { const p = estado.personajes[povId]; if (p.estres < 55 && p.miedo < 55) return false; }
+      if (op.impulsiva && povId) { const p = estado.personajes[povId] || {}; if ((p.estres || 0) < 55 && (p.miedo || 0) < 55) return false; }
       return true;
     });
+    let visibles = filtrar(true);
+    // Red de seguridad: una escena nunca deja la pantalla sin salida
+    if (!visibles.length && !ui.personajes.children.length && todas.length) {
+      visibles = filtrar(false);   // primero se relajan las de tono (lúcida / impulsiva)
+      if (!visibles.length) { visibles = todas.filter((op) => op && typeof op === "object"); console.warn("Escena sin opción visible; se muestran todas:", estado.escena); }
+      else console.warn("Escena sin opción de tono visible; se relajan lúcida/impulsiva:", estado.escena);
+    }
+    if (!visibles.length && !ui.personajes.children.length) {
+      console.error("Escena sin salida:", estado.escena);
+      const btn = document.createElement("button");
+      btn.className = "opcion"; btn.type = "button"; btn.textContent = "Pantalla de inicio";
+      btn.style.animationDelay = retraso + "s";
+      btn.addEventListener("click", (e) => { e.stopPropagation(); mostrarInicio(true); });
+      ui.opciones.appendChild(btn); return;
+    }
     visibles.forEach((op, i) => {
       const btn = document.createElement("button");
       btn.className = "opcion" + (op.pov ? " pov-" + op.pov : ""); btn.type = "button";
       if (op.pov && PJS[op.pov]) { const q = document.createElement("span"); q.className = "quien"; q.textContent = PJS[op.pov].nombre; btn.appendChild(q); }
-      btn.appendChild(document.createTextNode(resolver(op.texto)));
+      const textoOp = resolver(op.texto);
+      btn.appendChild(document.createTextNode(textoOp === undefined || textoOp === null ? "…" : String(textoOp)));
       btn.style.animationDelay = (retraso + i * 0.12) + "s";
       btn.addEventListener("click", (e) => { e.stopPropagation(); elegir(op, btn); });
       ui.opciones.appendChild(btn);
@@ -997,28 +1076,40 @@
     ui.meta.classList.toggle("oculto", !partes.length);
   }
 
+  // Los fondos de las escenas a las que se puede ir desde aquí se piden ya, para que el fundido no espere
+  function precargarDestinos(escena) {
+    const ids = [];
+    (Array.isArray(escena.opciones) ? escena.opciones : []).forEach((op) => { if (op && typeof op.a === "string") ids.push(op.a); });
+    (Array.isArray(escena.personajes) ? escena.personajes : []).forEach((c) => { if (c && typeof c.a === "string") ids.push(c.a); });
+    ids.forEach((d) => { const e = HISTORIA.escenas[d]; if (e && typeof e.fondo === "string") precargarFondo(e.fondo); });
+  }
+
   function mostrarEscena(id, yaLeida = false) {
     const escena = HISTORIA.escenas[id];
-    if (!escena) { console.error("Escena no encontrada:", id); return; }
+    if (!escena) { console.error("Escena no encontrada:", id); ui.aviso.textContent = "escena no encontrada: " + id; return; }
     const esNueva = estado.escena !== id && !estado.visitadas[id];
     escenaActual = escena;
     clearTimeout(autoTimer);
+    anularCartel();
+    eligiendo = false;
     if (esNueva) {
       avanzarConsumo();
       aplicarDeriva();
       dinamica();
       const c = resolver(escena.consumo);
-      if (Array.isArray(c)) c.forEach(([quien, tipo]) => api.consumir(quien, tipo));
+      if (Array.isArray(c)) c.forEach((par) => { if (Array.isArray(par)) api.consumir(par[0], par[1]); });
       trazar(id);
     }
     estado.escena = id;
 
-    if (escena.pov !== undefined) estado.pov = resolver(escena.pov);
+    if (escena.pov !== undefined) { const p = resolver(escena.pov); estado.pov = p && PJS[p] ? p : null; }
     const cambioPov = estado.pov && estado.pov !== povAnterior;
     const relAntes = cambioPov ? null : relPrev;
     if (escena.lugar !== undefined) estado.lugar = resolver(escena.lugar);
     if (escena.hora !== undefined) estado.hora = resolver(escena.hora);
-    if (!estado.visitadas[id] && typeof escena.alEntrar === "function") escena.alEntrar(api);
+    if (!estado.visitadas[id] && typeof escena.alEntrar === "function") {
+      try { escena.alEntrar(api); } catch (e) { console.error("Error en alEntrar de", id, e); }
+    }
     estado.visitadas[id] = true;
 
     // Pulso en el retrato si las relaciones del POV han cambiado desde la escena anterior
@@ -1039,11 +1130,15 @@
     renderMeta();
     ui.personajes.innerHTML = ""; ui.opciones.innerHTML = "";
     ui.pista.classList.remove("oculto");
-    prepararTexto(resolver(escena.texto));
+    let texto;
+    try { texto = resolver(escena.texto); }
+    catch (e) { console.error("Error en el texto de", id, e); texto = DEBUG ? "[Error en el texto de la escena " + id + ": " + (e && e.message) + "]" : "..."; }
+    prepararTexto(texto);
     actualizarPista();
     ui.escena.scrollTop = 0;
     renderEstado();
     guardar();
+    precargarDestinos(escena);
 
     if (yaLeida) { revelarTodo(); return; }
     const arrancar = () => { revelarGolpe(); };
@@ -1051,28 +1146,57 @@
     else setTimeout(arrancar, 250);
   }
 
+  // Un solo clic cuenta: dos pulsaciones seguidas (doble clic, clic + Intro) no aplican el efecto dos veces
+  let eligiendo = false;
   function elegir(op, btn) {
+    if (eligiendo || !op) return;
+    eligiendo = true;
     if (btn) { btn.classList.add("elegida"); }
     registrarEnHistorial(op);
     ui.escena.classList.add("saliendo");
     setTimeout(() => {
-      const dicho = String(resolver(op.texto) || "").match(/«([^»]+)»/); if (dicho && (op.pov || estado.pov)) api.decir(op.pov || estado.pov, dicho[1]);
-      if (typeof op.efecto === "function") op.efecto(api);
-      if (escenaActual && Array.isArray(escenaActual.personajes)) {
-        escenaActual.personajes
-          .filter((c) => c !== op && (!c.si || c.si(api)) && typeof c.auto === "function")
-          .forEach((c) => c.auto(api));
-      }
-      mostrarEscena(resolver(op.a));
+      let destino = null;
+      try {
+        const dicho = String(resolver(op.texto) || "").match(/«([^»]+)»/); if (dicho && (op.pov || estado.pov)) api.decir(op.pov || estado.pov, dicho[1]);
+        if (typeof op.efecto === "function") op.efecto(api);
+        if (escenaActual && Array.isArray(escenaActual.personajes)) {
+          escenaActual.personajes
+            .filter((c) => c && c !== op && (!c.si || c.si(api)) && typeof c.auto === "function")
+            .forEach((c) => c.auto(api));
+        }
+        destino = resolver(op.a);
+      } catch (e) { console.error("Error en el efecto de una opción:", e); }
+      eligiendo = false;
       ui.escena.classList.remove("saliendo");
+      if (destino === null || destino === undefined || !HISTORIA.escenas[destino]) {
+        // Destino inexistente: la escena sigue en pantalla con sus opciones; se avisa en el pie
+        console.error("Escena no encontrada:", destino, "desde", estado.escena);
+        if (btn) btn.classList.remove("elegida");
+        if (estado.historial && estado.historial.length) estado.historial.pop();
+        ui.aviso.textContent = "escena no encontrada: " + destino;
+        return;
+      }
+      mostrarEscena(destino);
     }, 280);
   }
 
   function reiniciar() {
     borrarGuardado();
     estado = estadoInicial(); fondoActual = null; povAnterior = null; relPrev = null;
+    anularCartel();
     ocultarInicio();
     mostrarEscena(estado.escena);
+  }
+  // Botón del final: se borra la partida y se vuelve a la pantalla de inicio (portada), sin arrancar otra
+  function volverAlPrincipio() {
+    borrarGuardado();
+    estado = estadoInicial(); fondoActual = null; povAnterior = null; relPrev = null;
+    anularCartel(); clearTimeout(autoTimer);
+    escenaActual = null; golpes = []; lineasEscena = [];
+    musica.poner(null); ambiente.poner("silencio");
+    ui.negro.classList.remove("visible");
+    ui.escena.classList.remove("final");
+    mostrarInicio(false);
   }
 
   // ---------- Pantalla de inicio ----------

@@ -27,6 +27,9 @@
  *   ouija_pov · huesped ("irene"|"marcos") · contacto · contacto_inicial · marcos_accion ·
  *   luz_por · irene_fuera · nora_reaccion_beso · irene_verdad · irene_mentira ·
  *   nora_vio_llama · alda_visto · ajoba_visto · ouija_cerrada · vaso_final · voz_desertor
+ * Banderas internas de la fase (se escriben y se leen aquí): nora_calla (Nora no entra al trapo, sin POV Nora) ·
+ *   nora_accion_oscuro (qué hace Nora a oscuras, decidida si no la llevamos) · irene_mascara (sin POV Irene: si le sale
+ *   el «me he metido en el papel»; sin máscara, se va al baño) · nora_duda_lampara («¿Floja?» / «¿Solo esa?»)
  */
 (() => {
   const N = { nora: "Nora", marcos: "Marcos", alex: "Álex", irene: "Irene" };
@@ -60,13 +63,20 @@
     if (api.setas()) persona -= 20;                                   // todo le llega un poco tarde
     if (api.bandera("irene_miro_marcos")) persona += 15;
     if (api.bandera("marcos_se_levanta")) persona += 10;
-    if (api.bandera("nora_accion_oscuro") === "irene") persona -= 10; // Nora ya va: él reparte
-    let lampara = api.valor("marcos", "eje") - 40;
+    persona += api.bandera("nora_accion_oscuro") === "irene" ? -10 : 8;   // Nora ya va: él reparte. Nadie va: va él.
+    let lampara = api.valor("marcos", "eje") - 45;
     if (api.bandera("marcos_vio_silla") || api.bandera("marcos_miro_mesa") || api.bandera("marcos_sospecha")) lampara += 20;
     if (api.nivel("marcos", "intox") === "alto") lampara -= 10;
     const cocina = api.valor("marcos", "intox") - 30;
     if (persona >= lampara && persona >= cocina) return "rescate";
     return lampara >= cocina ? "lampara" : "cocina";
+  }
+
+  // Qué hace Nora a oscuras si no la llevamos: clavada si el miedo manda, la linterna si tiene la cabeza para ello, Irene si no.
+  function decidirNoraOscuro(api) {
+    if (api.valor("nora", "miedo") >= 50) return "mesa";
+    if (api.lucido("nora") && api.relv("nora", "irene", "proteccion") < 5) return "luz";
+    return "irene";
   }
 
   // Cómo reacciona Nora al beso si no la llevamos. Confianza, tensión previa, alcohol, estrés.
@@ -175,7 +185,7 @@ Nora: Dámela.
 
 Nora: Esa frase contigo debería ser delito.
 
-Te levantas. Él rodea la mesa. Tú rodeas la mesa. Es la segunda vez esta noche que persigues a Álex alrededor de esta mesa por algo tuyo y él lo sabe, y por eso le encanta.
+Te levantas. Él rodea la mesa. Tú rodeas la mesa. No es la primera vez esta noche que Álex te saca algo de la mochila. Es la primera vez que le persigues por ello, y él lo sabe, y por eso le encanta.
 
 Marcos: Dásela, anda. Que se va a caer con ella.
 
@@ -199,15 +209,15 @@ Nora: Ya estás empezando.
 
 Marcos empieza a retirar cosas. Los vasos. Las cartas. Un plato con restos de algo. Lo hace sin que nadie se lo pida, porque es Marcos, y porque si hay que hacer una ouija en esta mesa por lo menos que esté recogida. Irene ya tiene tus velas en la mano. Las dos. No se las has dado. No sabes cuándo ha abierto tu mochila.
 
-Y el resto sigue ahí. Las botellas. El cenicero lleno. La bolsa de Álex con lo que queda de lo que queda. Una camisa de alguien en un respaldo. No parece un ritual. Parece exactamente lo que es: cuatro borrachos montando una ouija en la mesa donde hace media hora ${api.bandera("juego") === "poker" ? "estaban jugando al póker" : "giraba una botella"}.
+Y el resto sigue ahí. Las botellas. El cenicero lleno. La bolsa de Álex con lo que queda de lo que queda. Una camisa de alguien en un respaldo. No parece un ritual. Parece exactamente lo que es: cuatro borrachos montando una ouija en la mesa donde hace una hora ${api.bandera("juego") === "poker" ? "estaban jugando al póker" : "giraba una botella"}.
 
-${api.bandera("musica_leyenda") === "sonando" ? `Nora: Bajad la música.
+Nora: Bajad la música.
 
 Álex: ¿Necesitan silencio los muertos?
 
 Nora: Necesito escucharte menos a ti.
 
-Irene la baja. Luego la apaga.` : `La música lleva apagada desde la historia de Álex. Nadie la ha echado de menos hasta ahora, que la echáis de menos todos.`}
+Irene la baja. Luego la apaga. El silencio de la casa entra de golpe, como si llevara un rato esperando en la puerta.
 
 Irene deja el móvil apoyado contra una botella, con la cámara hacia la mesa.
 
@@ -223,7 +233,7 @@ ${modo(api, "nora", {
   tenso: "~ «Que la haga él.» Irene. Cómo le gusta empujar y quedarse mirando.",
   ido: "~ El tablero tiene las letras en arco, como una sonrisa. Nunca lo había visto así. Es una boca.",
   perdido: "~ Ya está en la mesa. Ella. Antes de que abramos nada. Se ha sentado en la silla vacía y está esperando a que empecemos.",
-  normal: "~ Sabía que iba a acabar así. Lo sabía desde que metí la tabla en la mochila. Para eso la metí.",
+  normal: "~ Álex con mi tabla contra el pecho. Así empieza todo lo que sale mal con Álex: con algo mío en sus manos.",
 })}
 
 La mesa se monta despacio. Cada uno está en una cosa. Nora coloca. Marcos recoge. Irene se ocupa de la luz.
@@ -398,7 +408,7 @@ Nora: Álex.
 
 Irene: Álex.
 
-Vas a por él. Retrocede con el péndulo en alto, como si fuera una antorcha.
+Te levantas. Retrocede con el péndulo en alto, como si fuera una antorcha.
 
 Álex: ¡No lo toques! Está calibrado.
 
@@ -472,7 +482,7 @@ Nora le alcanza en la segunda vuelta. Le quita el péndulo de la mano con las do
       const irenePrepara = pov === "irene" ? `
 Bajas. La silla vuelve a su sitio. Nadie ha visto nada porque no había nada que ver: una chica bajando una lámpara.
 
-Miras a Álex. Álex, con el péndulo todavía en la mano y Nora colgada del brazo, te mira.
+Miras a Álex. Álex, ya sin el péndulo, te mira por encima de la cabeza de Nora.
 
 Una sonrisa de nada. Un milímetro.
 
@@ -484,11 +494,11 @@ Te sientas. Estiras la pierna por debajo de la mesa. Descalza, como toda la noch
 
 Toc.
 
-Poco. Nadie lo oye porque Álex está gritando que el péndulo está calibrado. Pero lo has oído tú. Sirve.
+Poco. Nadie lo oye porque Álex sigue protestando por lo del péndulo. Pero lo has oído tú. Sirve.
 ` : pov === "marcos" && api.bandera("marcos_vio_silla") ? `
-La has mirado. A Irene. En la silla, con la mano en la tulipa, bajándola. Y bajar de la silla. Y mirar a Álex.
+La has mirado. A Irene. En la silla, con la mano dentro de la tulipa, «bajándola». La has visto bajar de la silla. Y mirar a Álex.
 
-Y Álex mirarla.
+Y a Álex mirarla.
 
 Nada. Una mirada. Llevan cinco años mirándose así por encima de la gente. Te la guardas donde guardas las cosas que no son nada.
 ` : `
@@ -524,9 +534,13 @@ Lo dice como quien sabe. Nadie en esta mesa sabe. ${pov === "irene" ? "Pero ella
 
 Silencio.
 
-Coloca los dedos. La punta. Los otros seis, sobre la mesa, esperando.
+Coloca los dedos. La punta. Las otras seis manos, sobre la mesa, esperando.
 
 Todos esperáis.
+
+Álex: Venga. Si estás ahí, sal.
+
+Con la voz de documental. Con la sonrisa a medio poner. Nadie se ríe, y eso es lo primero raro de la noche.
 
 Álex desliza lentamente el vaso.
 
@@ -627,6 +641,17 @@ ${cierre}`;
     pov: (api) => P(api),
     titulo: "La ouija · Las respuestas de Álex",
     hora: "03:05",
+    alEntrar: (api) => {
+      // Nora, cuando no la llevamos: entra al trapo o se calla y mira la mesa. La misma regla decide si ve la llama,
+      // para que lo que dice el texto y lo que queda en las banderas sea lo mismo.
+      if (P(api) !== "nora" && api.bandera("nora_vio_llama") === undefined) {
+        const mira = api.valor("nora", "eje") >= 50 && api.valor("nora", "lucidez") >= 55 && api.valor("nora", "estres") < 60;
+        api.marcar("nora_calla", mira);
+        const v = mira && api.anomalia("llama_velas");
+        api.marcar("nora_vio_llama", v);
+        if (v) { api.saber("nora", "llama_velas"); api.presenciar("nora", 1); }
+      }
+    },
     texto: (api) => {
       const pov = P(api);
       const nora = api.bandera("nora_amenaza") ? `
@@ -730,16 +755,7 @@ ${primera}
 ${golpe}
 ${energia}
 
-${modo(api, "nora", {
-  lucido: "Nora: Lo que estás sintiendo son cuatro cervezas.",
-  asustado: "Nora no dice nada. Se ha quedado mirando la mesa.",
-  tenso: "Nora: Lo que estás sintiendo son cuatro cervezas.",
-  ido: "Nora no dice nada. Está mirando las velas como si le hablaran.",
-  perdido: "Nora no dice nada. Mira las velas.",
-  normal: "Nora: Lo que estás sintiendo son cuatro cervezas.",
-})}
-
-${["asustado", "ido", "perdido"].includes(api.modo("nora")) ? "Álex abre un ojo. Nadie le ha contestado. Baja la barbilla, un poco decepcionado." : "Risas. Álex abre los ojos con cara de ofendido y sigue."}
+${api.bandera("nora_calla") ? "Nora no dice nada. Se ha quedado mirando la mesa. Las velas.\n\nÁlex abre un ojo. Nadie le ha contestado. Baja la barbilla, un poco decepcionado." : "Nora: Lo que estás sintiendo son cuatro cervezas.\n\nRisas. Álex abre los ojos con cara de ofendido y sigue."}
 
 Álex: Vale. Siguiente.
 
@@ -764,14 +780,7 @@ ${primera}
 ${golpe}
 ${energia}
 
-${modo(api, "nora", {
-  lucido: "Nora: Lo que estás sintiendo son cuatro cervezas.\n\nRisas. Álex abre los ojos con cara de ofendido y sigue.",
-  asustado: "Nora no dice nada. Se ha quedado mirando la mesa. Mejor. Cuanto más mire las velas, menos te mira a ti.",
-  tenso: "Nora: Lo que estás sintiendo son cuatro cervezas.\n\nRisas. Álex abre los ojos con cara de ofendido y sigue.",
-  ido: "Nora no dice nada. Está mirando las velas como si le hablaran. Mejor. Cuanto más mire las velas, menos te mira a ti.",
-  perdido: "Nora no dice nada. Mira las velas. Mejor.",
-  normal: "Nora: Lo que estás sintiendo son cuatro cervezas.\n\nRisas. Álex abre los ojos con cara de ofendido y sigue.",
-})}
+${api.bandera("nora_calla") ? "Nora no dice nada. Se ha quedado mirando la mesa. Mejor. Cuanto más mire las velas, menos te mira a ti.\n\nÁlex abre un ojo. Nadie le ha contestado. Baja la barbilla." : "Nora: Lo que estás sintiendo son cuatro cervezas.\n\nRisas. Álex abre los ojos con cara de ofendido y sigue."}
 
 Álex: Vale. Siguiente.
 
@@ -1288,6 +1297,13 @@ Marcos ya se ha movido. Lo oyes. Una silla. Su voz. No sabes hacia dónde.`;
     titulo: "La ouija · A oscuras",
     hora: "03:07",
     alEntrar: (api) => {
+      if (api.bandera("nora_accion_oscuro") === undefined) {
+        const n = decidirNoraOscuro(api);
+        api.marcar("nora_accion_oscuro", n);
+        if (n === "irene") api.rel("nora", "irene", "proteccion", 3);
+        else if (n === "luz") api.est("nora", "lucidez", 1);
+        else api.est("nora", "eje", 3);
+      }
       if (!api.bandera("marcos_accion")) api.marcar("marcos_accion", decidirMarcos(api));
       const acc = api.bandera("marcos_accion");
       // El contacto existe. Nadie lo sabe. Irene sabe que no ha sido teatro.
@@ -1479,7 +1495,7 @@ Y de pronto respira. Un ruido feo, de tubería. Tose. Vuelve.`;
 
 La lámpara. Ha parpadeado antes de irse: eso no lo hace un fusible. Eso lo hace una rosca.
 
-Rodeas la mesa. Hay una silla debajo de la lámpara. ${api.bandera("marcos_vio_silla") ? "La que has visto usar a Irene hace veinte minutos para «bajar esto un poco»." : "Alguien la ha dejado ahí."} Te subes.
+Rodeas la mesa. Hay una silla debajo de la lámpara. ${api.bandera("marcos_vio_silla") ? "La que has visto usar a Irene hace diez minutos para «bajar esto un poco»." : "Alguien la ha dejado ahí."} Te subes.
 
 Abajo, a oscuras, Irene hace un ruido. Nora dice su nombre. Álex dice «Irene» con otra voz.
 
@@ -1718,8 +1734,10 @@ ${modo(api, "irene", {
       { texto: "Mirar la mesa. El tablero torcido. Las velas apagadas. El vaso.", a: "o8_gilipollas", si: (api) => P(api) === "nora" && api.bandera("marcos_accion") === "rescate",
         efecto: (api) => { api.marcar("nora_miro_vaso", true); api.est("nora", "eje", 2); } },
       // Nora, sin rescate
-      { texto: "«¿Floja?»", a: "o8_gilipollas", si: (api) => P(api) === "nora" && api.bandera("marcos_accion") !== "rescate",
-        efecto: (api) => { api.marcar("nora_sospecha_irene", true); api.est("nora", "lucidez", 1); } },
+      { texto: "«¿Floja?»", a: "o8_gilipollas", si: (api) => P(api) === "nora" && api.bandera("marcos_accion") === "lampara",
+        efecto: (api) => { api.marcar("nora_duda_lampara", true); api.est("nora", "lucidez", 1); } },
+      { texto: "«¿Solo se ha ido esa?» La lámpara de la mesa. Las demás, no.", a: "o8_gilipollas", si: (api) => P(api) === "nora" && api.bandera("marcos_accion") === "cocina",
+        efecto: (api) => { api.marcar("nora_duda_lampara", true); api.est("nora", "lucidez", 1); } },
       { texto: "Ir a Irene. «Irene. Mírame.»", a: "o8_gilipollas", si: (api) => P(api) === "nora" && api.bandera("marcos_accion") !== "rescate",
         efecto: (api) => { api.rel("nora", "irene", "proteccion", 3); api.rel("irene", "nora", "resentimiento", -3); } },
       { texto: "Encender las velas otra vez. Que haya luz de la tuya.", a: "o8_gilipollas", si: (api) => P(api) === "nora" && api.bandera("marcos_accion") !== "rescate",
@@ -1756,6 +1774,8 @@ ${modo(api, "irene", {
       api.rel("nora", "alex", "resentimiento", 4); api.rel("nora", "irene", "resentimiento", 3);
       api.rel("marcos", "alex", "resentimiento", 2);
       api.est("alex", "eje", 3);                            // le ha salido. Le ha salido demasiado bien.
+      // Sin llevar a Irene: ¿se pone la máscara («me he metido en el papel») o no le sale? Decide si luego se va al baño.
+      if (P(api) !== "irene") api.marcar("irene_mascara", api.bandera("irene_tras") === "risa" || Boolean(api.bandera("irene_mentira")) || (api.lucido("irene") && api.valor("irene", "miedo") < 45));
     },
     texto: (api) => {
       const pov = P(api);
@@ -1764,6 +1784,7 @@ ${modo(api, "irene", {
       const g = api.bandera("golpes_irene") || 0;
 
       // Cómo se descubre la bombilla
+      const floja = api.bandera("nora_duda_lampara") ? "\n\nNora: ¿Floja?\n\nMarcos: Un cuarto de vuelta. Eso no se afloja solo." : " Un cuarto de vuelta.";
       let descubre;
       if (luz === "alex" && api.bandera("nora_pillo_alex")) descubre = `
 Nora: ¿Cómo sabías que era la bombilla?
@@ -1788,12 +1809,12 @@ Marcos: No.`;
       else if (luz === "marcos") descubre = api.bandera("marcos_calla") ? `
 Marcos no ha dicho nada más. Ha bajado de la silla. Ha esperado a que Irene respirase normal. Y entonces, con la calma de quien ha decidido cuándo:
 
-Marcos: Estaba floja. La bombilla. Un cuarto de vuelta.
+Marcos: Estaba floja. La bombilla.${floja}
 
 Mira a Irene. Luego a Álex.
 
 Marcos: No.` : `
-Marcos: Estaba floja. La bombilla. Un cuarto de vuelta.
+Marcos: Estaba floja. La bombilla.${floja}
 
 Lo ha dicho ${api.bandera("marcos_tras") === "floja" ? "dos veces. La segunda más despacio." : "una vez. Ha bastado."}
 
@@ -1805,7 +1826,7 @@ Marcos deja el interruptor. Cruza el salón. Va a la lámpara muerta. Hay una si
 
 Luz. Amarilla. La de siempre.
 
-Marcos: Estaba floja.
+Marcos: Estaba floja.${floja}
 
 Baja. Mira a Irene. Luego a Álex.
 
@@ -1827,7 +1848,7 @@ Silencio.
 
 Álex sonríe.
 
-Irene levanta el pie. Descalzo. Lo apoya en el travesaño.
+Irene, desde el suelo, estira la pierna. El talón, descalzo, encuentra el travesaño.
 
 [toc]
 
@@ -1838,10 +1859,11 @@ Irene: Con el talón.
 ${g >= 3 ? "Irene: Y la rodilla. Para los vasos." : ""}`;
 
       const mentira = api.bandera("irene_mentira") ? `
-Irene ya lo ha dicho antes. «Me he metido demasiado en el papel.» Y ahora lo repite, riéndose, y suena mejor la segunda vez.` : pov === "irene" ? "" : `
+Irene ya lo ha dicho antes. «Me he metido demasiado en el papel.» Y ahora lo repite, riéndose, y suena mejor la segunda vez.` : pov === "irene" ? "" : api.bandera("irene_mascara") ? `
 Irene se ríe. Pero su risa tiene algo. Un temblor pequeño, al final, que se traga.
 
-Irene: Me he metido demasiado en el papel.`;
+Irene: Me he metido demasiado en el papel.` : `
+Irene se ríe cuando se ríen los demás. Un segundo tarde. No dice nada. Se mira las manos como si fueran de otra.`;
 
       const trampas = `
 Nora: Sois unos putos gilipollas.
@@ -1922,7 +1944,7 @@ ${modo(api, "irene", {
 
 Nora: ¿Qué?
 
-Marcos mira debajo de la mesa. Ve el pie de Irene. Ve a Irene mirándole mirar.
+Marcos mira a Irene. Los pies descalzos. El travesaño de la mesa. Ve a Irene mirándole mirar.
 
 Irene y Álex se miran.
 
@@ -1980,7 +2002,7 @@ ${lectura}`;
       const acc = api.bandera("marcos_accion");
       // Los que no llevamos, con sus reglas
       if (api.bandera("marcos_pregunto_pared") === undefined && pov !== "marcos") api.marcar("marcos_pregunto_pared", Boolean(api.bandera("hubo_golpes")) && api.lucido("marcos"));
-      if (pov !== "irene" && !api.bandera("irene_mentira") && !api.bandera("irene_verdad")) api.marcar("irene_mentira", true);
+      if (pov !== "irene" && !api.bandera("irene_mentira") && !api.bandera("irene_verdad") && api.bandera("irene_mascara")) api.marcar("irene_mentira", true);
       if (acc === "rescate") {
         // El beso es Irene: convierte el miedo en poder social. Ocurre la llevemos o no.
         api.marcar("irene_beso_marcos", true);
@@ -2231,7 +2253,7 @@ ${modo(api, "irene", {
       { texto: "«Vuelve, que sin ti no hay sesión.» Con humor.", a: "o10_alda", si: (api) => P(api) === "nora" && api.bandera("marcos_accion") !== "rescate",
         efecto: (api) => { api.marcar("nora_tras", "humor"); api.rel("irene", "nora", "resentimiento", -3); api.rel("alex", "nora", "afecto", 2); } },
       // Marcos, tras el beso
-      { texto: "«Nora, me ha besado ella.»", a: "o10_alda", si: (api) => P(api) === "marcos" && api.bandera("marcos_accion") === "rescate",
+      { texto: "«Nora, me ha besado ella.»", a: "o10_alda", si: (api) => P(api) === "marcos" && api.bandera("marcos_accion") === "rescate" && api.bandera("nora_reaccion_beso") !== "marcos",
         efecto: (api) => { api.marcar("marcos_beso", "defiende"); api.est("marcos", "estres", -2); if (api.bandera("nora_reaccion_beso") === "marcos") api.rel("nora", "marcos", "resentimiento", 2); } },
       { texto: "«¿Podemos no convertir esto en nada raro?»", a: "o10_alda", si: (api) => P(api) === "marcos" && api.bandera("marcos_accion") === "rescate",
         efecto: (api) => { api.marcar("marcos_beso", "corta"); api.est("marcos", "estres", -2); api.rel("alex", "marcos", "afecto", 2); } },
@@ -2275,20 +2297,21 @@ ${modo(api, "irene", {
     texto: (api) => {
       const fuera = api.bandera("irene_fuera");
       const tras = api.bandera("nora_tras");
+      const humor = tras === "humor" ? "\n\nNora: Vuelve, que sin ti no hay sesión.\n\nIrene: Sin mí no hay nada.\n\nLo dice con la sonrisa. Casi." : "";
       const salida = fuera === "cerveza" ? `
 Irene: Voy a por una cerveza. ¿Alguien quiere?
 
-Nadie quiere. Va igual. Descalza, por el arco. Se oye la nevera. No vuelve enseguida.` : fuera === "bano" ? `
-Irene: Necesito mear.
+Nadie quiere.${humor}
 
-${tras === "humor" ? "Nora: Vuelve, que sin ti no hay sesión.\n\nIrene: Sin mí no hay nada.\n\nLo dice con la sonrisa. Casi." : ""}
+Va igual. Descalza, por el arco. Se oye la nevera. No vuelve enseguida.` : fuera === "bano" ? `
+Irene: Necesito mear.${humor}
 
 Sube. Descalza. El tercer escalón. El séptimo. La puerta del baño.
 
 Quedáis tres.` : `
 Irene: Estoy bien. Seguid.
 
-Se sienta. Se pone recta. Coge su vaso como si viniera de la cocina. ${tras === "irene" ? "Le has preguntado si estaba bien, de verdad, y te ha dicho «de verdad» con una cara que no era de verdad." : ""}`;
+Se sienta. Se pone recta. Coge su vaso como si viniera de la cocina. ${tras === "irene" ? "Le has preguntado si estaba bien, de verdad, y te ha dicho «de verdad» con una cara que no era de verdad." : tras === "humor" ? "Le has dicho que vuelva, que sin ella no hay sesión. Ha vuelto. Por eso o por lo otro." : ""}`;
 
       return `${salida}
 
@@ -2392,7 +2415,7 @@ ${modo(api, "nora", {
   lucido: "~ Tres opciones. Álex ha visto mi cuaderno. Alguien ha visto mi cuaderno. O es real. Las dos primeras son posibles. La tercera es la que siento.",
   asustado: "~ Es real. Es real. Es real y estoy sentada delante y lo he pedido yo.",
   tenso: "~ No les digas nada. No les des nada. Que no vean la cara. Ya la han visto.",
-  ido: "~ Alda. Suena a nombre de alguien que conozco. Suena a mi nombre dicho al revés. No lo es.",
+  ido: "~ Alda. Suena a nombre de alguien que conozco. Suena a un nombre dicho a medias. Como si le faltara la mitad.",
   perdido: "~ Me está diciendo su nombre. A mí. Solo a mí. Los otros no lo entienden. Yo sí.",
   normal: "~ Sé lo que es. Y sé que no lo sabe nadie más. Y eso me asusta más que la palabra.",
 })}
@@ -2401,7 +2424,7 @@ ${modo(api, "nora", {
 
 Nora: Estoy bien.
 
-Marcos te ha cogido la mano por debajo de la mesa. Se la aprietas. Fuerte. Más de lo que querías.
+${api.bandera("nora_reaccion_beso") === "marcos" ? "Marcos no te coge la mano. Después de lo de antes no sabe si puede. Tú tampoco. La tuya se queda encima de la mesa, cerrada." : "Marcos te ha cogido la mano por debajo de la mesa. Se la aprietas. Fuerte. Más de lo que querías."}
 
 Y quieres seguir. Es lo más horrible de todo. Tienes frío en las muñecas y el estómago en el suelo y quieres seguir.
 
@@ -2430,6 +2453,8 @@ Nora: Espera.`;
       api.marcar("ajoba_visto", true);
       ["nora", "marcos", "alex"].forEach((p) => api.saber(p, "ajoba"));
       if (!api.bandera("irene_fuera")) api.saber("irene", "ajoba");
+      // El cuaderno con ALDA y AJOBA es evidencia obligatoria (Biblia §7): si no anotó ALDA antes, la anota ahora
+      if (!api.hayEvidencia("cuaderno_alda")) api.evidencia("cuaderno_alda", "nora", "cuaderno de Nora", "nota");
       api.evidencia("cuaderno_ajoba", "nora", "cuaderno de Nora", "nota");
       api.presenciar("nora", 1.5); api.presenciar("marcos", 1);
     },
@@ -2512,7 +2537,7 @@ Marcos: Álex.`;
 
       return `${anterior}
 
-Marcos coge aire. Marcos, que no cree en nada, que ha encontrado la bombilla, que ha dicho «claro». Marcos pregunta.
+Marcos coge aire. Marcos, que no cree en nada, que ha desmontado la bombilla${api.bandera("marcos_pregunto_pared") ? ", que ha dicho «claro»" : ""}. Marcos pregunta.
 
 Marcos: ¿Dónde estás?
 
@@ -2533,7 +2558,7 @@ A.
 Marcos: ¿Ajoba?
 ${alcoba}
 
-Escribes. AJOBA. Con jota. Exactamente así. No lo corriges. No le das vueltas. No buscas la ele que falta ni la letra que sobra. Lo apuntas debajo de ALDA y ya.
+${n === "anota" ? "Escribes. AJOBA. Con jota. Exactamente así. No lo corriges. No le das vueltas. No buscas la ele que falta ni la letra que sobra. Lo apuntas debajo de ALDA y ya." : "Abres el cuaderno. Escribes ALDA, que no habías escrito todavía. Y debajo, AJOBA. Con jota. Exactamente así. No lo corriges. No le das vueltas. No buscas la ele que falta ni la letra que sobra. Y ya."}
 
 ~ Ajoba. No es nada. No es una palabra. Es una jota donde no toca.
 
@@ -2555,11 +2580,11 @@ Y no hace nada. Otra pregunta. Nada. Otra. Nada. El vaso quieto bajo los dedos d
 
 A Álex se le cae el hombro. Se le ve aburrirse: el codo en la mesa, la mirada al techo. Ya ha pasado lo suyo. Ya ha tenido su bombilla y su ADIÓS y su IRENE, y esto es lento, y lo lento no es de Álex.
 
-Marcos: Efecto ideomotor.
+Marcos: Lo mueve él.
 
 Lo dice bajo. Para sí. Y luego más alto, porque ya lo ha dicho.
 
-Marcos: Lo mueve él sin saberlo. Alda lo ha oído en algún sitio. Y ajoba es que se le ha ido el dedo.
+Marcos: Lo mueve él sin saberlo. Alda la ha oído en algún sitio. Y ajoba es que se le ha ido el dedo.
 
 Nora: ¿Dónde ha oído Alda?
 
@@ -2605,11 +2630,13 @@ ${modo(api, "nora", {
       return `
 Arriba. La escalera. El tercero. El séptimo. El pasillo con la lámpara de llama falsa y la cuerda de la buhardilla, quieta, a la altura de la cara.
 
-Entras al baño. Cierras. Te sientas en el borde de la bañera. No has venido a mear.
+Entras al baño. Cierras. No has venido a mear.
 
-Te miras en el espejo. Te levantas el pelo. Te miras la garganta.
+El espejo. Te levantas el pelo. Te miras la garganta.
 
 No hay marca. Tendría que haber una marca. Algo. Rojo. Un dedo. Nada.
+
+Te sientas en el borde de la bañera.
 
 ${huesped ? "Tragas. Y otra vez. Hay algo que no baja. No es nada. Es la garganta, que se acuerda.\n\nTe abrochas un botón. Te lo desabrochas. Tragas otra vez." : "Te abrochas un botón. Te lo desabrochas. Respiras. Entra. Entra sin más, como si nunca hubiera dejado de entrar."}
 
@@ -2664,6 +2691,7 @@ El pasillo. Vacío. La cuerda. Quieta. La escalera bajando hacia la luz.
       api.horror(2);
       api.marcar("vaso_final", api.anomalia("vaso_final"));
       if (api.bandera("ouija_cerrada") === undefined) api.marcar("ouija_cerrada", false);
+      if (api.bandera("voz_desertor") === undefined) api.marcar("voz_desertor", false);   // nadie subió: la Fase V lo lee
       api.marcar("fase4_completa", true);
     },
     texto: (api) => {
@@ -2672,7 +2700,7 @@ El pasillo. Vacío. La cuerda. Quieta. La escalera bajando hacia la luz.
       const huesped = api.bandera("huesped");
       const cerrada = api.bandera("ouija_cerrada");
 
-      const vuelve = fuera === "bano" ? `
+      const vuelve = fuera === "bano" ? (voz ? `
 El séptimo escalón. El tercero. Irene.
 
 Irene: ¿Me habéis llamado?
@@ -2681,7 +2709,7 @@ Nadie la ha llamado.
 
 Marcos: No.
 
-${voz ? `Irene: Alguien ha dicho mi nombre.
+Irene: Alguien ha dicho mi nombre.
 
 Nora: Nadie ha dicho tu nombre.
 
@@ -2693,9 +2721,12 @@ Silencio.
 
 Irene: Da igual. Habré oído mal.
 
-No da igual. Se le nota en la cara que no da igual. Y a ti se te nota en la tuya que no has dicho su nombre. Y ninguna de las dos va a insistir. Todavía.` : `Irene: Vale.
+No da igual. Se le nota en la cara que no da igual. Y a ti se te nota en la tuya que no has dicho su nombre. Y ninguna de las dos va a insistir. Todavía.` : `
+El séptimo escalón. El tercero. Irene. Se sienta. Coge su vaso.
 
-Se sienta. Coge su vaso.`}` : fuera === "cerveza" ? `
+Irene: ¿Qué me he perdido?
+
+Álex: Un fantasma con problemas de ortografía.`) : fuera === "cerveza" ? `
 Irene vuelve de la cocina con dos cervezas. Una es para Marcos. La deja delante de él sin mirarte. Se sienta.
 
 Irene: ¿Qué me he perdido?
@@ -2719,7 +2750,7 @@ Lo dice al tablero. Con la mano. Como quien se despide de un perro. ${fuera ? "M
 Tú sabes lo que dice tu prima de eso y sabes que tu prima es idiota, y las dos cosas te importan.`;
 
       const huespedTexto = huesped === "marcos" ? `
-Marcos te pone la mano en la nuca. Te giras hacia él.
+Marcos te pone la mano en la nuca.${api.bandera("nora_reaccion_beso") === "marcos" ? " Tarde. Con cuidado, como quien no sabe si puede." : ""} Te giras hacia él.
 
 Nora: Tienes las manos heladas.
 
@@ -2747,7 +2778,7 @@ Música. Baja. Algo de Irene. Algo que no pega con nada de lo que ha pasado, y p
 
 Álex coge el móvil de Irene de la botella. Para la grabación. Se mira en la pantalla. Habla a cámara.
 
-Álex: Documental número dos. La ouija. Ha sobrevivido todo el mundo.
+Álex: Documental número ${api.bandera("d16") === "grabar" ? "tres" : "dos"}. La ouija. Ha sobrevivido todo el mundo.
 
 Se ríe. Deja el móvil. Abre una cerveza. Le pasa otra a Marcos. Marcos la coge. Y así se acaba una ouija: con alguien abriendo una cerveza.
 
@@ -2779,7 +2810,7 @@ No.
 
 Está unos centímetros más lejos. Hacia el borde. Hacia ti.
 
-${api.bandera("nora_miro_vaso") ? "Ya lo miraste antes, a oscuras. Estaba en el centro. Lo sabes porque lo miraste." : "No lo has visto moverse. Nadie lo ha visto moverse."} Y cualquiera de ellos ha podido rozarlo al levantarse.
+${cerrada ? "Álex lo soltó en ADIÓS. Le viste soltarlo." : "Álex quitó los dedos y lo dejó donde estaba. Le viste."} ${api.bandera("nora_miro_vaso") ? "Es la segunda vez esta noche que miras ese vaso más de la cuenta. La primera fue a oscuras." : "No lo has visto moverse. Nadie lo ha visto moverse."} Y cualquiera de ellos ha podido rozarlo al levantarse.
 
 Cualquiera.` : `sigue donde lo dejasteis. Boca abajo. En mitad del tablero. Quieto.
 

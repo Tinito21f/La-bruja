@@ -197,7 +197,7 @@ Y se calla. Porque el pie es el tamaño de la rodilla y lo sabe, y porque salir 
 Álex: Voy yo.` : `
 Marcos: Voy yo.
 
-Lo dice antes de que nadie lo pregunte. Se levanta. ${R().lleva(api, "marcos", "atizador") ? "Coge el atizador." : ""} Coge la linterna.
+Lo dice antes de que nadie lo pregunte. Se levanta. ${R().lleva(api, "marcos", "atizador") ? "Coge el atizador." : ""} Coge el móvil, con la linterna puesta.
 
 Irene: Nadie sale.
 
@@ -400,13 +400,13 @@ Pasas por encima. Dentro.
 
 El cobertizo. Dos por tres. Olor a gasolina y a tierra. Una garrafa roja. Herramientas de otro. Y el generador: una caja naranja con un motor, un depósito, un tirador con cuerda, como una cortadora de césped.
 
-${pov === "marcos" || dos ? "Marcos" : "Tú"} ${pov === "marcos" ? "miras" : dos ? "mira" : "miras"} el depósito. Medio. No es la gasolina.
+${dos ? "Marcos mira" : "Miras"} el depósito. Medio. No es la gasolina.
 
-${a === "marcos" ? "Marcos coge" : "Coges"} el tirador. Tira${a === "marcos" && !(pov === "marcos") ? "" : "s"}. El motor tose y no. Otra vez. Tose y no.
+${a === pov ? "Coges el tirador. Tiras." : "Marcos coge el tirador. Tira."} El motor tose y no. Otra vez. Tose y no.
 
 Y a la tercera, la mano resbala.
 
-La chapa del arranque tiene un borde. Como una lata abierta. Y la mano de ${a === "marcos" ? "Marcos" : "Álex"} baja por ese borde con el peso del tirón, y se abre, y la sangre sale antes que el dolor, oscura, mucha, goteando en la tierra del suelo.
+La chapa del arranque tiene un borde. Como una lata abierta. Y ${a === pov ? "tu mano" : "la mano de Marcos"} baja por ese borde con el peso del tirón, y se abre, y la sangre sale antes que el dolor, oscura, mucha, goteando en la tierra del suelo.
 
 ${a === pov ? `Miras la mano. La palma. Un corte de un lado a otro, hondo, blanco un segundo y luego rojo. Gotea. Gotea en la tierra y la tierra se lo bebe.
 
@@ -471,6 +471,7 @@ La puerta del cobertizo, detrás, se mueve con el viento. Golpea. Se abre. Golpe
       ["nora", "marcos", "alex", "irene"].forEach((p) => api.est(p, "estres", -6));
       api.est("marcos", "eje", 4);
       api.rel("nora", "marcos", "afecto", 3);
+      R().contacto(api, "nora", arrancador(api), 1);   // lavar y vendar es contacto (§23.7)
     },
     texto: (api) => {
       const g = goers(api);
@@ -516,7 +517,7 @@ Marcos: Se acabó qué.
 
 Álex: Lo que sea. Se ha acabado. Es un generador con una bujía de mierda. Y ahora hay luz. Y ahora hay cerveza.
 
-Y durante un minuto es verdad. Es verdad entera. Cuatro personas en una cabaña con luz y cerveza y música, a las cinco menos cinco, con una mano vendada y un pie hinchado y una historia que contar en el trabajo el lunes.
+Y durante un minuto es verdad. Es verdad entera. Cuatro personas en una cabaña con luz y cerveza y música, a las cinco menos cinco, con una mano vendada${["marcos", "alex", "irene"].some((p) => R().herido(api, p, "cojera")) ? " y un pie hinchado" : ""} y una historia que contar en el trabajo el lunes.
 
 ${dos ? "Álex mira a Marcos. Marcos mira la cerveza." : g[0] === "alex" ? "Álex, con la cerveza en la mano buena, mira la puerta. Solo un momento. Luego a Irene. Luego la puerta otra vez." : "Marcos, con la cerveza en la mano buena, mira la puerta. Solo un momento. Luego a ti. Luego la puerta otra vez."}
 
@@ -575,7 +576,7 @@ Delante de todos. Con la voz de las preguntas serias.
 ${api.bandera("golpes_marcado") ? "No dices lo de la voz. Tu voz desde los pinos. Lo tienes en la boca y sale otra cosa: «nada más». Álex, que lo cuenta todo, diciendo «nada más». Y te oyes decirlo como se oye a otro." : "Y es verdad. Y aun así te suena a mentira, y a Nora se le ve que también."}`) : "";
       if (p === "marcos") return `${preg}
 
-La mesa. ${R().herido(api, "marcos", "sangra") ? "La cerveza en la mano buena. La otra en alto, con el paño de cuadros, que ya está oscuro por dentro." : "La cerveza en la mano. Álex, enfrente, con la suya en alto, envuelta en el paño de cuadros que ya está oscuro por dentro."} ${vv === "rodilla" ? "Nora con la mano en tu rodilla. Sin decir nada. Es su manera." : ""} Álex contando lo del conejo con más detalles de los que hubo. Irene sin reírse.
+La mesa. ${R().herido(api, "marcos", "sangra") ? "La cerveza en la mano buena. La otra en alto, con el paño de cuadros, que ya está oscuro por dentro." : "La cerveza en la mano. Álex, enfrente, con la mano del paño en alto y la cerveza en la otra. El paño ya está oscuro por dentro."} ${vv === "rodilla" ? "Nora con la mano en tu rodilla. Sin decir nada. Es su manera." : ""} Álex contando lo del conejo con más detalles de los que hubo. Irene sin reírse.
 
 Y la ventana.
 
@@ -708,7 +709,7 @@ ${N[p]} se ha bebido la cerveza de un trago y ha cogido la botella y se ha servi
 
 Cinco y dos minutos. Lo ha dicho Nora. Nora dice la hora como otros tocan madera.
 
-Faltan dos horas para las siete. La música sigue, baja, y ya no es de fiesta: es de sala de espera. ${["alex", "marcos", "irene"].filter((p) => R().herido(api, p, "cojera")).map((p) => N[p] + " tiene el pie en la silla. ").join("")}${["marcos", "alex"].filter((p) => R().herido(api, p, "sangra")).map((p) => N[p] + " la mano en alto. ").join("")}Tú tienes las dos manos en la mesa y los pies descalzos encogidos bajo la silla, porque el suelo está frío, porque todo está frío.
+Faltan dos horas para las siete. La música sigue, baja, y ya no es de fiesta: es de sala de espera. ${["alex", "marcos"].filter((p) => R().herido(api, p, "cojera")).map((p) => N[p] + " tiene el pie en la silla. ").join("")}${["marcos", "alex"].filter((p) => R().herido(api, p, "sangra")).map((p) => N[p] + " la mano en alto. ").join("")}Tú tienes las dos manos en la mesa y ${R().herido(api, "irene", "cojera") ? "el pie malo en la otra silla, descalzo, del tamaño de la rodilla" : "los pies descalzos encogidos bajo la silla"}, porque el suelo está frío, porque todo está frío.
 
 ${h === "irene" ? `Y te llega. Con tu voz.
 
@@ -788,6 +789,8 @@ ${modo(api, "irene", {
       api.marcar("fase7_completa", true);
       R().fuera(api, p, true);
       api.marcar("puerta_cerrada_llave", false);
+      // Marcos sale sin el atizador: se queda apoyado en su silla (lo lee la VIII)
+      if (p === "marcos" && R().lleva(api, "marcos", "atizador")) { R().soltar(api, "marcos"); api.marcar("atizador_silla", true); }
       api.est("nora", "estres", 4);
     },
     texto: (api) => {
@@ -836,11 +839,11 @@ Marcos: No.
 
 Álex: Marcos. Un minuto. Debajo de la bombilla. Con la puerta abierta.
 
-${!marcosPuedeSalir(api) ? "Y Marcos no dice nada más, porque no tiene con qué. Álex ya tiene la mano en el bolsillo." : h === "marcos" ? "Y Marcos saca la llave. Sin discutir más. Marcos, que había dicho que nadie sale, saca la llave y se la da, y tú le miras hacerlo y no le reconoces el gesto." : "Y Marcos, que tiene " + (R().herido(api, "marcos", "cojera") ? "un tobillo del tamaño de la rodilla" : R().herido(api, "marcos", "sangra") ? "una mano abierta" : "el cuerpo entero") + " y dos horas de reglas, se cansa. Se le ve cansarse. Saca la llave. Se la tira por encima de la mesa."}
+${h === "marcos" ? "Y Marcos no dice nada más. Marcos, que había dicho que nadie sale, mira a Álex sacarse la llave del bolsillo, y no le reconoces la cara: es la de quien ya lo sabía." : !marcosPuedeSalir(api) ? "Y Marcos no dice nada más, porque no tiene con qué. Álex ya tiene la mano en el bolsillo." : "Y Marcos, que tiene " + (R().herido(api, "marcos", "cojera") ? "un tobillo del tamaño de la rodilla" : R().herido(api, "marcos", "sangra") ? "una mano abierta" : "el cuerpo entero") + " y dos horas de reglas, se cansa. Se le ve cansarse. Saca la llave. Se la tira por encima de la mesa."}
 
 Álex: Un minuto.
 
-Abre. Dos vueltas al revés. El frío. La bombilla del porche, encendida, con sus polillas. Álex sale. Deja la puerta entornada. Se ve la brasa encenderse. Se ve su espalda contra la barandilla. A cuatro metros.
+Abre. Dos vueltas al revés. Deja la llave puesta, porque va a volver. El frío. La bombilla del porche, encendida, con sus polillas. Álex sale. Deja la puerta entornada. Se ve la brasa encenderse. Se ve su espalda contra la barandilla. A cuatro metros.
 
 Un minuto.
 
@@ -879,7 +882,7 @@ Lo dice con la voz de las explicaciones. Y tú le conoces desde marzo y sabes qu
 
 ${api.bandera("marcos_miente") ? "Y mira la ventana. Al decirlo. Mira la ventana como se mira a alguien que te ha dicho algo." : "Y no te mira. Marcos siempre te mira cuando te dice que no. Ahora mira la puerta."}
 
-Saca la llave. Dos vueltas al revés. El frío. La bombilla del porche con sus polillas. Deja la llave puesta por dentro, que es lo que hace Marcos: dejar las cosas donde hacen falta. ${R().lleva(api, "marcos", "atizador") ? "El atizador, apoyado en su silla. " : ""}Sale. Deja la puerta entornada. Se ve su espalda bajar los escalones, cojeando o no, con la linterna.
+${marcosPuedeSalir(api) ? "Saca la llave." : "Le tiende la mano abierta a Álex. Álex le da la llave. Nadie dice nada."} Dos vueltas al revés. El frío. La bombilla del porche con sus polillas. Deja la llave puesta por dentro, que es lo que hace Marcos: dejar las cosas donde hacen falta. ${api.bandera("atizador_silla") ? "El atizador, apoyado en su silla. " : ""}Sale. Deja la puerta entornada. Se ve su espalda bajar los escalones${R().herido(api, "marcos", "cojera") ? ", un escalón y el pie malo, otro escalón y el pie malo," : ""} con la linterna.
 
 Un minuto. La linterna cruza la grava hacia ${goers(api).includes("marcos") ? "el cobertizo" : "el coche"}. Llega. Se para.
 

@@ -37,6 +37,7 @@ Una línea sola entre corchetes dentro del texto dispara un efecto al llegar a e
 `bash build.sh` genera `dist/`: `LaBruja.html` (CSS, JS e imágenes incrustadas) y `assets/musica/` al lado. Para enviar el juego, comprime la carpeta `dist` entera. Para publicar, sube el proyecto tal cual (`index.html` en la raíz).
 
 ## Estado
+- Segunda auditoría completa por capas (30-09-2026, cinco auditores: motor e interfaz, II–IV, V–VI, VII–IX, X–XII): motor tolerante a partidas antiguas y escenas mal formadas, interfaz en móvil, y unas ciento cincuenta reparaciones de coherencia y prosa en las fases II a XII; la Fase I no se tocó (sus hallazgos están en el informe de la sesión). Probado: 102 escenas por 216 configuraciones y una partida completa de la leyenda al epílogo.
 - Auditoría de coherencia de las doce fases (30-09-2026): unas cien incoherencias corregidas (heridas y objetos que solo existen en algunas rutas, el coche de Marcos, las voces devueltas, el reloj, el epílogo montado con lo que de verdad pasó). Pendiente de la segunda vuelta: cobrar el reloj de condenas y la percepción no fiable, que están en reglas.js sin uso.
 - Fases I a XII escritas y probadas (29-09-2026): el prólogo se juega de principio a fin, con los dos finales (NORA_DEAD / NORA_UNKNOWN según las ofrendas y si Nora baja con luz) y el epílogo «Diez años después» montado con lo que quedó. Pendiente: la revisión del autor escena a escena.
 - Reglas fijas de las fases VI a XII (29-09-2026): Biblia, secciones 14 a 26; cada fase detallada en la 5; presupuesto y orden de escritura en la 25.

@@ -85,7 +85,7 @@ Niega lentamente.
 Tienes el cuaderno cerrado bajo la mano. Y dentro, dos páginas fotocopiadas que dicen otra cosa. Que dicen menos. Que dicen que no se sabe.
 
 ${({
-  lucido: "~ «Cuatrocientos años.» Ya ha metido un siglo de más. La fuente más antigua es de mil seiscientos y pico.",
+  lucido: "~ «Cuatrocientos años.» Redondo. La fuente más antigua es de mil seiscientos y pico y no da fecha. Dice «por entonces». Y «norma» no: era un cuento para que los niños volvieran antes de que anocheciera.",
   asustado: "~ La ha mirado a Irene al decir «a quién». Como si lo hubiera ensayado. Lo ha ensayado.",
   tenso: "~ Va a contarla mal. Va a contarla entera mal y yo voy a tener que estar callada.",
   ido: "~ Las paredes de madera. Las ventanas negras. Las ha dicho él o las he pensado yo.",
@@ -485,7 +485,7 @@ Marcos: ¿Para qué coño quería cadáveres?
 
 Álex: Según la historia, utilizaba grasa humana para fabricar velas.
 
-Mira tus velas. Las dos que trajiste. Sonríe.
+Mira tu mochila. Donde van tus velas. Sonríe.
 
 Álex: Huesos de niños para hacer amuletos.
 
@@ -545,7 +545,7 @@ ${({
     opciones: [
       { texto: "«Eso no tiene sentido. El libro de piel es de otra leyenda. Lo estás mezclando.»", a: "l5_leyenda", lucida: true,
         efecto: (api) => { api.marcar("ley_nora4", "corrige"); api.est("nora", "lucidez", 2); api.rel("alex", "nora", "tension", 4); api.rel("irene", "nora", "resentimiento", 3); api.saber("nora", "leyenda_mezclada"); } },
-      { texto: "Abrir el cuaderno y apuntar: «espino, pelo negro, diente de leche». Sin decir nada.", a: "l5_leyenda", lucida: true,
+      { texto: "Abrir el cuaderno y apuntar: espino, pelo negro, diente de leche. Sin decir nada.", a: "l5_leyenda", lucida: true,
         efecto: (api) => { api.marcar("ley_nora4", "apunta"); api.est("nora", "lucidez", 2); api.est("nora", "eje", 3); api.evidencia("cuaderno_triada", "nora", "cuaderno de Nora", "nota"); api.saber("nora", "leyenda_mezclada"); } },
       { texto: "Callarte. Beber. Dejar que te dé miedo, un poco, porque para eso has venido.", a: "l5_leyenda",
         efecto: (api) => { api.marcar("ley_nora4", "miedo"); api.est("nora", "eje", 4); api.est("nora", "miedo", 3); api.consumir("nora", "chupito"); } },
@@ -594,7 +594,9 @@ Mira hacia la ventana.
 
 Álex: Hasta que una noche desaparecían.
 
-${api.bandera("golpe_leyenda") ? `TOC.
+${api.bandera("golpe_leyenda") ? `[golpe]
+
+TOC.
 
 Arriba.
 
@@ -791,7 +793,7 @@ Señala con los dedos. Uno por uno.
 ...
 
 ${({
-  lucido: "~ Siete. Siete círculos, siete ofrendas. Y la niña «construida». Está juntando tres leyendas distintas en una. Y la juntura no se nota. Eso es lo que da miedo: que no se note.",
+  lucido: "~ Siete. Siete círculos, siete ofrendas. Las ha contado con los dedos y le han salido justas. Nadie improvisa una lista de siete y le sale justa. Esto lo trae aprendido. De alguien.",
   asustado: "~ «Mi madre os conoce a todos.» Me ha mirado a mí el último. A mí. ¿Por qué a mí?",
   tenso: "~ Muy específico. Muy específico. Suéltalo ya y que se ría alguien.",
   ido: "~ Siete círculos. Los estoy contando en la mesa. Uno por vaso. Hay siete vasos. ¿Hay siete vasos?",
@@ -1139,7 +1141,7 @@ Coge la botella.
 
 Álex: Eso son gilipolleces.
 
-${api.bandera("musica_leyenda") === "sonando" && !api.bandera("musica_sola") ? "La música sigue sonando, alegre, absurda, y ahora sí la oyes." : "Irene vuelve a poner la música. Algo alegre. Absurdo. Y ahora sí la oyes."}
+${api.bandera("musica_leyenda") === "sonando" && !api.bandera("musica_sola") ? "La música sigue sonando, alegre, absurda, y ahora sí la oyes." : api.bandera("musica_leyenda") === "baja" && !api.bandera("musica_sola") ? "[musica:fiesta]\n\nIrene sube la música. Algo alegre. Absurdo. Y ahora sí la oyes." : "[musica:fiesta]\n\nIrene vuelve a poner la música. Algo alegre. Absurdo. Y ahora sí la oyes."}
 
 Marcos se ríe. Irene le dice que es un cabrón. Álex llena de nuevo su vaso.
 
@@ -1211,7 +1213,6 @@ ${({
   // =====================================================================
 
   c1_contrahistoria: {
-    musica: (api) => api.bandera("musica_leyenda") === "sonando" ? undefined : "terror_suave",
     pov: "nora",
     titulo: "La contrahistoria",
     hora: "02:45",
@@ -1273,7 +1274,7 @@ Su ego reacciona. Pero lo hace con encanto.
 
 Nora: ¿Qué?
 
-Álex mira hacia tu mochila. Sabe lo que hay dentro. Lo vio antes.
+Álex mira hacia tu mochila. Sabe lo que hay dentro. Lo sabe desde el «yo nunca». Estaba sembrando.
 
 Álex: Pregúntaselo.
 
