@@ -35,6 +35,7 @@
     R().saltoBase(api);
     R().fase(api, "VI", 2, 2);
     if (/^vi[4-8]/.test(id) && !api.bandera("vi_sube")) { api.marcar("vi_sube", "nora_marcos"); api.marcar("vi_pov", "nora"); }
+    if (/^vi[5-8]/.test(id) && !api.bandera("vi_herido")) { api.marcar("vi_herido", "marcos"); api.marcar("vi_herida_tipo", "cojera"); R().herir(api, "marcos", "cojera", "escalera"); }
     if (/^vi[5-8]/.test(id) && api.bandera("vi_subida_hecha") === undefined) api.marcar("vi_subida_hecha", true);
     if (/^vi[7-8]/.test(id) && !api.bandera("decision_irse")) api.marcar("decision_irse", "amanecer");
     if (/^vi8/.test(id) && !api.bandera("evento_imposible")) { api.marcar("evento_imposible", true); api.marcar("imposible_quien", "alex"); api.horror(3); }
@@ -46,7 +47,7 @@
     const cartas = [];
     const marcosPuede = R().vivo(api, "marcos");
     const noraQuiere = api.valor("nora", "eje") >= 45 && !api.bandera("fascinacion_rota");
-    const ireneConNora = api.bandera("irene_nora") === "alianza" || (h === "irene" && api.bandera("v_nora_con") !== "irene");
+    const ireneConNora = api.bandera("irene_nora") === "alianza" || api.bandera("cree_irene_nora") || (h === "irene" && api.bandera("v_nora_con") !== "irene");
     const alexQuiere = api.valor("alex", "eje") >= 70 && !api.bandera("alex_cruzo");
     if (marcosPuede && noraQuiere) cartas.push({ id: "nora", config: "nora_marcos", desc: "Subir con Marcos. La linterna, la escalera. Y él delante, que es donde quieres que esté." });
     if (marcosPuede) cartas.push({ id: "marcos", config: "marcos", desc: h === "marcos" ? "Subir solo. Con el atizador. Sin que nadie te vea la cara mientras subes." : "Subir solo. Con el atizador. Que se queden los tres juntos abajo." });
@@ -121,13 +122,13 @@ Encima de la lámpara. Exactamente encima. Y la lámpara no se mueve, y todos la
 
 Marcos: Ratas.
 
-Lo dice sin quitar la mano de tu nuca. Con la voz de las explicaciones. Pero la mano está fría y no se mueve.
+Lo dice sin quitar la mano de tu nuca. Con la voz de las explicaciones. ${h === "marcos" ? "Pero la mano está fría y no se mueve." : "Y la mano, caliente, se mueve un poco, como quien acaricia sin darse cuenta."}${api.bandera("marcos_dijo_no_ratas") ? " Lo dice él. El que ha dicho «no eran ratas» hace media hora, a la mesa, para que constara. Se le ve saberlo, y decirlo igual." : ""}
 
 Nora: No.
 
 Se te ha escapado. Con la voz que no usas.
 
-Álex: Son las de la buhardilla. ${api.bandera("v_nora_con") === "alex" ? "Las ha despertado la ouija." : "Las ha despertado Nora."}
+Álex: Son las de la buhardilla. Las ha despertado Nora.
 
 Nadie se ríe. Ni él.
 
@@ -387,7 +388,7 @@ ${herido === "marcos" ? `Sube. El primer peldaño. El segundo. El tercero. El cu
 
 CRACK.
 
-La madera se parte y el pie de Marcos se va con ella, hasta la rodilla, y el resto de Marcos se queda colgado de los brazos, y el atizador cae a la alfombra con un ruido que oye toda la casa.
+La madera se parte y el pie de Marcos se va con ella, hasta la rodilla, y el resto de Marcos se queda colgado de los brazos, y ${atiz ? "el atizador cae a la alfombra" : "el móvil cae a la alfombra, con la linterna hacia arriba,"} con un ruido que oye toda la casa.
 
 Marcos: Joder. Joder, joder.
 
@@ -407,7 +408,7 @@ Sobre tus dedos. Los de la mano derecha. Contra el marco. Todo el peso de la mad
 
 Gritas. No sabías que gritabas así.
 
-Y la trampilla no sube. Alguien la sujeta desde arriba. Con el peso. Con las dos manos. Ves las botas de Marcos, a un palmo de tu cara, plantadas encima.
+Y la trampilla no sube. Alguien la sujeta desde arriba. Con el peso. Con las dos manos. Ves las zapatillas de Marcos, a un palmo de tu cara, plantadas encima.
 
 Marcos: Todavía no.
 
@@ -962,7 +963,7 @@ Una vez. Corta. Como un guiño. Y se queda.
 
 Marcos: La bombilla.
 
-Nadie contesta. La bombilla está apretada. La apretaste tú. Con dos vueltas de más.` : "La lámpara aguanta. Amarilla. La misma de la fiesta, sobre la misma mesa, sobre cuatro personas que ya no son las de la fiesta."}
+Nadie contesta. La bombilla está apretada. ${api.bandera("marcos_aprieta") || api.bandera("luz_por") === "marcos" ? (api.pov() === "marcos" ? "La apretaste tú. Con dos vueltas de más." : "La apretó Marcos. Con dos vueltas de más.") : "La apretó Álex después del susto. Con dos vueltas de más, riéndose."}` : "La lámpara aguanta. Amarilla. La misma de la fiesta, sobre la misma mesa, sobre cuatro personas que ya no son las de la fiesta."}
 
 Cuatro y treinta y cinco. Faltan dos horas y veinticinco minutos para las siete. Nora las ha contado en voz alta. Nadie le ha pedido que las contara.
 

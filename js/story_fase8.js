@@ -60,7 +60,7 @@
       api.marcar("viii_c_decision", d === "alex" ? "voz" : "coche");
       api.marcar("viii_c_final", d === "alex" ? (api.valor("alex", "eje") >= 70 ? "grita" : "corre") : "frena");
     }
-    if (d === "alex") { api.evidencia("movil_alex_bosque", "alex", "borde de los pinos, grabando", "video"); }
+    if (d === "alex") { api.marcar("alex_graba_bosque", true); api.evidencia("movil_alex_bosque", "alex", "borde de los pinos, grabando", "video"); }
     else { api.evidencia("coche_volcado", "marcos", "el camino, contra el pino grande", "objeto"); }
   }
   // ---------- La búsqueda, se vea o no: quién sale a mirar, hasta dónde, qué encuentra ----------
@@ -83,7 +83,8 @@
     const d = D(api);
     if (!api.bandera("muerto_" + d)) R().matar(api, d, d === "alex" ? "bosque" : "coche", d === "alex" ? "el terraplén bajo los pinos" : "el camino, contra el pino grande", "nora");
     api.marcar("cuerpo_" + d, d === "alex" ? "terraplen" : "coche");
-    if (d === "alex") { api.marcar("movil_alex_hallado", true); api.evidencia("movil_alex_bosque", "nora", "bolsillo de Nora", "video"); }
+    const mm = api.bandera("muerte_" + d); if (mm && !mm.visto_por) { mm.visto_por = "nora"; api.marcar("muerte_" + d, mm); }
+    if (d === "alex") { api.marcar("movil_alex_hallado", true); api.marcar("alex_graba_bosque", true); api.evidencia("movil_alex_bosque", "nora", "bolsillo de Nora", "video"); }
     else { api.marcar("coche_hallado", true); }
     api.horror(4);
     R().fuera(api, "nora", false); R().fuera(api, buscador(api), false);
@@ -218,7 +219,7 @@ No la del porche. Otra. Naranja. Baja. Entre los troncos, a la izquierda, lejos.
 
 Antorchas.
 
-Vienen. No hacia ti. Hacia la casa. Como iban los de los troncos que vio Nora: hacia la casa, como quien va a un fuego.` : `Y nada. Nadie en el claro. La voz se ha ido a otro sitio. Más adentro. Como se va alguien que quiere que la sigas.`}
+Vienen. No hacia ti. Hacia la casa. ${api.bandera("nora_cuenta_gente") ? "Como iban los de los troncos que vio Nora: hacia la casa, como quien va a un fuego." : "Como iban los del pueblo en mi historia: hacia la casa, como quien va a un fuego."}` : `Y nada. Nadie en el claro. La voz se ha ido a otro sitio. Más adentro. Como se va alguien que quiere que la sigas.`}
 
 ${modo(api, "alex", {
   lucido: "~ La voz de Irene no puede estar aquí. Irene está en la puerta. Lo sé. Lo he visto. Y estoy andando hacia la voz como si no lo supiera, porque saberlo no me sirve para las piernas.",
@@ -226,13 +227,13 @@ ${modo(api, "alex", {
   tenso: "~ Irene. Joder, Irene. Donde estés. Dilo otra vez. Dilo otra vez y voy.",
   ido: "~ Las agujas no suenan. Piso y no suenan. Como si el suelo estuviera de acuerdo en que no me oigan.",
   perdido: "~ Ya sé las voces. Ya sé que es ella y no es ella. Y voy igual, porque a lo mejor esta vez sí.",
-  normal: "~ Veinte metros. Miro el claro, no hay nadie, vuelvo. Es lo que haría cualquiera. Cualquiera que no tuviera miedo.",
+  normal: "~ Veinte metros. Miro el claro, no hay nadie, vuelvo. Documental número tres, toma dos.",
 })}
 
 Detrás de ti, la luz del porche. Más pequeña. Más amarilla. Más lejos de lo que has andado.`;
 
       return `
-La grava. Mojada. Cruje. El coche, a veinte metros. Lo has mirado desde el porche con la linterna y has visto la puerta del conductor. Abierta.
+${["marcos", "ambos"].includes(api.bandera("generador_quien")) ? "El pestillo del cobertizo, echado. Ya está. Y al volver, a mitad de la grava, la luz de dentro del coche. Otra vez. " : ""}La grava. Mojada. Cruje. El coche, a veinte metros. Lo has mirado desde el porche con la linterna y has visto la puerta del conductor. Abierta.
 
 Tú la cerraste. Al llegar. Con el mando. Dos veces.
 
@@ -408,7 +409,7 @@ Como si no lo oyeran. Como si el claxon sonara dentro del coche y solo dentro.
 Sueltas. Y en el silencio, desde abajo, otro claxon. Igual. Largo. Contestando.` : `
 Marcha atrás. Primera. El camino.
 
-Bajas. Los faros hacen un túnel de tierra y ramas. El coche va como va tu coche, que es como debe ir un coche. Las manos en el volante. La derecha con el paño de cuadros, que mancha el cuero. Da igual.`;
+Bajas. Los faros hacen un túnel de tierra y ramas. El coche va como va tu coche, que es como debe ir un coche. Las manos en el volante. ${R().herido(api, "marcos", "sangra") ? "La derecha con el paño de cuadros, que mancha el cuero. Da igual." : "Las dos enteras, a las diez y diez, como te enseñaron. Da igual."}`;
       return `${inicio}
 
 El camino baja. Entre los pinos. Con las curvas que conoces de subir esta tarde, hace un siglo, con Álex cantando.
@@ -421,9 +422,9 @@ Y suena la fiesta.
 
 No una canción. La fiesta. Vuestra fiesta. La carcajada de Irene, la que reconocerías en cualquier parte. Los vasos. Y Álex, con la sonrisa entera:
 
-«¡Documental número uno! Cuatro idiotas en la casa de una bruja. ¿Qué podría salir mal?»
+${api.hayEvidencia("video_brindis") ? "«¡Documental número uno! Cuatro idiotas en la casa de una bruja. ¿Qué podría salir mal?»" : "«" + R().voz(api, "alex", 0) + "»"}
 
-Tu grabación. La del brindis. Las doce y cuarenta. Está en tu móvil. Tu móvil está en tu bolsillo. La radio no tiene tu móvil.
+${api.hayEvidencia("video_brindis") ? "Tu grabación. La del brindis. Las doce y cuarenta. Está en tu móvil. Tu móvil está en tu bolsillo. La radio no tiene tu móvil." : "La voz de Álex. Lo que dijo esta noche, en la mesa. Nadie lo grabó. La radio no tiene a Álex."}
 
 ~ Bluetooth. Se ha conectado solo. Lo hace. Lo ha hecho otras veces.
 
@@ -599,7 +600,7 @@ La vuelta. A la casa. A la luz del porche. A Nora.
 Giras en la recta. Los faros barren los pinos. Y el camino sube, con sus curvas, y arriba la luz amarilla con polillas.
 
 Vas. Con la mano manchando el cuero. Con la fiesta en la radio. Con tu nombre debajo.` : `
-Bajas. Otra vez. Despacio. Los ojos en el camino y en nada más. La mano buena en el volante y la otra en el muslo, sangrando en el pantalón.
+Bajas. Otra vez. Despacio. Los ojos en el camino y en nada más. ${R().herido(api, "marcos", "sangra") ? "La mano buena en el volante y la otra en el muslo, sangrando en el pantalón." : "Las dos manos en el volante, a las diez y diez, como te enseñaron."}
 
 El camino baja. Las curvas. Los pinos. La fiesta en la radio, más baja ahora, como si la casa se estuviera quedando sin ella.`;
       return `${inicio}
@@ -630,17 +631,17 @@ El pino.
 
 El ruido no es un ruido. Es un sitio. Estás dentro de él. El cristal que se hace polvo. El volante que entra. El techo que es el suelo. Vueltas. Una. Dos. Y el silencio, que es peor.
 
-Boca abajo. Colgando del cinturón. Con el techo a un palmo. Con algo dentro que no está donde estaba: lo notas cuando respiras, que es como respirar a través de una tela mojada. La mano buena no la ves. La otra sí. La ves por el cristal roto, fuera, en la tierra, con el paño de cuadros todavía puesto.
+Boca abajo. Colgando del cinturón. Con el techo a un palmo. Con algo dentro que no está donde estaba: lo notas cuando respiras, que es como respirar a través de una tela mojada. ${R().herido(api, "marcos", "sangra") ? "La mano buena no la ves. La otra sí. La ves por el cristal roto, fuera, en la tierra, con el paño de cuadros todavía puesto." : "Una mano no la ves. La otra sí. La ves por el cristal roto, fuera, en la tierra, con los dedos abiertos."}
 
 Y la radio.
 
-Sigue. La fiesta. Álex diciendo «documental número uno». La carcajada de Irene. Los vasos. A todo volumen, en un coche volcado, en mitad de un camino, a las cinco y media de la mañana.
+Sigue. La fiesta. Álex diciendo «${api.hayEvidencia("video_brindis") ? "documental número uno" : R().voz(api, "alex", 0)}». La carcajada de Irene. Los vasos. A todo volumen, en un coche volcado, en mitad de un camino, a las cinco y media de la mañana.
 
 Y por el hueco del cristal, entre los pinos, una luz naranja. Baja. Y otra. Y otra. Acercándose. Despacio. Con el balanceo de quien anda. Con el olor a leña.
 
 ~ Nora. Nora, que no estaba. Nora, que está en la puerta. Dile que no estaba. Díselo tú, que ella te cree.
 
-~ Cuando deja de hacer chistes, corre. Lo dijo ella. De mí. Se lo dijo a Álex riéndose.
+~ Cuando dejo de hacer chistes es que pasa algo. Lo sabe ella. Lo sabe desde marzo, y no se lo ha dicho a nadie.
 
 Y en la radio, debajo de la fiesta, la voz que lee la lista llega a tu nombre. Lo dice entero. Con los apellidos. Como en la hoguera.
 
@@ -710,7 +711,7 @@ Nada.
 
 ${b === "irene" ? "Irene: ¡" + N[d].toUpperCase() + "!\n\nNada. Y en el nada, algo: que Irene ha gritado su nombre con la voz de verdad. La de pedir." : ""}
 
-~ ${d === "marcos" ? "Las llaves del coche las tiene Marcos. En el bolsillo. Las vi. Y el coche está abierto con la luz de dentro. Y no está el coche vacío: está el coche esperando." : "Ha ido a la izquierda. A los pinos. Donde Álex oyó a Irene. Donde yo vi a la gente. Ha ido al mismo sitio, y no ha vuelto del mismo sitio."}
+~ ${d === "marcos" ? "Las llaves del coche las tiene Marcos. En el bolsillo. Las vi. Y el coche está abierto con la luz de dentro. Y no está el coche vacío: está el coche esperando." : "Ha ido a la izquierda. A los pinos. " + (api.bandera("alex_oyo_irene_fuera") ? "Donde Álex oyó a Irene. " : "") + (api.bandera("nora_vio_gente") ? "Donde yo vi a la gente. " : "") + "Ha ido al mismo sitio, y no ha vuelto del mismo sitio."}
 
 ${modo(api, "nora", {
   lucido: "~ Cinco minutos. Veinte metros de luz. Y más allá, lo que hay más allá. Si salgo, somos dos fuera. Si no salgo, es uno. Las matemáticas de esta noche son horribles.",
@@ -752,7 +753,7 @@ El bosque se ve.
 Blanco. Los troncos como huesos. Las agujas del suelo, planas, brillantes. Treinta metros de bosque iluminado, y en los treinta metros, nada. Ni Álex. Ni nadie. Y detrás de los treinta metros, el negro, más negro por contraste, como una pared.` : sn === "grita" ? `
 Has gritado. Hasta que la voz se ha ido. Hasta que ha salido la voz de debajo de la voz, la que no usas. ${N[d]}. ${N[d]}. ${N[d]}.
 
-Y a la séptima vez, desde los pinos, tu propia voz. Devuelta. ${N[d]}. Con tu ronquera. Exacta. Como una pelota.
+Y a la séptima vez, desde los pinos, el nombre. Devuelto. ${N[d]}. Con una voz que no es de nadie y tiene tu ronquera. Exacta. Como una pelota.
 
 Te callas.` : sn === "porche" ? `
 Te quedas en el porche. La luz. Alguien tiene que ser la luz, y eres tú, con las manos en la barandilla y la linterna apuntando a la grava.` : `
@@ -795,7 +796,7 @@ Irene: Nora, te lo pido yo. Te lo pido yo, que no te pido nada.
 
 Y es verdad. Irene no te ha pedido nada en toda la noche. Y ahora te pide esto.`}
 
-${d === "marcos" ? "El coche. A tres metros. La puerta del conductor abierta. La luz de dentro encendida. Y en el asiento del conductor, en el cuero, una mancha. Oscura. Con la forma de una mano. La de Marcos, con el corte. Ha estado sentado. Ha estado sentado y se ha ido, y no se ha llevado el coche." : "Los pinos. A tres metros. Las agujas del suelo. Y en las agujas, huellas. De zapatilla. De Álex. Entrando. Una detrás de otra. Y ninguna volviendo."}
+${d === "marcos" ? "El coche no está. Donde estaba, a veinte metros, dos surcos en la grava, recientes, hacia el camino. Un motor: lo habéis oído hace cinco minutos y nadie ha dicho nada, porque un motor es una cosa normal. Y al lado de los surcos, en la grava, una mancha. Oscura. Con la forma de una mano. " + (R().herido(api, "marcos", "sangra") ? "La de Marcos, con el corte." : "De alguien que se apoyó con la mano abierta para levantarse.") + " Ha estado en el suelo. Ha estado en el suelo y se ha levantado, y se ha llevado el coche." : "Los pinos. A tres metros. Las agujas del suelo. Y en las agujas, huellas. De zapatilla. De Álex. Entrando. Una detrás de otra. Y ninguna volviendo."}
 
 ${modo(api, "nora", {
   lucido: `~ ${d === "marcos" ? "La mancha en el asiento tiene la forma de la mano izquierda. Marcos se cortó la derecha. O se ha sentado al revés. O la mano no es suya." : "Huellas que entran y no salen. Como las de la buhardilla. Exactamente como las de la buhardilla."} Un pie más y ya es fuera. Un pie.`,
@@ -917,7 +918,7 @@ Abajo. En la curva grande. La del pino que Álex señaló esta tarde: «ahí te 
 
 Música.
 
-La fiesta. La grabación del brindis. Álex diciendo «documental número uno». La carcajada de Irene. A todo volumen. Saliendo de un coche volcado en mitad del camino.
+La fiesta. ${api.hayEvidencia("video_brindis") ? "La grabación del brindis. Álex diciendo «documental número uno»." : "Álex diciendo «" + R().voz(api, "alex", 0) + "». Sin grabación que lo explique."} La carcajada de Irene. A todo volumen. Saliendo de un coche volcado en mitad del camino.
 
 ${cruza ? "Bajas. Corriendo. Con la linterna saltando. Los cien metros de camino que Marcos bajó esta tarde en primera diciendo «esta cuesta no la sube ni Dios»." : N[b] + " baja. Corriendo. Tú detrás, porque ya da igual el borde, porque el borde era para esto."}
 
@@ -927,7 +928,7 @@ Boca arriba. Con el techo aplastado contra la tierra. Con el morro dentro del pi
 
 Y una mano fuera.
 
-Por la ventana del conductor. En la tierra. Con el paño de cuadros todavía puesto, oscuro, y los dedos abiertos.
+Por la ventana del conductor. En la tierra. ${R().herido(api, "marcos", "sangra") ? "Con el paño de cuadros todavía puesto, oscuro, y los dedos abiertos." : "Con los dedos abiertos, como quien suelta algo."}
 
 Te agachas. La linterna dentro.
 
@@ -979,7 +980,7 @@ ${modo(api, "nora", {
 
 La luz vuelve a ser la tuya. La de tu linterna, en tu mano, apuntando abajo. Al terraplén. A las piedras blancas que no son blancas.
 
-Has seguido las huellas con ${N[b]}. Hasta el claro. Hasta el borde. Y el móvil de Álex, entre las agujas, grabando el cielo: catorce minutos.
+Has seguido las huellas con ${N[b]}. Hasta el claro. Hasta el borde. ${api.bandera("alex_graba_bosque") ? "Y el móvil de Álex, entre las agujas, grabando el cielo: catorce minutos." : "Y el móvil de Álex, entre las agujas, con la pantalla hacia arriba, apagado."}
 
 Y abajo, Álex.
 
@@ -990,7 +991,7 @@ La luz vuelve a ser la tuya. La de tu linterna, en tu mano, bajando por el camin
 
 Los faros. Uno apuntando al cielo. La curva grande. El pino que Álex señaló esta tarde.
 
-El coche, boca arriba, con el morro dentro del tronco. El cristal en polvo, brillando. Una mano fuera, por la ventana, en la tierra, con el paño de cuadros oscuro.
+El coche, boca arriba, con el morro dentro del tronco. El cristal en polvo, brillando. Una mano fuera, por la ventana, en la tierra${R().herido(api, "marcos", "sangra") ? ", con el paño de cuadros oscuro" : ""}.
 
 Y dentro, colgando del cinturón, Marcos. Con el cuello doblado hacia donde no se dobla. Con los ojos abiertos.
 
@@ -1007,9 +1008,9 @@ ${d === "alex" ? `Bajas. Por las piedras. Con las manos. Te cortas una rodilla y
 
 Le tocas. La mejilla. Fría. Ya. Tan pronto.
 
-Y algo más. En el cuello. Debajo de la mandíbula. Cuatro marcas. Rojas. Como cuatro dedos. Como las del brazo de Irene. Como las de tu tobillo. Y no son de la caída, porque la caída no aprieta.` : `Te agachas. La linterna dentro del coche. Metes la mano por la ventana. Le tocas la cara, que está donde no debería estar una cara. Fría. Ya. Tan pronto.
+Y algo más. En el cuello. Debajo de la mandíbula. Cuatro marcas. Rojas. Como cuatro dedos. ${api.hayEvidencia("marca_brazo_irene") ? "Como las del brazo de Irene. " : ""}${api.hayEvidencia("marca_tobillo_nora") ? "Como las de tu tobillo. " : api.hayEvidencia("marca_muneca_nora") ? "Como las de tu muñeca. " : ""}Y no son de la caída, porque la caída no aprieta.` : `Te agachas. La linterna dentro del coche. Metes la mano por la ventana. Le tocas la cara, que está donde no debería estar una cara. Fría. Ya. Tan pronto.
 
-Y algo más. En el cuello. Debajo de la mandíbula, a la vista porque la cabeza cae hacia atrás. Cuatro marcas. Rojas. Como cuatro dedos. Como las del brazo de Irene. Y no son del cinturón, porque el cinturón no aprieta ahí.`}
+Y algo más. En el cuello. Debajo de la mandíbula, a la vista porque la cabeza cae hacia atrás. Cuatro marcas. Rojas. Como cuatro dedos. ${api.hayEvidencia("marca_brazo_irene") ? "Como las del brazo de Irene. " : api.hayEvidencia("marca_tobillo_nora") ? "Como las de tu tobillo. " : ""}Y no son del cinturón, porque el cinturón no aprieta ahí.`}
 
 ~ No puede ser. No puede ser y es. Es esto lo que había en la historia debajo de la historia: que se muere uno. Que se muere de verdad, con la boca llena, en una zanja, y que da igual lo que sabías.
 
@@ -1062,7 +1063,7 @@ Las cinco y media. Faltan hora y media para las siete. Y sois tres.`;
       const vivos = R().vivos(api).filter((p) => p !== "nora");
       const h = H(api);
       const vh = api.bandera("viii_hallazgo");
-      const movil = api.bandera("movil_alex_hallado");
+      const movil = api.bandera("movil_alex_hallado") && api.bandera("alex_graba_bosque");
       const vaso = api.bandera("vaso_en_video");
       const inicio = vh === "tapa" ? `Le has tapado con la camisa. La de Marcos. La que ${api.sabe("nora", "irene_camisa") ? "Irene le regaló hace tres años" : "cogiste esta mañana sin preguntar"}. Se ha quedado allí, con la camisa encima de la cara, y tú con la camiseta, con el frío por dentro.` : vh === "movil" ? "Tienes el móvil de Álex en el bolsillo. Has parado la grabación. Catorce minutos y cincuenta segundos de cielo y de lo que sea que hay antes del cielo." : vh === "llave" ? "Tienes la llave del coche en el bolsillo. Has apagado el motor. La radio ha seguido sonando dos segundos más y se ha callado, como quien termina una frase." : vh === "foto" ? "Has fotografiado las marcas. Con flash. Cuatro dedos en un cuello. La foto está en tu móvil, entre la del símbolo de la mesa y la de la viga. Un catálogo." : "Has subido. Sin tocarle más. Sin mirar atrás. La luz del porche. La puerta. Dentro.";
       return `
@@ -1153,11 +1154,11 @@ ${modo(api, "nora", {
       if (d === "alex") return `
 Álex.
 
-Álex, que te lamió el pulgar en la mesa a la una menos veinte. Álex, con la mano donde la tiene siempre. Álex, que te guiñó un ojo mientras te ahogabas${api.bandera("irene_senal") ? " y no lo entendió" : ""}. Álex, que era horrible, y tú también, y erais compatibles siendo horribles.
+Álex, al que le lamiste el pulgar en la mesa a la una menos veinte. Álex, con la mano donde la tiene siempre. Álex, que te guiñó un ojo mientras te ahogabas${api.bandera("irene_senal") ? " y no lo entendió" : ""}. Álex, que era horrible, y tú también, y erais compatibles siendo horribles.
 
 En una zanja. Con la boca llena. Con la mano abierta.
 
-Y aquí, en la mesa, Marcos. Con la mano vendada. Con la cara de buscar nombres.
+Y aquí, en la mesa, Marcos. ${R().herido(api, "marcos", "sangra") ? "Con la mano vendada. " : ""}Con la cara de buscar nombres.
 
 Irene: Le diste la llave.
 
@@ -1201,11 +1202,11 @@ ${modo(api, "irene", {
       return `
 Marcos.
 
-Marcos, que te sujetó el pelo en tu bañera hace cinco años. Marcos, que nunca te besó en el sofá de Rubén${api.bandera("p3") === "beso" || api.bandera("p3") === "beso_fuerte" ? " y te ha besado esta noche" : ""}. Marcos, que te sopló dentro cuando no respirabas${api.bandera("marcos_accion") === "rescate" ? "" : ", o no, o fue la lámpara"}. Marcos, que lo explicaba todo.
+Marcos, al que le sujetaste el pelo en tu bañera hace cinco años. Marcos, que nunca te besó en el sofá de Rubén${api.bandera("p3") === "beso" || api.bandera("p3") === "beso_fuerte" ? " y te ha besado esta noche" : ""}. Marcos, que te sopló dentro cuando no respirabas${api.bandera("marcos_accion") === "rescate" ? "" : ", o no, o fue la lámpara"}. Marcos, que lo explicaba todo.
 
 Colgando de un cinturón en un coche boca arriba, con la fiesta en la radio.
 
-Y aquí, en la mesa, Nora. Con la camiseta y sin la camisa. Con el cuaderno cerrado. Con la cara de quien ha visto lo que ha visto.
+Y aquí, en la mesa, Nora. ${api.bandera("camisa_en_cuerpo") ? "Con la camiseta y sin la camisa. " : ""}Con el cuaderno cerrado. Con la cara de quien ha visto lo que ha visto.
 
 Irene: Le dejaste salir.
 
@@ -1302,7 +1303,7 @@ Irene se ha sentado. Se ha callado. Te ha cogido la mano por encima de la mesa y
 
 La mesa. Tres. La silla de Álex vacía, con su cerveza a medias delante, con el cenicero lleno de sus colillas.
 
-${marcado ? "Y la ventana. No la miras. La miras. Los faros siguen ahí, abajo, entre los pinos. Quietos. Esperando. Y ahora sabes qué esperan, porque has visto un coche boca arriba en tu cabeza toda la noche y era el tuyo." : "Y la mano. Late. Debajo del paño. Como algo que quiere salir."}
+${marcado ? "Y la ventana. No la miras. La miras. Los faros siguen ahí, abajo, entre los pinos. Quietos. Esperando. Y ahora sabes qué esperan, porque has visto un coche boca arriba en tu cabeza toda la noche y era el tuyo." : R().herido(api, "marcos", "sangra") ? "Y la mano. Late. Debajo del paño. Como algo que quiere salir." : "Y las manos. Quietas en la mesa. Enteras. Y aun así, algo que late."}
 
 Nora escribe. Irene ${vc === "bano" ? "en el baño." : "con la cabeza en la mesa."} Y tú, con nada que arreglar por primera vez en tu vida.
 
@@ -1340,9 +1341,9 @@ ${modo(api, "marcos", {
       // Álex vivo, Marcos muerto
       return `${inicio}
 
-La mesa. Tres. La silla de Marcos vacía, con su cerveza a medias, con el atizador apoyado en el respaldo.
+La mesa. Tres. La silla de Marcos vacía, con su cerveza a medias, ${R().lleva(api, "marcos", "atizador") ? "con el atizador apoyado en el respaldo" : "un poco separada de la mesa, como la dejó"}.
 
-${marcado ? "Y la ventana. No la miras. La miras. Y en el cristal, dos golpes que solo oyes tú, toc, toc, y el tercero que no llega porque el tercero es tuyo." : "Y el pie. Late. Como algo que quiere salir."}
+${marcado ? "Y la ventana. No la miras. La miras. Y en el cristal, dos golpes que solo oyes tú, toc, toc, y el tercero que no llega porque el tercero es tuyo." : R().herido(api, "alex", "cojera") ? "Y el pie. Late. Como algo que quiere salir." : R().herido(api, "alex", "sangra") ? "Y la mano. Late. Debajo del paño. Como algo que quiere salir." : "Y nada. Y eso también late."}
 
 Nora escribe. Irene ${vc === "bano" ? "en el baño." : "con la cabeza en la mesa."} Y tú sin documental, sin chiste, sin nada que decir a cámara, con las manos vacías por primera vez desde que tienes manos.
 
@@ -1366,7 +1367,7 @@ Otra vez. Igual. Como una grabación. No: como alguien que se ha aprendido una f
 
 ~ Cuanto más hablamos dentro, más tiene. Lo dijo Nora. Me reí.` : `Y nada. La nevera. El generador lejos. Y las tres respiraciones, que se oyen demasiado.
 
-Y en el silencio, sin voz, sin golpe, tienes la certeza más grande de la noche: que la casa está esperando a que uno de los tres diga algo, para quedárselo.`}
+Y en el silencio, sin voz, sin golpe, se te ocurre lo peor que se te ha ocurrido en toda la noche: que la casa no está esperando nada. Que ya lo tiene.`}
 
 ${modo(api, "alex", {
   lucido: `~ ${v ? "Su voz. Sus palabras. Devueltas desde un porche vacío. Lo conté yo: voces que te llaman por tu nombre. Lo conté como se cuenta un chiste, y la casa se lo tomó en serio." : "Tres personas. Una mesa. Ochenta minutos. Y yo de adulto. Yo. Marcos se reiría. Marcos no se va a reír."}`,
@@ -1418,7 +1419,7 @@ Las seis menos dos minutos. Faltan sesenta y dos para las siete. Lo has dicho en
 
 Tres.
 
-Tú, con la camiseta y sin la camisa, con el cuaderno abierto y una página que dice lo que dice. Irene, ${h === "irene" ? "con la mano en el cuello y los ojos en la silla vacía, quieta, como quien escucha a alguien sentado" : "descalza, con las rodillas en el pecho, temblando de una manera que ya no es de frío"}. ${o === "marcos" ? "Marcos, con la mano vendada y el atizador" + (seg === "marcos" ? " y la mirada en la ventana, en los faros que no ve nadie más" : "") + "." : o === "alex" ? "Álex, con el pie hinchado y el móvil apagado" + (seg === "alex" ? " y la mirada en el cristal, en los golpes que no oye nadie más" : "") + "." : ""}
+Tú, ${api.bandera("camisa_en_cuerpo") ? "con la camiseta y sin la camisa, " : ""}con el cuaderno abierto y una página que dice lo que dice. Irene, ${h === "irene" ? "con la mano en el cuello y los ojos en la silla vacía, quieta, como quien escucha a alguien sentado" : "descalza, con las rodillas en el pecho, temblando de una manera que ya no es de frío"}. ${o === "marcos" ? "Marcos, " + (R().herido(api, "marcos", "sangra") ? "con la mano vendada y " : "con ") + (R().lleva(api, "marcos", "atizador") ? "el atizador" : "las manos en la mesa") + (seg === "marcos" ? " y la mirada en la ventana, en los faros que no ve nadie más" : "") + "." : o === "alex" ? "Álex, " + (R().herido(api, "alex", "cojera") ? "con el pie hinchado y " : "con ") + "el móvil apagado" + (seg === "alex" ? " y la mirada en el cristal, en los golpes que no oye nadie más" : "") + "." : ""}
 
 Y la silla vacía. Con la cerveza a medias. Que nadie aparta.
 

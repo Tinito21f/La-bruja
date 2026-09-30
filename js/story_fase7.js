@@ -96,11 +96,7 @@ ${marcosCojo ? "Se levanta. Se sienta. El pie. Se vuelve a levantar con el atiza
 
 El almacén. El frío que sale del escalón de piedra. La caja gris. La tapa. Marcos la levanta.
 
-Marcos: Está subido.
-
-Nora: ¿Qué?
-
-Marcos: El diferencial. Está subido. Todo está subido. No es esto.
+${api.bandera("cuadro_visto") ? "Marcos: Está subido.\n\nNora: ¿Qué?\n\nMarcos: El diferencial. Está subido. Todo está subido. No es esto." : "Marcos: Bajado.\n\nNora: ¿Qué?\n\nMarcos: El diferencial. Estaba bajado. Lo subo. Y nada. No es esto."}${api.bandera("cuadro_visto") ? "" : "\n\nY la estantería del fondo. Con un hueco de dos dedos entre la madera y la pared. Y la pared, que no es de madera: piedra. Marcos la mira dos segundos más de la cuenta y no dice nada."}
 
 Se queda mirando la caja con la linterna. Y se le ve la cara de cuando una cosa no tiene solución, que es la cara que menos le has visto en cinco meses.
 
@@ -130,7 +126,7 @@ ${modo(api, "nora", {
 Tienes las velas. Tienes el móvil al treinta por ciento. Tienes a Marcos mirando la puerta con la cara de un cálculo.`;
     },
     opciones: [
-      { texto: "Encender las otras dos velas. Las de la mochila. «Para la luz.»", a: "vii2_quien",
+      { texto: "Encender las velas que quedan en la mochila. «Para la luz.»", a: "vii2_quien",
         efecto: (api) => { api.marcar("vii_nora", "velas"); api.est("nora", "estres", -3); api.est("irene", "miedo", -3); api.est("nora", "eje", 2); } },
       { texto: "«Nadie sale. Aguantamos con las velas hasta las siete.»", a: "vii2_quien",
         efecto: (api) => { api.marcar("vii_nora", "nadie"); api.rel("irene", "nora", "confianza", 4); api.rel("marcos", "nora", "tension", 3); api.est("nora", "estres", 2); } },
@@ -309,8 +305,8 @@ Los faros se paran. Entre los árboles. A cien metros. A doscientos. No sabes ca
 Enciendes la linterna. Te das la vuelta. Cobertizo. Tirador. Tres minutos. Es lo que sabes hacer.` : `Nada más. La grava, la tierra, el bulto del cobertizo. El viento arriba, en las copas, que suena a mar. Y tu respiración, que se oye demasiado aquí fuera, como si el bosque la devolviera.`}
 
 ${modo(api, "marcos", {
-  lucido: `~ ${faros ? "Faros. Un motor. En un camino sin salida. Hay tres explicaciones y las tres necesitan que haya alguien, y no hay nadie. Cobertizo. Tirador. Ya pensaré." : "Quince metros. Un cono de luz. Un cobertizo. Es lo más sencillo que he hecho en toda la noche y tengo el pulso en la garganta."}`,
-  asustado: `~ ${faros ? "Nos miran. Los faros nos miran. Como los ojos de un perro en la cuneta." : "El tin. Ha sonado un tin. Como el de la historia. Como el de Álex con los dedos."}`,
+  lucido: `~ ${faros ? "Faros. Un motor. En un camino sin salida. Hay tres explicaciones y las tres necesitan que haya alguien, y no hay nadie. Cobertizo. Tirador. Ya pensaré." : "Quince metros. Diez segundos a paso normal. Un tirador, tres intentos como mucho. Y el pulso a ciento veinte, que es lo único que no me cuadra."}`,
+  asustado: `~ ${faros ? "Nos miran. Los faros nos miran. Como los ojos de un perro en la cuneta." : "Un tin. Metal contra metal. La chapa del cobertizo con el viento. Tiene que ser la chapa. Tiene que ser."}`,
   tenso: "~ Tirador. Gasolina. Tirador. Vuelta. No mires el coche. No mires los árboles. Tirador.",
   ido: `~ ${faros ? "Los faros parpadean como una respiración. Suben cuando inspiro. Bajan cuando suelto." : "La grava brilla sin luz. Brilla sola. Es un camino que se enciende cuando lo pisas."}`,
   perdido: `~ ${faros ? "Es mi coche. Es mi coche subiendo por el camino con alguien dentro. Y yo aquí. Y mi coche allí." : "Ha sonado. La campanilla. Ya soy suyo. Lo dijo Álex: cuando decide que eres suyo. Ya."}`,
@@ -338,16 +334,14 @@ Te paras. ${dos ? "Marcos no se para. No lo ha oído. Se le ve no oírlo." : ""}
 
 Y entonces, desde los árboles, con tu voz, con la voz de hace cuatro horas, con la sonrisa entera:
 
-«¡Documental número uno! Cuatro idiotas en la casa de una bruja.»
-
-Tu voz. Tus palabras. Las del brindis. Desde los pinos. Como si alguien las hubiera grabado y las pusiera ahora, bajo, para ti.
+${api.hayEvidencia("video_brindis") ? "«¡Documental número uno! Cuatro idiotas en la casa de una bruja.»\n\nTu voz. Tus palabras. Las del brindis." : "«" + R().voz(api, "alex", 0) + "»\n\nTu voz. Tus palabras. De esta noche."} Desde los pinos. Como si alguien las hubiera grabado y las pusiera ahora, bajo, para ti.
 
 ~ Me lo devuelve. Mi juego. Los golpes. Mi voz. Me lo está devolviendo todo, como se devuelve un favor.
 
-~ Grabé eso. Marcos grabó eso. Está en su móvil. Nadie ha estado en su móvil. Nadie ha estado en los pinos.` : `Nada. El cono de luz, la tierra, el cobertizo. El viento arriba, en las copas. Y tú con las ganas de decir algo a cámara y sin cámara, porque el móvil es la linterna y no se puede tener todo.`}
+${api.hayEvidencia("video_brindis") ? "~ Grabé eso. Marcos grabó eso. Está en su móvil. Nadie ha estado en su móvil." : "~ Lo dije yo. Esta noche. En la mesa. Nadie lo grabó."} Nadie ha estado en los pinos.` : `Nada. El cono de luz, la tierra, el cobertizo. El viento arriba, en las copas. Y tú con las ganas de decir algo a cámara y sin cámara, porque el móvil es la linterna y no se puede tener todo.`}
 
 ${modo(api, "alex", {
-  lucido: `~ ${golpes ? "Mi voz. Mis palabras exactas. Solo hay dos sitios donde están: el móvil de Marcos y mi cabeza. Y los pinos no tienen ninguno de los dos." : "Quince metros de tierra a oscuras. Es lo más sencillo de la noche y tengo el pulso en la garganta. Bien. Por lo menos es mío."}`,
+  lucido: `~ ${golpes ? "Mi voz. Mis palabras exactas. " + (api.hayEvidencia("video_brindis") ? "Solo hay dos sitios donde están: el móvil de Marcos y mi cabeza. Y los pinos no tienen ninguno de los dos." : "Solo hay un sitio donde están: mi cabeza. Y los pinos no tienen cabeza.") : "Quince metros de tierra a oscuras. Es lo más sencillo de la noche y tengo el pulso en la garganta. Bien. Por lo menos es mío."}`,
   asustado: `~ ${golpes ? "Me lo devuelve. Todo. Como el tablón del porche. Sabe mi voz. Sabe mis chistes." : "El tin. Ha sonado un tin. Como el de la historia. Como el que hice con los dedos."}`,
   tenso: "~ Cobertizo. Generador. Tirador. Que no se diga que Álex se ha quedado en un escalón dos veces.",
   ido: `~ ${golpes ? "Mi voz sonaba mejor desde los pinos. Más grave. Más de verdad. Como si allí supieran hacerla bien." : "La grava brilla sin luz. Brilla sola. Es un camino. Ya lo era antes."}`,
@@ -432,7 +426,7 @@ Un ruido enorme en un sitio pequeño. Humo. Y por la puerta abierta, entre los p
 
 Encendida.
 
-Todas las ventanas. El porche con su bombilla y sus polillas. La luz amarilla del salón cayendo sobre la grava como algo que se ha derramado. Y dentro, a través del cristal, dos figuras de pie. Nora. Irene. Mirando hacia aquí.
+Todas las ventanas. El porche con su bombilla y sus polillas. La luz amarilla del salón cayendo sobre la grava como algo que se ha derramado. Y dentro, a través del cristal, ${goers(api).length === 2 ? "dos figuras de pie. Nora. Irene." : "tres figuras de pie. Nora. Irene. Y " + (goers(api)[0] === "marcos" ? "Álex" : "Marcos") + "."} Mirando hacia aquí.
 
 Es lo más bonito que has visto en toda la noche. Una casa encendida. Te das cuenta de que tienes las rodillas flojas.
 
@@ -490,7 +484,7 @@ La puerta del cobertizo, detrás, se mueve con el viento. Golpea. Se abre. Golpe
 
 La luz vuelve.
 
-Así. Sin avisar. La lámpara, la cocina, el pasillo de arriba por el hueco de la escalera. El zumbido de la nevera, que ahora oyes porque lo has echado de menos. Las cuatro velas siguen ardiendo y de repente no hacen falta, y las miras como se mira a alguien que se ha quedado hablando solo.
+Así. Sin avisar. La lámpara, la cocina, el pasillo de arriba por el hueco de la escalera. El zumbido de la nevera, que ahora oyes porque lo has echado de menos. Las velas siguen ardiendo y de repente no hacen falta, y las miras como se mira a alguien que se ha quedado hablando solo.
 
 Irene suelta el aire. Con ruido.
 
@@ -514,7 +508,7 @@ Y cuando volvéis a la mesa, Álex ha puesto música.
 
 [musica:fiesta_baja]
 
-Baja. Algo de Irene. Algo alegre que no pega con nada y por eso pega. Irene ha abierto cuatro cervezas. Marcos coge la suya con la mano buena.
+Baja. Algo de Irene. Algo alegre que no pega con nada y por eso pega. Irene ha abierto cuatro cervezas. ${R().herido(api, "marcos", "sangra") ? "Marcos coge la suya con la mano buena." : R().herido(api, "alex", "sangra") ? "Álex coge la suya con la mano buena y brinda con nadie." : "Marcos coge la suya."}
 
 Álex: Se acabó.
 
@@ -581,7 +575,7 @@ Delante de todos. Con la voz de las preguntas serias.
 ${api.bandera("golpes_marcado") ? "No dices lo de la voz. Tu voz desde los pinos. Lo tienes en la boca y sale otra cosa: «nada más». Álex, que lo cuenta todo, diciendo «nada más». Y te oyes decirlo como se oye a otro." : "Y es verdad. Y aun así te suena a mentira, y a Nora se le ve que también."}`) : "";
       if (p === "marcos") return `${preg}
 
-La mesa. La cerveza en la mano buena. La otra en alto, con el paño de cuadros, que ya está oscuro por dentro. ${vv === "rodilla" ? "Nora con la mano en tu rodilla. Sin decir nada. Es su manera." : ""} Álex contando lo del conejo con más detalles de los que hubo. Irene sin reírse.
+La mesa. ${R().herido(api, "marcos", "sangra") ? "La cerveza en la mano buena. La otra en alto, con el paño de cuadros, que ya está oscuro por dentro." : "La cerveza en la mano. Álex, enfrente, con la suya en alto, envuelta en el paño de cuadros que ya está oscuro por dentro."} ${vv === "rodilla" ? "Nora con la mano en tu rodilla. Sin decir nada. Es su manera." : ""} Álex contando lo del conejo con más detalles de los que hubo. Irene sin reírse.
 
 Y la ventana.
 
@@ -593,7 +587,7 @@ Amarillas. Bajas. Quietas.
 
 Los faros.
 
-Los mismos. A cien metros. A doscientos. Encendidos. Mirando la casa.
+${api.bandera("faros_marcado") ? "Los mismos. " : ""}A cien metros. A doscientos. Encendidos. Mirando la casa.
 
 Te quedas mirándolos por encima del hombro de Álex. Álex sigue hablando. Nadie mira la ventana. Nadie más los ve, porque nadie más mira, o porque no están.
 
@@ -638,7 +632,7 @@ Te callas. A mitad de frase. Álex no se calla a mitad de nada.
 
 Nadie más lo ha oído. Marcos sigue con la bujía. Irene mira a Marcos. Nora te mira a ti.
 
-Y el tercero no llega. Como no llegaba el tuyo en el porche. Lo esperas. Te oyes esperarlo. Y no llega, porque el tercero es tuyo, porque siempre has sido tú el que da el tercero.
+Y el tercero no llega. ${api.bandera("v_nora_porche") ? "Como no llegaba el tuyo en el porche. " : ""}Lo esperas. Te oyes esperarlo. Y no llega, porque el tercero es tuyo, porque siempre has sido tú el que da el tercero.
 
 ~ Me lo devuelve. Aquí dentro. Con luz. Con todos delante. Y solo yo lo oigo, y eso es exactamente lo que quiere.
 
@@ -714,7 +708,7 @@ ${N[p]} se ha bebido la cerveza de un trago y ha cogido la botella y se ha servi
 
 Cinco y dos minutos. Lo ha dicho Nora. Nora dice la hora como otros tocan madera.
 
-Faltan dos horas para las siete. La música sigue, baja, y ya no es de fiesta: es de sala de espera. Álex tiene el pie en la silla. Marcos la mano en alto. Tú tienes las dos manos en la mesa y los pies descalzos encogidos bajo la silla, porque el suelo está frío, porque todo está frío.
+Faltan dos horas para las siete. La música sigue, baja, y ya no es de fiesta: es de sala de espera. ${["alex", "marcos", "irene"].filter((p) => R().herido(api, p, "cojera")).map((p) => N[p] + " tiene el pie en la silla. ").join("")}${["marcos", "alex"].filter((p) => R().herido(api, p, "sangra")).map((p) => N[p] + " la mano en alto. ").join("")}Tú tienes las dos manos en la mesa y los pies descalzos encogidos bajo la silla, porque el suelo está frío, porque todo está frío.
 
 ${h === "irene" ? `Y te llega. Con tu voz.
 
@@ -728,7 +722,7 @@ Irene.
 
 Con la voz de Marcos.
 
-No la de la mesa. La de la ouija. La de cuando dijo tu nombre agachado sobre ti, «Irene, Irene, mírame», la que solo le has oído una vez. Desde fuera. Desde el porche donde no hay nadie.
+No la de la mesa. La de la ouija. ${api.bandera("marcos_accion") === "rescate" ? "La de cuando dijo tu nombre agachado sobre ti, «Irene, Irene, mírame», la que solo le has oído una vez." : "La de cuando dijo «¿Irene?» con la luz yéndose, la que solo le has oído una vez."} Desde fuera. Desde el porche donde no hay nadie.
 
 Irene.
 
@@ -738,7 +732,7 @@ Marcos: ¿Qué?
 
 Irene: Nada.
 
-Miras la puerta. Cerrada. Dos vueltas. La llave en el bolsillo de Marcos.
+Miras la puerta. Cerrada. Dos vueltas. La llave en el bolsillo de ${marcosPuedeSalir(api) ? "Marcos" : "Álex"}.
 
 Irene.
 
@@ -836,13 +830,13 @@ Nora: Álex.
 
 Marcos: Está cerrada.
 
-Álex: Tienes la llave.
+${marcosPuedeSalir(api) ? "Álex: Tienes la llave." : "Álex: Tengo la llave. Desde el apagón. Nadie me la ha pedido."}
 
 Marcos: No.
 
 Álex: Marcos. Un minuto. Debajo de la bombilla. Con la puerta abierta.
 
-${h === "marcos" ? "Y Marcos saca la llave. Sin discutir más. Marcos, que había dicho que nadie sale, saca la llave y se la da, y tú le miras hacerlo y no le reconoces el gesto." : "Y Marcos, que tiene un tobillo del tamaño de la rodilla y una mano abierta y dos horas de reglas, se cansa. Se le ve cansarse. Saca la llave. Se la tira por encima de la mesa."}
+${!marcosPuedeSalir(api) ? "Y Marcos no dice nada más, porque no tiene con qué. Álex ya tiene la mano en el bolsillo." : h === "marcos" ? "Y Marcos saca la llave. Sin discutir más. Marcos, que había dicho que nadie sale, saca la llave y se la da, y tú le miras hacerlo y no le reconoces el gesto." : "Y Marcos, que tiene " + (R().herido(api, "marcos", "cojera") ? "un tobillo del tamaño de la rodilla" : R().herido(api, "marcos", "sangra") ? "una mano abierta" : "el cuerpo entero") + " y dos horas de reglas, se cansa. Se le ve cansarse. Saca la llave. Se la tira por encima de la mesa."}
 
 Álex: Un minuto.
 
@@ -867,11 +861,11 @@ Y baja a la grava.
 Y se va de la luz.` : `
 Marcos se levanta.
 
-Marcos: Voy a cerrar el cobertizo.
+${goers(api).includes("marcos") ? "Marcos: Voy a cerrar el cobertizo." : "Marcos: Voy a apagar la luz del coche."}
 
 Nora: ¿Qué?
 
-Marcos: ${api.bandera("cobertizo_cerrado") ? "He cerrado el pestillo y no estoy seguro. Y si entra un bicho y toca el generador, nos quedamos a oscuras otra vez." : "Lo he dejado abierto. Con la puerta dando golpes. Si se cierra sola con el viento y ahoga el motor, nos quedamos a oscuras otra vez."}
+Marcos: ${!goers(api).includes("marcos") ? "Se ha vuelto a encender. La luz de dentro del coche. Si se queda así, mañana no arranca. Y entonces sí que no sale nadie." : api.bandera("cobertizo_cerrado") ? "He cerrado el pestillo y no estoy seguro. Y si entra un bicho y toca el generador, nos quedamos a oscuras otra vez." : "Lo he dejado abierto. Con la puerta dando golpes. Si se cierra sola con el viento y ahoga el motor, nos quedamos a oscuras otra vez."}
 
 Nora: Marcos. No.
 
@@ -879,15 +873,15 @@ Marcos: Está encendido el porche. Son quince metros con luz. Un minuto.
 
 Nora: Has dicho que nadie sale.
 
-Marcos: Y he salido. Y he vuelto. Es un pestillo.
+${goers(api).includes("marcos") ? "Marcos: Y he salido. Y he vuelto. Es un pestillo." : "Marcos: Es mi coche. Es un botón."}
 
 Lo dice con la voz de las explicaciones. Y tú le conoces desde marzo y sabes que cuando Marcos explica dos veces la misma cosa es que no es esa cosa.
 
 ${api.bandera("marcos_miente") ? "Y mira la ventana. Al decirlo. Mira la ventana como se mira a alguien que te ha dicho algo." : "Y no te mira. Marcos siempre te mira cuando te dice que no. Ahora mira la puerta."}
 
-Saca la llave. Dos vueltas al revés. El frío. La bombilla del porche con sus polillas. Sale. Deja la puerta entornada. Se ve su espalda bajar los escalones, cojeando o no, con la linterna.
+Saca la llave. Dos vueltas al revés. El frío. La bombilla del porche con sus polillas. Deja la llave puesta por dentro, que es lo que hace Marcos: dejar las cosas donde hacen falta. ${R().lleva(api, "marcos", "atizador") ? "El atizador, apoyado en su silla. " : ""}Sale. Deja la puerta entornada. Se ve su espalda bajar los escalones, cojeando o no, con la linterna.
 
-Un minuto. La linterna cruza la grava hacia el cobertizo. Llega. Se para.
+Un minuto. La linterna cruza la grava hacia ${goers(api).includes("marcos") ? "el cobertizo" : "el coche"}. Llega. Se para.
 
 Dos minutos.
 

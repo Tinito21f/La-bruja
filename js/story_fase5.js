@@ -35,15 +35,17 @@
 (() => {
   const modo = (api, id, m) => m[api.modo(id)] || m.normal;
   const H = (api) => api.bandera("huesped");
-  const noraCon = (api) => api.bandera("v_nora_con");     // "alex" | "marcos" | "irene" | null
-  const ireneCon = (api) => api.bandera("v_irene_con");   // "marcos" | "nora" | "alex" | null
-  const quedan = (api) => api.bandera("v_quedan") || null; // "irene_alex" | "alex_marcos" | null: los dos que quedan cuando Nora sube acompañada
+  const noraCon = (api) => api.bandera("v_nora_con");     // tramo 1: "alex" | null · tramo 2: "marcos" | "irene" | null (con quién sube)
+  const noraPorche = (api) => Boolean(api.bandera("v_nora_porche"));   // tramo 1: Nora salió al porche con Álex
+  const ireneCon = (api) => api.bandera("v_irene_con");   // tramo 1: "marcos" | null
+  const quedan = (api) => api.bandera("v_quedan") || null; // tramo 2: "irene_alex" | "alex_marcos" | null: los dos que quedan cuando Nora sube acompañada
   const R = () => HISTORIA.R;                              // reglas de las fases VI en adelante (js/story_reglas.js); existen al ejecutar
-  // Las rutas que existen en esta configuración. Las no seguidas se resuelven con las mismas banderas.
-  const rutasDeConfig = (api) => quedan(api) === "irene_alex" ? ["buhardilla", "dormitorio"]
-    : quedan(api) === "alex_marcos" ? ["buhardilla", "almacen_dos"]
-    : noraCon(api) === "alex" ? ["porche", "arriba", "almacen"]
-    : ["porche", "arriba", "almacen", "buhardilla"];
+  // Dos tramos (30-09-2026). Tramo 1 (03:30): cada uno a su necesidad; Nora al porche con Álex o en la mesa con la tabla.
+  // Tramo 2 (03:42): todos de vuelta, la cuerda se mueve y Nora sube: sola, con Marcos o con Irene. Los que quedan siembran.
+  // Las rutas no seguidas se resuelven con las mismas banderas.
+  const T1 = ["porche", "arriba", "almacen"];
+  const T2 = (api) => ["buhardilla"].concat(quedan(api) === "irene_alex" ? ["dormitorio"] : quedan(api) === "alex_marcos" ? ["almacen_dos"] : []);
+  const rutasDeConfig = (api) => T1.concat(T2(api));
   const camisa = (api) => api.bandera("juego") === "poker" ? "la camisa de cuadros de Marcos" : "la camisa de Marcos";
 
   Object.assign(HISTORIA.presupuestoAnomalias, { V: 4 });
@@ -52,19 +54,23 @@
   const saltoPrevio = HISTORIA.prepararSalto;
   HISTORIA.prepararSalto = (api, id) => {
     if (typeof saltoPrevio === "function") saltoPrevio(api, id);
-    if (!/^v[abmpq]?\d/.test(id)) return;
+    if (!/^v[abmnpq]?\d/.test(id)) return;
     api.fase("V"); api.horror(2);
     if (!api.bandera("huesped")) { api.marcar("huesped", "marcos"); api.marcar("marcos_accion", "rescate"); api.marcar("contacto", true); api.marcar("contacto_inicial", "irene"); }
     if (!api.bandera("huesped_nivel")) api.marcar("huesped_nivel", 1);
-    if (/^vq1/.test(id)) { api.marcar("v_nora_con", "marcos"); api.marcar("v_irene_con", "alex"); api.marcar("v_quedan", "irene_alex"); }
-    if (/^vq[234]/.test(id) || /^vb4/.test(id)) { api.marcar("v_nora_con", "irene"); api.marcar("v_irene_con", "nora"); api.marcar("v_quedan", "alex_marcos"); }
+    if (/^vq1/.test(id)) { api.marcar("v_nora_con", "marcos"); api.marcar("v_quedan", "irene_alex"); }
+    if (/^vq[234]/.test(id) || /^vb4/.test(id)) { api.marcar("v_nora_con", "irene"); api.marcar("v_quedan", "alex_marcos"); }
+    if (api.bandera("v_nora_porche") === undefined) api.marcar("v_nora_porche", /^vp/.test(id));
     if (api.bandera("v_nora_con") === undefined) api.marcar("v_nora_con", /^vp/.test(id) ? "alex" : /^vb/.test(id) && id !== "vb1_trampilla" ? "marcos" : null);
     if (api.bandera("v_irene_con") === undefined) api.marcar("v_irene_con", /^va/.test(id) ? "marcos" : null);
     if (api.bandera("v_quedan") === undefined) api.marcar("v_quedan", null);
-    if (api.bandera("v_marcos_libre") === undefined) api.marcar("v_marcos_libre", !api.bandera("v_quedan") && !api.bandera("v_irene_con") && api.bandera("v_nora_con") !== "marcos");
-    if (!api.bandera("v1_nora")) api.marcar("v1_nora", api.bandera("v_nora_con") || "sola");
+    if (api.bandera("v_marcos_libre") === undefined) api.marcar("v_marcos_libre", api.bandera("v_irene_con") !== "marcos");
+    if (api.bandera("v_irene_callada") === undefined) api.marcar("v_irene_callada", H(api) === "irene");
+    if (!api.bandera("v1_nora")) api.marcar("v1_nora", api.bandera("v_nora_porche") ? "alex" : "mesa");
+    if (!api.bandera("v2_nora") && /^v[6-9]|^v[bq]/.test(id)) api.marcar("v2_nora", api.bandera("v_nora_con") || "sola");
     if (api.bandera("v_nora_con") === "irene" && !api.bandera("irene_nora")) api.marcar("irene_nora", versionIreneNora(api));
-    if (/^v9/.test(id)) rutasDeConfig(api).forEach((r) => resolverRuta(api, r, false));
+    if (/^v[5-9]|^v[bq]/.test(id)) { api.marcar("v_resuelta_mesa", true); T1.forEach((r) => resolverRuta(api, r, false)); }
+    if (/^v9/.test(id)) T2(api).forEach((r) => resolverRuta(api, r, false));
   };
 
   // Irene y Nora a solas en la buhardilla: la conversación pendiente, la alianza, o el peligro (Biblia §5, V retoque)
@@ -131,7 +137,7 @@
       const v = api.anomalia("voz_fuera");
       api.marcar("alex_oyo_irene_fuera", v);
       if (v) { api.saber("alex", "oi_irene_fuera"); api.presenciar("alex", 1.5); }
-      if (noraCon(api) === "alex") {
+      if (noraPorche(api)) {
         const g = api.anomalia("gente_arboles");
         api.marcar("nora_vio_gente", g);
         if (g) { api.saber("nora", "gente_arboles"); api.presenciar("nora", 2); }
@@ -139,8 +145,8 @@
       }
       if (!seguida) {
         api.marcar("alex_quiso_cruzar", api.valor("alex", "eje") >= 70);
-        api.marcar("alex_llamo_marcos", noraCon(api) !== "alex" && api.valor("alex", "eje") >= 75);   // grita hacia la casa: lo oye quien esté dentro
-        if (noraCon(api) === "alex") { api.marcar("nora_porro", api.valor("nora", "estres") < 60); if (api.bandera("nora_porro")) api.consumir("nora", "porro"); api.marcar("nora_cuenta_gente", false); }
+        api.marcar("alex_llamo_marcos", !noraPorche(api) && api.valor("alex", "eje") >= 75);   // grita hacia la casa: lo oye quien esté dentro
+        if (noraPorche(api)) { api.marcar("nora_porro", api.valor("nora", "estres") < 60); if (api.bandera("nora_porro")) api.consumir("nora", "porro"); api.marcar("nora_cuenta_gente", false); }
         api.marcar("alex_cuenta", true);           // Álex lo cuenta todo. Siempre.
       }
     }
@@ -179,7 +185,6 @@
     }
 
     if (ruta === "buhardilla") {
-      if (noraCon(api) === "alex") return;   // Nora está en el porche: nadie sube
       api.marcar("huellas_vistas", true); api.saber("nora", "huellas_pequenas"); api.saber("nora", "marcas_viga"); api.saber("nora", "muneca");
       api.presenciar("nora", 1.5);
       const t = api.anomalia("trampilla_cierra");
@@ -212,17 +217,36 @@
       }
     }
 
-    // Irene y Álex, a lo suyo, en su dormitorio: la casa entra sin que se vea nada sobrenatural
+    // Irene y Álex, a lo suyo, en su dormitorio (tramo 2, si Nora sube con Marcos). Con Irene huésped: las uñas, la sangre,
+    // el mordisco, y Álex decide si le gusta. Sin el huésped: lo que Irene ve en el armario por encima del hombro de Álex.
     if (ruta === "dormitorio") {
       api.marcar("armario_golpe", true); api.saber("irene", "golpe_armario"); api.saber("alex", "golpe_armario");
-      const agua = api.anomalia("voz_alex_puerta");   // el mismo hueco del presupuesto: aquí es el agua del baño de al lado
-      api.marcar("irene_oyo_agua", agua);
-      if (agua) { api.saber("irene", "agua_sola"); api.presenciar("irene", 1.2); }
-      if (h === "irene") { api.marcar("irene_paro_alex", true); api.marcar("huesped_lapso", true); api.saber("alex", "irene_rara"); api.rel("alex", "irene", "tension", -4); }
       api.rel("alex", "irene", "afecto", 3); api.rel("irene", "alex", "afecto", 2);
+      if (h === "irene") {
+        api.marcar("irene_paro_alex", true); api.marcar("huesped_lapso", true);
+        api.evidencia("aranazos_alex", "alex", "espalda de Álex", "marca"); api.evidencia("mordisco_alex", "alex", "cuello de Álex", "marca");
+        api.saber("alex", "irene_me_mordio"); api.saber("alex", "irene_rara");
+        api.est("alex", "miedo", 4); api.est("alex", "estres", 4);
+        R().alimentar(api, 1);
+        api.marcar("irene_vio_sombra", false);
+        if (!seguida) {
+          const gusto = api.valor("alex", "eje") >= 70 && api.valor("alex", "miedo") < 50;
+          api.marcar("alex_gusto", gusto);
+          if (gusto) { R().alimentar(api, 1); R().ofrenda(api, "sangre"); api.rel("alex", "irene", "afecto", 4); }
+          else { api.marcar("alex_paro_irene", true); api.rel("alex", "irene", "tension", 6); }
+        }
+      } else {
+        const s = api.anomalia("voz_alex_puerta");   // el mismo hueco del presupuesto: aquí es lo que Irene ve en el armario
+        api.marcar("irene_vio_sombra", s);
+        if (s) { api.saber("irene", "sombra_armario"); api.presenciar("irene", 1.5); }
+        if (!seguida) {
+          const abre = api.lucido("irene");
+          api.marcar("irene_tras_sombra", abre ? "abre" : "para");
+          api.marcar("irene_abre_armario", abre);
+          if (abre) api.saber("irene", "marca_armario");
+        }
+      }
       if (!seguida) {
-        api.marcar("alex_abre_armario", api.valor("alex", "eje") >= 70);
-        if (api.bandera("alex_abre_armario")) api.saber("alex", "marca_armario");
         api.marcar("alex_cuenta", true);           // Álex lo cuenta todo. También esto. Sobre todo esto.
         api.marcar("irene_cuenta", false);
       }
@@ -248,65 +272,78 @@
         api.marcar("marcos_cuenta_arrastre", false);
         api.marcar("alex_quiso_cruzar", api.valor("alex", "eje") >= 70);
         api.marcar("alex_cuenta", true);
-        if (api.valor("alex", "eje") >= 75) { api.marcar("llave_inglesa", "alex"); }
+        if (api.valor("alex", "eje") >= 75) { api.marcar("llave_inglesa", "alex"); R().coger(api, "alex", "llave"); }
       }
     }
   }
 
-  // ---------- Reparto: quién va con quién. Esencia y estados. ----------
-  function repartir(api) {
+  // ---------- Reparto del tramo 1: quién va con quién a las tres y media. Esencia y estados. ----------
+  function repartir1(api) {
     const h = H(api);
-    const e = api.bandera("v1_nora");
-    let noraC = null, ireneC = null, libre = true, q = null;
+    const porche = api.bandera("v1_nora") === "alex";
+    let ireneC = null, libre = true;
     api.marcar("v_irene_callada", h === "irene");
-    if (e === "alex") noraC = "alex";
+    api.marcar("v_nora_porche", porche);
+    api.marcar("v_nora_con", porche ? "alex" : null);
+    // Irene pide a Marcos que suba con ella si oyó su nombre, si tiene miedo o si quiere apartarle de Nora
+    const pide = h !== "irene" && (api.bandera("voz_desertor") || api.valor("irene", "miedo") >= 45 || api.relv("irene", "marcos", "tension") >= 50);
+    api.marcar("v_irene_pide", pide);
+    if (pide) {
+      const acepta = api.relv("marcos", "irene", "afecto") + api.relv("marcos", "irene", "proteccion") >= 45 || api.bandera("marcos_accion") === "rescate";
+      api.marcar("v_marcos_acepta_irene", acepta);
+      if (acepta) { ireneC = "marcos"; libre = false; }
+    }
+    // Si Irene es la huésped no pide nada. Pero Marcos puede seguirla por su cuenta: la ha visto rara.
+    const sigue = h === "irene" && libre && (api.relv("marcos", "irene", "proteccion") >= 5 || api.relv("marcos", "irene", "afecto") >= 45 || api.bandera("marcos_fraude") === "irene" || api.bandera("marcos_tras") === "irene");
+    api.marcar("v_marcos_sigue_irene", sigue);
+    if (sigue) { ireneC = "marcos"; libre = false; }
+    api.marcar("v_irene_con", ireneC);
+    api.marcar("v_marcos_libre", libre);
+    api.marcar("v_quedan", null);
+  }
+
+  // ---------- Reparto del tramo 2: con quién sube Nora, y los dos que quedan ----------
+  function repartir2(api) {
+    const e = api.bandera("v2_nora");
+    let noraC = null, q = null;
     if (e === "irene") {
       // Nora sube con Irene. Quedan Álex y Marcos, y Álex no se queda quieto: sigue a Marcos al almacén.
-      noraC = "irene"; ireneC = "nora"; libre = false; q = "alex_marcos";
+      noraC = "irene"; q = "alex_marcos";
     }
     if (e === "marcos") {
       // Marcos sube con Nora salvo que ella le haya dejado helado con el beso y él lo lleve mal
       const rechaza = api.bandera("nora_reaccion_beso") === "marcos" && api.relv("marcos", "nora", "afecto") < 60;
       api.marcar("v_marcos_rechaza", rechaza);
       // Quedan Irene y Álex. Se van a su dormitorio a lo suyo, y ahí entra la casa.
-      if (!rechaza) { noraC = "marcos"; ireneC = "alex"; libre = false; q = "irene_alex"; }
+      if (!rechaza) { noraC = "marcos"; q = "irene_alex"; }
     }
-    if (!q) {
-      const pide = h !== "irene" && libre && (api.bandera("voz_desertor") || api.valor("irene", "miedo") >= 45 || api.relv("irene", "marcos", "tension") >= 50);
-      api.marcar("v_irene_pide", pide);
-      if (pide) {
-        const acepta = api.relv("marcos", "irene", "afecto") + api.relv("marcos", "irene", "proteccion") >= 45 || api.bandera("marcos_accion") === "rescate";
-        api.marcar("v_marcos_acepta_irene", acepta);
-        if (acepta) { ireneC = "marcos"; libre = false; }
-      }
-      // Si Irene es la huésped no pide nada. Pero Marcos puede seguirla por su cuenta: la ha visto rara.
-      const sigue = h === "irene" && libre && (api.relv("marcos", "irene", "proteccion") >= 5 || api.relv("marcos", "irene", "afecto") >= 45 || api.bandera("marcos_fraude") === "irene" || api.bandera("marcos_tras") === "irene");
-      api.marcar("v_marcos_sigue_irene", sigue);
-      if (sigue) { ireneC = "marcos"; libre = false; }
-    } else { api.marcar("v_irene_pide", false); api.marcar("v_marcos_sigue_irene", false); }
     api.marcar("v_nora_con", noraC);
-    api.marcar("v_irene_con", ireneC);
-    api.marcar("v_marcos_libre", libre);
     api.marcar("v_quedan", q);
     if (noraC === "irene") api.marcar("irene_nora", versionIreneNora(api));
   }
 
-  // Segunda carta: el grupo de la huésped. Si la huésped va con Nora, el grupo de los que quedan.
-  function carta2(api) {
-    const h = H(api), nc = noraCon(api), ic = ireneCon(api), q = quedan(api);
-    if (q === "irene_alex") return h === "irene"
-      ? { id: "irene", ruta: "dormitorio", a: "vq1_dormitorio", desc: "El dormitorio, con Álex. La sudadera, la cama. Y algo que llega a mitad." }
-      : { id: "alex", ruta: "dormitorio", a: "vq1_dormitorio", desc: "El dormitorio, con Irene. La cama, el armario. La casa mirando." };
-    if (q === "alex_marcos") return h === "marcos"
-      ? { id: "marcos", ruta: "almacen_dos", a: "vq2_almacen_dos", desc: "El almacén, con Álex detrás. El cuadro, la estantería, el candado. Y una palabra." }
-      : { id: "alex", ruta: "almacen_dos", a: "vq2_almacen_dos", desc: "El almacén, con Marcos. El candado, la caja de herramientas. Y después, el coche." };
-    if (h === "marcos" && nc !== "marcos" && ic !== "marcos") return { id: "marcos", ruta: "almacen", a: "vm1_cocina", desc: "La cocina. El cuadro de luces. El almacén." };
+  // Segunda carta del tramo 1: el grupo de la huésped. Si van dos, la cara de la carta es quien mira desde fuera.
+  function carta2Tramo1(api) {
+    const h = H(api), ic = ireneCon(api);
+    if (h === "marcos" && ic !== "marcos") return { id: "marcos", ruta: "almacen", a: "vm1_cocina", desc: "La cocina. El cuadro de luces. El almacén." };
     if (ic === "marcos") return { id: h === "marcos" ? "irene" : "marcos", ruta: "arriba", a: "va1_pasillo", desc: h === "marcos" ? "Arriba con Marcos. La sudadera, el baño. Y él, que no dice nada." : "Arriba con Irene. La sudadera, el baño. Y ella, que va delante sin girarse." };
     return { id: "irene", ruta: "arriba", a: "va1_pasillo", desc: "Arriba. La sudadera, el baño. Sola." };
   }
+  // Segunda carta del tramo 2: los que quedan. Si Nora sube sola, nadie: los tres se quedan en la mesa.
+  function carta2Tramo2(api) {
+    const h = H(api), q = quedan(api);
+    if (q === "irene_alex") return h === "irene"
+      ? { id: "alex", ruta: "dormitorio", a: "vq1_dormitorio", desc: "El dormitorio, con Irene. La cama. Y ella, que esta noche no es la de siempre." }
+      : { id: "irene", ruta: "dormitorio", a: "vq1_dormitorio", desc: "El dormitorio, con Álex. La cama, el armario. Y algo que llega a mitad." };
+    if (q === "alex_marcos") return h === "marcos"
+      ? { id: "marcos", ruta: "almacen_dos", a: "vq2_almacen_dos", desc: "El almacén, con Álex detrás. El cuadro, la estantería, el candado. Y una palabra." }
+      : { id: "alex", ruta: "almacen_dos", a: "vq2_almacen_dos", desc: "El almacén, con Marcos. El candado, la caja de herramientas. Y después, el coche." };
+    return null;
+  }
   function elegirRuta(api, r) {
     api.marcar("v_ruta", r);
-    rutasDeConfig(api).filter((x) => x !== r).forEach((x) => resolverRuta(api, x, false));
+    const tramo = r === "mesa" || T1.includes(r) ? T1 : T2(api);
+    tramo.filter((x) => x !== r).forEach((x) => resolverRuta(api, x, false));
   }
 
   Object.assign(HISTORIA.escenas, {
@@ -380,26 +417,22 @@ Nora: No fumo.
 
 La casa se está vaciando. Lo notas: cada uno tira hacia un sitio, como el agua cuando quitas el tapón. Arriba, la cocina, la puerta. Y tú en medio, con el cuaderno cerrado bajo la mano y dos palabras dentro.
 
-Y la cuerda. La cuerda de la trampilla, que alguien vio balancearse esta noche. Que quieres mirar desde hace una hora. ${h === "irene" ? "Irene ya está en la escalera. Podrías subir detrás de ella. Ella no te ha mirado; tú a ella sí." : "Irene está en el primer escalón, de espaldas, con la mano en la barandilla. Arriba no hay nadie que os oiga."}
+Y la cuerda. La cuerda de la trampilla: ${api.bandera("buhardilla_descubierta") === "irene" ? "la que Irene encontró esta noche, y la escalera que bajó sola y ella volvió a subir con las dos manos" : "la que viste al subir las mochilas, colgando del techo del pasillo como una pregunta"}. Que quieres mirar desde hace una hora. Puede esperar diez minutos. Álex sin Marcos y sin Irene delante, no.
 
 ${modo(api, "nora", {
-  lucido: "~ Quiero ver esa cuerda. Con Marcos, porque si hay algo arriba quiero su mano en la escalera. Con Irene, porque llevo toda la noche sin hablar con ella a solas y arriba no hay nadie que nos oiga. Sola, que es como se miran las cosas de verdad. O el porche, que es el más seguro y el más incómodo. Cada uno cuesta algo.",
-  asustado: "~ No quiero quedarme sola en esta mesa con la tabla abierta. Y no quiero subir sola. Y no quiero salir. Quiero que no se vayan. Quiero que suba alguien conmigo.",
-  tenso: `~ ${api.bandera("nora_reaccion_beso") === "marcos" || api.bandera("nora_reaccion_beso") === "silencio" ? "Marcos a la cocina. Sin mirarme. Después de lo de antes. Pues muy bien. Subo con quien sea." : "Cada uno a su sitio. Como si no hubiera pasado nada. Como si Alda fuera un chiste. Y yo con ganas de decírselo a Irene a la cara, arriba, donde no nos oigan."}`,
-  ido: "~ El humo de Álex sube recto. No hay corriente. Y la cuerda de arriba se movía. Sin corriente. Tengo que verla. Con alguien o sin nadie.",
-  perdido: "~ Se van. Se van todos y me dejan con ella. Ella se queda en la mesa. Ella no se levanta nunca. Súbete con alguien. Con quien sea.",
-  normal: "~ Álex con un porro y una puerta abierta. Marcos con un cuadro de luces. Irene en la escalera. Y arriba, una cuerda. Elige, Nora. Elige con quién.",
+  lucido: "~ Dos cosas y un orden. Álex a solas, que es una vez por noche. Y la cuerda, que va a seguir ahí cuando vuelva. O la mesa: quedarme con la tabla y oír la casa entera moverse alrededor. Cada una cuesta algo.",
+  asustado: "~ No quiero quedarme sola en esta mesa con la tabla abierta. Y no quiero salir al frío con Álex. Y no quiero que se vayan. Quiero que no se vayan.",
+  tenso: `~ ${api.bandera("nora_reaccion_beso") === "marcos" || api.bandera("nora_reaccion_beso") === "silencio" ? "Marcos a la cocina. Sin mirarme. Después de lo de antes. Pues muy bien. Salgo con Álex." : "Cada uno a su sitio. Como si no hubiera pasado nada. Como si Alda fuera un chiste. Y Álex, que lo sabe, con un porro en la boca."}`,
+  ido: "~ El humo de Álex sube recto. No hay corriente. Y la cuerda de arriba se movía. Sin corriente. Luego. Primero Álex, que sabe cosas cuando fuma.",
+  perdido: "~ Se van. Se van todos y me dejan con ella. Ella se queda en la mesa. Ella no se levanta nunca. Sal. Sal con quien sea.",
+  normal: "~ Álex con un porro y una puerta abierta. Marcos con un cuadro de luces. Irene en la escalera. Y tú con una tabla. Elige, Nora.",
 })}`;
     },
     opciones: [
       { texto: "Salir con Álex. Al porche. Al frío. Al porro. A preguntar.", a: "v2_reparto",
         efecto: (api) => { api.marcar("v1_nora", "alex"); api.rel("alex", "nora", "tension", 3); if (api.bandera("nora_reaccion_beso") === "marcos") api.rel("marcos", "nora", "resentimiento", 3); } },
-      { texto: "Subir. Sola. A mirar la cuerda de la trampilla.", a: "v2_reparto",
-        efecto: (api) => { api.marcar("v1_nora", "sola"); api.est("nora", "eje", 3); } },
-      { texto: "«Marcos. Ven conmigo arriba.»", a: "v2_reparto", si: (api) => api.relv("nora", "marcos", "confianza") >= 45 || api.valor("nora", "miedo") >= 50,
-        efecto: (api) => { api.marcar("v1_nora", "marcos"); api.rel("marcos", "nora", "proteccion", 3); } },
-      { texto: "«Irene. Espera. Subo contigo.»", a: "v2_reparto",
-        efecto: (api) => { api.marcar("v1_nora", "irene"); api.est("nora", "eje", 2); api.rel("irene", "nora", "tension", 3); api.rel("nora", "irene", "confianza", 2); } },
+      { texto: "Quedarte. Con la tabla y el cuaderno. Alguien tiene que quedarse con la tabla.", a: "v2_reparto",
+        efecto: (api) => { api.marcar("v1_nora", "mesa"); api.est("nora", "eje", 2); } },
     ],
   },
 
@@ -409,67 +442,18 @@ ${modo(api, "nora", {
     musica: null,
     titulo: "La dispersión · Cada uno a su sitio",
     hora: "03:33",
-    alEntrar: (api) => repartir(api),
+    alEntrar: (api) => repartir1(api),
     texto: (api) => {
-      const h = H(api);
-      const nc = noraCon(api), ic = ireneCon(api);
-      const q = quedan(api);
-      const nora = nc === "alex" ? `
-Nora coge el mechero de la mesa y sale detrás de Álex. La puerta se queda entreabierta. El frío entra hasta la tabla.` : nc === "irene" ? (api.bandera("v_irene_callada") ? `
-Nora: Irene. Espera.
+      const ic = ireneCon(api);
+      const porche = noraPorche(api);
+      const nora = porche ? `
+Nora coge el mechero de la mesa y sale detrás de Álex. La puerta se queda entreabierta. El frío entra hasta la tabla.` : `
+Nora se queda. Con el cuaderno cerrado bajo la mano y la tabla delante.
 
-Irene no espera. No se gira. Sube como quien no ha oído, con la mano en el cuello.
+Nora: Alguien tiene que quedarse con la tabla.
 
-Nora sube detrás. Dos escalones por debajo. El tercero. El séptimo. Irene no la mira ni una vez.` : `
-Nora: Irene. Espera. Subo contigo.
-
-Irene se para en el tercer escalón. La mira desde arriba. Con esa cara: la de calcular.
-
-Irene: ¿A qué?
-
-Nora: A ver una cosa. Y a que no subas sola.
-
-Irene: Yo no subo sola. Subo.
-
-Pero espera. Suben las dos. Irene delante, descalza; Nora detrás, con el cuaderno. Es la primera vez en toda la noche que están a solas, y las dos lo saben, y ninguna lo dice.`) : nc === "marcos" ? `
-Nora: Marcos. Ven conmigo arriba.
-
-Marcos se para a medio camino de la cocina. La mira.
-
-Marcos: ¿Arriba?
-
-Nora: Quiero ver una cosa.
-
-Marcos: Vale.
-
-No pregunta qué cosa. Va con ella. El cuadro de luces se queda para luego.` : api.bandera("v_marcos_rechaza") ? `
-Nora: Marcos. Ven conmigo arriba.
-
-Marcos se para a medio camino de la cocina. No la mira.
-
-Marcos: Sube tú. Yo voy a mirar la luz.
-
-Lo dice sin maldad. Lo dice como se dice algo que no se quiere decir con maldad. Nora sube sola. El tercero. El séptimo.` : `
-Nora se levanta con el cuaderno. Mira la escalera.
-
-Nora: Voy a mirar una cosa arriba.
-
-Nadie pregunta qué cosa. Sube. El tercero. El séptimo.`;
-      const irene = q === "irene_alex" ? (api.bandera("v_irene_callada") ? `
-Irene ya está en la escalera. Álex apaga el porro a medio liar contra el cenicero y va detrás.
-
-Álex: Te ayudo con la sudadera.
-
-Irene no contesta. Sube. Álex sube detrás, riéndose solo, con la mano donde la tiene siempre. Ella no se aparta y no se acerca. Sube.` : `
-Álex apaga el porro a medio liar contra el cenicero. Mira la escalera. Mira a Irene en el primer escalón.
-
-Álex: Te ayudo con la sudadera.
-
-Irene: Con la sudadera.
-
-Álex: Con lo que haga falta.
-
-Suben. Ella delante, descalza; él detrás, con la mano donde la tiene siempre, y ella dejándosela. El porche se queda sin fumador. La casa, con dos parejas arriba y nadie abajo.`) : nc === "irene" ? "" : api.bandera("v_irene_callada") ? (api.bandera("v_marcos_sigue_irene") ? `
+Nadie le ha preguntado. Nadie contesta.`;
+      const irene = api.bandera("v_irene_callada") ? (ic === "marcos" ? `
 Irene ya está arriba. Nadie la ha oído entrar en ningún sitio. Ni una puerta.
 
 Marcos mira la escalera. Deja el cuadro de luces para luego.
@@ -495,63 +479,94 @@ Marcos: Ahora subo. Déjame mirar la luz primero.
 
 Irene se queda un segundo en el primer escalón. Luego sube. Sola. Sin mirar atrás, que es como sube Irene cuando alguien le ha dicho que no.`) : `
 Irene sube a por la sudadera. Descalza. El tercero. El séptimo.`;
-      const marcos = q === "alex_marcos" ? `
-Marcos cruza el arco de la cocina. Álex se guarda el porro detrás de la oreja y va detrás.
-
-Álex: Voy contigo. Al sótano de los cadáveres.
-
-Marcos: Es un cuadro de luces.
-
-Álex: Todo es un cuadro de luces hasta que no lo es.
-
-Se enciende la luz blanca. Se oye abrir una puerta que no es la de la nevera. Y a Álex, riéndose de algo, dentro.` : api.bandera("v_marcos_libre") ? `
+      const marcos = api.bandera("v_marcos_libre") ? `
 Marcos cruza el arco de la cocina. Se enciende la luz blanca. Se oye abrir una puerta que no es la de la nevera.` : "";
-      const alex = nc === "alex" || q ? "" : `
+      const alex = porche ? "" : `
 Álex ya está fuera. Se ve la brasa a través del cristal. Y el coche de Marcos, un bulto, veinte metros más allá.`;
-
-      const grupoNora = nc === "alex" ? "El porche, con Álex y Nora." : nc === "marcos" ? "La buhardilla, con Nora y Marcos." : nc === "irene" ? "La buhardilla, con Nora e Irene." : "La buhardilla, con Nora.";
-      const c2 = carta2(api);
-      const grupoOtro = c2.ruta === "dormitorio" ? "El dormitorio del fondo, con Irene y Álex." : c2.ruta === "almacen_dos" ? "El almacén, con Marcos y Álex." : c2.ruta === "almacen" ? "La cocina y el almacén, con Marcos." : c2.ruta === "porche" ? "El porche, con Álex." : ic === "marcos" ? "Arriba, con Irene y Marcos." : "Arriba, con Irene.";
-
+      const grupoNora = porche ? "El porche, con Álex y Nora." : "La mesa, con Nora y la tabla.";
+      const c2 = carta2Tramo1(api);
+      const grupoOtro = c2.ruta === "almacen" ? "La cocina y el almacén, con Marcos." : ic === "marcos" ? "Arriba, con Irene y Marcos." : "Arriba, con Irene.";
       return `${alex}
 ${irene}
 ${nora}
 ${marcos}
 
-Y la casa se reparte. Cuatro personas en cuatro sitios, o en tres, y ninguno ve a los demás. Hace veinte minutos sabíais dónde estaba cada uno. Ahora no.
+Y la casa se reparte. Cuatro personas en tres sitios, y ninguno ve a los demás. Hace veinte minutos sabíais dónde estaba cada uno. Ahora no.
 
 ${grupoNora} ${grupoOtro}
 
 ¿Qué quieres ver?`;
     },
     personajes: [
-      {
-        id: "nora",
-        descripcion: (api) => noraCon(api) === "alex" ? "El porche. El porro, el frío, el coche de Marcos a veinte metros. Y Álex sin nadie delante." : noraCon(api) === "marcos" ? "La cuerda. La trampilla. Marcos detrás." : noraCon(api) === "irene" ? "La cuerda. La trampilla. Irene delante, por primera vez a solas." : "La cuerda. La trampilla. Sola.",
-        a: (api) => noraCon(api) === "alex" ? "vp1_porche" : "vb1_trampilla",
-        efecto: (api) => elegirRuta(api, noraCon(api) === "alex" ? "porche" : "buhardilla"),
-      },
+      { id: "nora",
+        descripcion: (api) => noraPorche(api) ? "El porche. El porro, el frío, el coche de Marcos a veinte metros. Y Álex sin nadie delante." : "La mesa. La tabla, el cuaderno, y la casa entera sonando alrededor.",
+        a: (api) => noraPorche(api) ? "vp1_porche" : "vn1_mesa",
+        efecto: (api) => elegirRuta(api, noraPorche(api) ? "porche" : "mesa") },
       // El grupo de la huésped. Si van dos, la cara de la carta es quien mira desde fuera.
-      {
-        id: "marcos", si: (api) => carta2(api).id === "marcos",
-        descripcion: (api) => carta2(api).desc, a: (api) => carta2(api).a,
-        efecto: (api) => elegirRuta(api, carta2(api).ruta),
-      },
-      {
-        id: "irene", si: (api) => carta2(api).id === "irene",
-        descripcion: (api) => carta2(api).desc, a: (api) => carta2(api).a,
-        efecto: (api) => elegirRuta(api, carta2(api).ruta),
-      },
-      {
-        id: "alex", si: (api) => carta2(api).id === "alex",
-        descripcion: (api) => carta2(api).desc, a: (api) => carta2(api).a,
-        efecto: (api) => elegirRuta(api, carta2(api).ruta),
-      },
+      { id: "marcos", si: (api) => carta2Tramo1(api).id === "marcos", descripcion: (api) => carta2Tramo1(api).desc, a: (api) => carta2Tramo1(api).a, efecto: (api) => elegirRuta(api, carta2Tramo1(api).ruta) },
+      { id: "irene", si: (api) => carta2Tramo1(api).id === "irene", descripcion: (api) => carta2Tramo1(api).desc, a: (api) => carta2Tramo1(api).a, efecto: (api) => elegirRuta(api, carta2Tramo1(api).ruta) },
     ],
   },
 
   // =====================================================================
   // RUTA PORCHE — Álex, o Álex y Nora
+  // =====================================================================
+  // RUTA MESA — Nora sola con la tabla mientras los demás van a lo suyo (tramo 1)
+  // =====================================================================
+
+  vn1_mesa: {
+    pov: "nora",
+    fondo: "assets/fondos/salon_noche.jpg",
+    ambiente: "interior",
+    musica: "fiesta_baja",
+    lugar: "comedor", hora: "03:35",
+    titulo: "La mesa · Sola con la tabla",
+    alEntrar: (api) => { api.marcar("v_resuelta_mesa", true); api.est("nora", "estres", 2); },
+    texto: (api) => {
+      const ic = ireneCon(api);
+      const libre = api.bandera("v_marcos_libre");
+      return `
+Sola.
+
+La mesa redonda. La tabla con las letras hacia ti. El vaso boca abajo en el centro, donde lo dejó Álex. Las velas, a medio consumir. La música, baja. Y tú, con el cuaderno cerrado bajo la mano.
+
+Alguien tiene que quedarse con la tabla. Lo has dicho en voz alta y nadie te ha preguntado por qué.
+
+La casa suena. Es lo que hace una casa cuando la gente se reparte por ella: cada uno hace su ruido en su sitio y tú, en medio, los oyes todos.
+
+${libre ? "La cocina. La luz blanca. Marcos abriendo una puerta que no es la de la nevera. El escalón. Y luego nada, que es el ruido que hace Marcos cuando mira algo." : ic === "marcos" ? "Arriba. Dos pares de pasos. Los de Irene, descalzos, que casi no se oyen. Los de Marcos, que sí. Una puerta. El grifo del baño, un momento. Otra vez nada." : "Arriba. Los pasos de Irene, descalzos, que casi no se oyen. Una puerta. Nada."}
+
+Fuera, el porche. La puerta a medio abrir, como la ha dejado Álex, y el frío que entra por la rendija hasta la tabla. Y Álex, que no se oye. Álex siempre se oye. ${api.bandera("alex_llamo_marcos") ? "Y de pronto sí: su voz, desde fuera, hacia la casa, diciendo el nombre de Marcos. Una vez. Marcos no contesta. Álex no repite." : ""}
+
+Abres el cuaderno. ALDA. AJOBA. Con jota. Tu letra, la de apuntar. Y debajo, nada, porque no ha pasado nada más.
+
+~ No ha pasado nada más. Se han levantado los cuatro y se han ido a lo suyo como si no hubiera pasado nada, porque para ellos no ha pasado nada: un vaso, una broma, un ahogo que fue ansiedad. Y yo con dos palabras que nadie podía saber.
+
+Miras la escalera. Desde tu silla se ve el hueco, el pasamanos, la sombra del pasillo de arriba. Y en la sombra, si te inclinas, la cuerda. La de la trampilla. Quieta.
+
+Quieta.
+
+${modo(api, "nora", {
+  lucido: "~ Tres ruidos, tres sitios, y ninguno raro. Una casa vieja con cuatro personas dentro suena exactamente así. Lo apunto igual: la hora, quién dónde. Si luego alguien dice que estaba en otro sitio, quiero tenerlo.",
+  asustado: "~ Sola con la tabla. Lo he elegido yo. Y ahora las letras me miran y el vaso no se mueve y eso es peor que si se moviera.",
+  tenso: "~ Podía haber salido con Álex. Podía haber subido detrás de Irene. Y estoy aquí guardando una tabla que no se va a mover. Muy bien, Nora.",
+  ido: "~ Las velas se inclinan hacia la escalera. Las tres. No hay corriente. Hay algo arriba que tira del aire como se tira de una sábana.",
+  perdido: "~ Me ha dejado con ella. La tabla. Quería que me quedara con ella. Por eso se han ido todos a la vez.",
+  normal: "~ Sola con la tabla y el cuaderno. Es lo que sé hacer: quedarme y apuntar. Que se vayan. Que vuelvan. Y entonces, arriba.",
+})}`;
+    },
+    opciones: [
+      { texto: "Apuntar. La hora. Quién ha ido a dónde. Por si acaso.", a: "v5_cuerda", lucida: true,
+        efecto: (api) => { api.marcar("vn1_nora", "apunta"); api.evidencia("cuaderno_reparto", "nora", "cuaderno de Nora", "nota"); api.est("nora", "lucidez", 2); } },
+      { texto: "Poner el vaso boca arriba. Lejos de las letras. Y no mirarlo.", a: "v5_cuerda",
+        efecto: (api) => { api.marcar("vn1_nora", "vaso"); api.est("nora", "estres", -2); api.est("nora", "eje", -1); } },
+      { texto: "Ir hasta el pie de la escalera. Mirar la cuerda desde abajo. Solo mirar.", a: "v5_cuerda",
+        efecto: (api) => { api.marcar("vn1_nora", "escalera"); api.est("nora", "eje", 3); api.est("nora", "miedo", 2); } },
+      { texto: "Asomarte a la cocina. Ver qué hace Marcos con la puerta que ha abierto.", a: "v5_cuerda", si: (api) => api.bandera("v_marcos_libre"),
+        efecto: (api) => { api.marcar("vn1_nora", "cocina"); api.saber("nora", "marcos_en_almacen"); api.rel("nora", "marcos", "confianza", 2); } },
+    ],
+  },
+
   // =====================================================================
 
   vp1_porche: {
@@ -598,7 +613,7 @@ Te quedas mirando la mano.
 
 La cierras.
 
-Y dentro de la casa, arriba, un golpe seco. Madera contra madera. Como una puerta grande cerrándose en el techo. Nora, seguramente, con su cuerda. Le dijiste que ahí arriba estaban los cadáveres.`;
+Y dentro de la casa, arriba, un golpe seco. Madera contra madera. Como una puerta grande cerrándose en el techo. Nora, seguramente, con su cuerda. ${api.bandera("buhardilla_descubierta") === "irene" ? "Le dijiste que ahí arriba estaban los cadáveres." : "Le dijiste que esta casa tiene más techo del que se ve."}`;
 
       if (pareja) return `
 La puerta se cierra detrás de ti y el frío te entra por ${camisa(api)}, por las mangas, por el cuello. Fuera no huele a velatorio. Huele a pino y a tierra mojada y a la brasa de Álex.
@@ -739,7 +754,7 @@ ${np === "manipula" ? `Nora: ¿De quién?
 
 Nora: Álex.
 
-Álex: Irene se fue a las siete y media. Sola. Una noche. Eso lo sabe Marcos y lo sabe Irene y ahora lo sabes tú. Yo estaba dormido en el baño.
+${api.bandera("d15") === "borde" ? "Álex: Lo de las siete y media ya te lo soltó Marcos. A su manera. Irene se fue sola, una noche, y volvió." : "Álex: Irene se fue a las siete y media. Sola. Una noche. Eso lo sabe Marcos y lo sabe Irene y ahora lo sabes tú."} Yo estaba dormido en el baño.
 
 Se lo has dado. Entero. Y mientras se lo das, algo te dice que te lo ha sacado ella. Que lo de reírse del piropo era eso. Lo notas tarde. Pero lo notas.` : `Nora no pregunta de quién. Espera. Y como espera, sigue saliendo.
 
@@ -956,22 +971,22 @@ ${modo(api, "alex", {
     },
     opciones: [
       // Nora: con qué entra. Conflicto, acercamiento o comprensión sin cariño. Y si cuenta lo de los árboles.
-      { texto: "«¿Y a Irene qué le pasa conmigo?» En la puerta. Antes de entrar.", a: "v9_regreso", si: (api) => noraCon(api) === "alex",
+      { texto: "«¿Y a Irene qué le pasa conmigo?» En la puerta. Antes de entrar.", a: "v5_cuerda", si: (api) => noraCon(api) === "alex",
         efecto: (api) => { api.marcar("salida_porche", "comprension"); api.marcar("nora_cuenta_gente", false); api.saber("nora", "irene_quiere_a_marcos"); api.rel("nora", "alex", "resentimiento", -2); } },
-      { texto: "Entrar sola. Dejarle fuera con el coche. Que se lo mire él.", a: "v9_regreso", si: (api) => noraCon(api) === "alex",
+      { texto: "Entrar sola. Dejarle fuera con el coche. Que se lo mire él.", a: "v5_cuerda", si: (api) => noraCon(api) === "alex",
         efecto: (api) => { api.marcar("salida_porche", "conflicto"); api.marcar("nora_cuenta_gente", false); api.rel("nora", "alex", "resentimiento", 4); api.rel("alex", "nora", "tension", -3); api.est("nora", "estres", 3); } },
-      { texto: "Cogerle del brazo. «Vamos.» Y entrar juntos.", a: "v9_regreso", si: (api) => noraCon(api) === "alex",
+      { texto: "Cogerle del brazo. «Vamos.» Y entrar juntos.", a: "v5_cuerda", si: (api) => noraCon(api) === "alex",
         efecto: (api) => { api.marcar("salida_porche", "acercamiento"); api.marcar("nora_cuenta_gente", false); api.rel("alex", "nora", "afecto", 5); api.rel("nora", "alex", "resentimiento", -4); api.rel("alex", "nora", "confianza", 4); } },
-      { texto: "«¿Has visto eso?» A Álex. Ya en la puerta.", a: "v9_regreso", si: (api) => noraCon(api) === "alex" && api.bandera("nora_vio_gente"),
+      { texto: "«¿Has visto eso?» A Álex. Ya en la puerta.", a: "v5_cuerda", si: (api) => noraCon(api) === "alex" && api.bandera("nora_vio_gente"),
         efecto: (api) => { api.marcar("salida_porche", "comprension"); api.marcar("nora_cuenta_gente", true); api.rel("alex", "nora", "confianza", 4); } },
-      { texto: "Sacar el móvil. Fotografiar los árboles. Antes de entrar.", a: "v9_regreso", lucida: true, si: (api) => noraCon(api) === "alex",
+      { texto: "Sacar el móvil. Fotografiar los árboles. Antes de entrar.", a: "v5_cuerda", lucida: true, si: (api) => noraCon(api) === "alex",
         efecto: (api) => { api.marcar("salida_porche", "comprension"); api.marcar("nora_cuenta_gente", false); api.evidencia("foto_arboles", "nora", "porche", "foto"); api.est("nora", "eje", 2); } },
       // Álex: siempre cuenta. La pregunta es cómo.
-      { texto: "Entrar y contarlo. Todo. Con detalles. Con más detalles de los que hubo.", a: "v9_regreso", si: (api) => noraCon(api) !== "alex",
+      { texto: "Entrar y contarlo. Todo. Con detalles. Con más detalles de los que hubo.", a: "v5_cuerda", si: (api) => noraCon(api) !== "alex",
         efecto: (api) => { api.marcar("alex_cuenta", true); api.est("alex", "eje", 2); } },
-      { texto: "Entrar y no decir nada. Por una vez.", a: "v9_regreso", si: (api) => noraCon(api) !== "alex",
+      { texto: "Entrar y no decir nada. Por una vez.", a: "v5_cuerda", si: (api) => noraCon(api) !== "alex",
         efecto: (api) => { api.marcar("alex_cuenta", false); api.est("alex", "eje", -3); api.est("alex", "estres", 4); } },
-      { texto: "Entrar gritando «¡Irene!». A ver desde dónde contesta.", a: "v9_regreso", si: (api) => noraCon(api) !== "alex" && api.bandera("alex_oyo_irene_fuera"),
+      { texto: "Entrar gritando «¡Irene!». A ver desde dónde contesta.", a: "v5_cuerda", si: (api) => noraCon(api) !== "alex" && api.bandera("alex_oyo_irene_fuera"),
         efecto: (api) => { api.marcar("alex_cuenta", true); api.marcar("alex_grita_irene", true); api.presenciar("alex", 1); } },
     ],
   },
@@ -1163,7 +1178,7 @@ No lo abriste. La sudadera, y fuera, y la luz apagada, y la puerta cerrada. No h
 
       if (!pareja) return `${armario}
 
-${noraCon(api) !== "alex" ? "Y desde el pasillo, un CLACK. Madera. La escalera plegable desplegándose con su traqueteo, el mismo de esta noche. La trampilla. Nora, que ha subido a mirar lo que quería mirar. No sales a verla. No quieres que te vea la cara.\n\n" : ""}El pasillo. La luz del baño, al fondo, encendida. La dejaste tú, antes, cuando subiste.
+${false ? "Y desde el pasillo, un CLACK. Madera. La escalera plegable desplegándose con su traqueteo, el mismo de esta noche. La trampilla. Nora, que ha subido a mirar lo que quería mirar. No sales a verla. No quieres que te vea la cara.\n\n" : ""}El pasillo. La luz del baño, al fondo, encendida. La dejaste tú, antes, cuando subiste.
 
 Y el agua.
 
@@ -1222,7 +1237,7 @@ ${modo(api, "irene", {
         return `
 El pasillo. Irene ha entrado en el baño y ha cerrado. Te has quedado fuera, apoyado en la pared, al lado de la lámpara de llama falsa, que hace su ciclo. Sube. Baja. Sube.
 
-${noraCon(api) !== "alex" ? "A tu espalda, en mitad del pasillo, un CLACK. La trampilla. La escalera plegable bajando con su traqueteo. Nora. Ha subido a la buhardilla y no te has girado a mirarla. No te has girado.\n\n" : ""}
+${false ? "A tu espalda, en mitad del pasillo, un CLACK. La trampilla. La escalera plegable bajando con su traqueteo. Nora. Ha subido a la buhardilla y no te has girado a mirarla. No te has girado.\n\n" : ""}
 
 ${api.bandera("irene_lee_marcos") ? "Te ha mirado en el dormitorio. Mucho rato. Como se mira a alguien que ha cambiado de peinado y no sabes qué. No te ha dicho nada." : "Dentro, el agua. Irene abre un grifo."}
 
@@ -1367,25 +1382,25 @@ ${modo(api, "irene", {
     },
     opciones: [
       // Irene sola
-      { texto: "Bajar. Y no contar nada. Nunca.", a: "v9_regreso", si: (api) => ireneCon(api) !== "marcos",
+      { texto: "Bajar. Y no contar nada. Nunca.", a: "v5_cuerda", si: (api) => ireneCon(api) !== "marcos",
         efecto: (api) => { api.marcar("irene_cuenta", false); api.est("irene", "eje", 2); } },
-      { texto: "Bajar y preguntarle a Álex si ha subido. Delante de todos.", a: "v9_regreso", si: (api) => ireneCon(api) !== "marcos",
+      { texto: "Bajar y preguntarle a Álex si ha subido. Delante de todos.", a: "v5_cuerda", si: (api) => ireneCon(api) !== "marcos",
         efecto: (api) => { api.marcar("irene_cuenta", true); api.est("irene", "estres", 3); } },
-      { texto: "Grabar un audio. «Álex, si has sido tú, te mato.» Y mandárselo.", a: "v9_regreso", lucida: true, si: (api) => ireneCon(api) !== "marcos",
+      { texto: "Grabar un audio. «Álex, si has sido tú, te mato.» Y mandárselo.", a: "v5_cuerda", lucida: true, si: (api) => ireneCon(api) !== "marcos",
         efecto: (api) => { api.marcar("irene_cuenta", false); api.evidencia("audio_irene_bano", "irene", "baño de arriba", "audio"); api.est("irene", "lucidez", 1); } },
       // Marcos huésped
-      { texto: "«Perdona.» Y bajar el primero. Rápido.", a: "v9_regreso", si: (api) => ireneCon(api) === "marcos" && H(api) === "marcos",
+      { texto: "«Perdona.» Y bajar el primero. Rápido.", a: "v5_cuerda", si: (api) => ireneCon(api) === "marcos" && H(api) === "marcos",
         efecto: (api) => { api.marcar("marcos_tras_lapso", "baja"); api.marcar("marcos_cuenta_grifo", false); api.est("marcos", "estres", 4); } },
-      { texto: "«No he sido yo.» Decirlo. Y oírte decirlo.", a: "v9_regreso", si: (api) => ireneCon(api) === "marcos" && H(api) === "marcos",
+      { texto: "«No he sido yo.» Decirlo. Y oírte decirlo.", a: "v5_cuerda", si: (api) => ireneCon(api) === "marcos" && H(api) === "marcos",
         efecto: (api) => { api.marcar("marcos_tras_lapso", "niega"); api.marcar("marcos_cuenta_grifo", false); api.rel("irene", "marcos", "confianza", -4); api.est("irene", "miedo", 4); } },
-      { texto: "Mirarte la mano. Un rato. Hasta que sea tuya.", a: "v9_regreso", lucida: true, si: (api) => ireneCon(api) === "marcos" && H(api) === "marcos",
+      { texto: "Mirarte la mano. Un rato. Hasta que sea tuya.", a: "v5_cuerda", lucida: true, si: (api) => ireneCon(api) === "marcos" && H(api) === "marcos",
         efecto: (api) => { api.marcar("marcos_tras_lapso", "mano"); api.marcar("marcos_cuenta_grifo", true); api.saber("marcos", "lapso"); api.est("marcos", "lucidez", 1); } },
       // Irene huésped
-      { texto: "«Perdona.» Secarle la mano con la toalla. Con cuidado.", a: "v9_regreso", si: (api) => ireneCon(api) === "marcos" && H(api) === "irene",
+      { texto: "«Perdona.» Secarle la mano con la toalla. Con cuidado.", a: "v5_cuerda", si: (api) => ireneCon(api) === "marcos" && H(api) === "irene",
         efecto: (api) => { api.marcar("irene_tras_lapso", "toalla"); api.marcar("irene_cuenta", false); api.rel("marcos", "irene", "afecto", 2); } },
-      { texto: "«El agua sale rara.» Como si fuera lo único que ha pasado.", a: "v9_regreso", si: (api) => ireneCon(api) === "marcos" && H(api) === "irene",
+      { texto: "«El agua sale rara.» Como si fuera lo único que ha pasado.", a: "v5_cuerda", si: (api) => ireneCon(api) === "marcos" && H(api) === "irene",
         efecto: (api) => { api.marcar("irene_tras_lapso", "agua"); api.marcar("irene_cuenta", false); api.rel("marcos", "irene", "confianza", -4); api.est("irene", "eje", 2); } },
-      { texto: "Mirarle. Ver si te ha reconocido.", a: "v9_regreso", lucida: true, si: (api) => ireneCon(api) === "marcos" && H(api) === "irene",
+      { texto: "Mirarle. Ver si te ha reconocido.", a: "v5_cuerda", lucida: true, si: (api) => ireneCon(api) === "marcos" && H(api) === "irene",
         efecto: (api) => { api.marcar("irene_tras_lapso", "mira"); api.marcar("irene_cuenta", false); api.saber("irene", "lapso"); api.est("irene", "lucidez", 1); } },
     ],
   },
@@ -1404,7 +1419,7 @@ ${modo(api, "irene", {
     alEntrar: (api) => resolverRuta(api, "almacen", true),
     texto: (api) => {
       const d11 = api.bandera("d11b");
-      const sarten = d11 === "foto" ? "La sartén de hierro sigue en el fuego. Le hiciste una foto hace tres horas, con el mando en cero y el reloj detrás, y te reíste de ti mismo mientras la hacías." : d11 === "comprobar" ? "La sartén de hierro sigue en el fuego. La tocaste hace tres horas. Estaba templada y decidiste que era el sol de la tarde en la ventana. A las doce de la noche." : "La sartén de hierro sigue en el fuego. Pasaste de ella hace tres horas. Ahora no pasas.";
+      const sarten = d11 === "foto" ? "La sartén de hierro sigue en el fuego. Le hiciste una foto hace hora y media, con el mando en cero y el reloj detrás, y te reíste de ti mismo mientras la hacías." : d11 === "comprobar" ? "La sartén de hierro sigue en el fuego. La tocaste hace hora y media. Estaba templada y decidiste que el hierro guarda el calor en la ventana. A las doce de la noche." : "La sartén de hierro sigue en el fuego. Pasaste de ella hace hora y media. Ahora no pasas.";
       const grifo = api.bandera("grifo") === "goteando" ? "El grifo gotea. Lo cerraste tú. Gotea." : "";
       return `
 La luz blanca de la cocina. De tubo. Parpadea una vez al encenderse, como siempre, y luego se queda.
@@ -1464,7 +1479,7 @@ No es el frío de la casa. Es otro: el que sale de un sitio que no se calienta n
 
 Buscas el interruptor. Una bombilla de cuarenta vatios, colgando de un cable. Suficiente.
 
-Un cuarto de tres por tres. Suelo de piedra. Una estantería de madera al fondo, con tarros vacíos, una garrafa, cuerda, una caja de herramientas de alguien que ya no vive aquí. Y a la izquierda, la caja gris. El cuadro.
+Un cuarto de tres por tres. Suelo de piedra. Una estantería de madera al fondo, con tarros vacíos, una garrafa, cuerda, una linterna grande de pilas, una caja de herramientas de alguien que ya no vive aquí. Y a la izquierda, la caja gris. El cuadro.
 
 La tapa, medio suelta. La levantas.
 
@@ -1508,21 +1523,21 @@ ${modo(api, "marcos", {
   lucido: `~ ${arrastre ? "Un arrastre detrás de una pared de piedra que da a algún sitio con corriente de aire. Un sótano. Un animal grande en un sótano. Un tejón. Los tejones pesan." : "Una pared de piedra. Una rendija con aire. Debajo de esta casa hay un hueco y alguien ha puesto una estantería delante para que no se sepa."}`,
   asustado: `~ ${arrastre ? "Tenía peso. Lo he oído tener peso. Y está a dos dedos de mi mano." : "Aire. De abajo. Hay un abajo. Álex dijo que había un abajo y hay un abajo."}`,
   tenso: "~ Un sótano tapiado. Cojonudo. Una casa de alquiler con un sótano tapiado y una estantería de mierda delante. Se lo voy a decir al de la inmobiliaria.",
-  ido: `~ ${arrastre ? "Se ha movido un palmo. Como yo. Como cuando me muevo en la cama para no despertar a Nora." : "El aire de la rendija huele a dulce y a tierra. Huele a lo que olía la buhardilla, dijo Irene. Yo no he subido nunca a la buhardilla."}`,
+  ido: `~ ${arrastre ? "Se ha movido un palmo. Como yo. Como cuando me muevo en la cama para no despertar a Nora." : "El aire de la rendija huele a dulce y a tierra. Huele a fruta pasada. A algo que lleva mucho tiempo en un sitio cerrado. Yo no he subido nunca a la buhardilla."}`,
   perdido: `~ ${huesped ? "Abajo. Es donde hay que ir. Es donde está. Ajoba. Abajo. Lo dijo en la mesa y no lo entendí." : "Hay una habitación debajo. Con cunas. Lo contó Álex. Lo contó porque es verdad."}`,
   normal: "~ Una puerta tapada. Una rendija. Un ruido. Y ahora, la decisión de siempre: mirar o contarlo.",
 })}`;
     },
     opciones: [
-      { texto: "Mover la estantería. A ver qué hay.", a: "v9_regreso",
+      { texto: "Mover la estantería. A ver qué hay.", a: "v5_cuerda",
         efecto: (api) => { api.marcar("marcos_movio_estanteria", true); api.saber("marcos", "puerta_vista"); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", false); api.presenciar("marcos", 1); } },
-      { texto: "Foto al cuadro y a la rendija. Y fuera.", a: "v9_regreso", lucida: true,
+      { texto: "Foto al cuadro y a la rendija. Y fuera.", a: "v5_cuerda", lucida: true,
         efecto: (api) => { api.marcar("marcos_movio_estanteria", false); api.evidencia("foto_cuadro", "marcos", "almacén", "foto"); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", false); api.est("marcos", "lucidez", 1); } },
-      { texto: "Cerrar. Salir. Contar lo del diferencial y nada más.", a: "v9_regreso",
+      { texto: "Cerrar. Salir. Contar lo del diferencial y nada más.", a: "v5_cuerda",
         efecto: (api) => { api.marcar("marcos_movio_estanteria", false); api.marcar("marcos_cuenta_puerta", false); api.marcar("marcos_cuenta_arrastre", false); api.est("marcos", "eje", 2); api.est("marcos", "estres", 3); } },
-      { texto: "Salir y contarlo todo. También lo que has oído. Aunque suene a Álex.", a: "v9_regreso", lucida: true, si: (api) => api.bandera("arrastre_almacen"),
+      { texto: "Salir y contarlo todo. También lo que has oído. Aunque suene a Álex.", a: "v5_cuerda", lucida: true, si: (api) => api.bandera("arrastre_almacen"),
         efecto: (api) => { api.marcar("marcos_movio_estanteria", false); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", true); api.est("marcos", "eje", -2); } },
-      { texto: "Quedarte. Un minuto. Con la mano en el estante. Sin saber por qué.", a: "v9_regreso", si: (api) => H(api) === "marcos",
+      { texto: "Quedarte. Un minuto. Con la mano en el estante. Sin saber por qué.", a: "v5_cuerda", si: (api) => H(api) === "marcos",
         efecto: (api) => { api.marcar("marcos_movio_estanteria", true); api.marcar("marcos_se_quedo", true); api.saber("marcos", "puerta_vista"); api.marcar("marcos_cuenta_puerta", false); api.marcar("marcos_cuenta_arrastre", false); api.est("marcos", "estres", 6); api.est("marcos", "lucidez", -2); } },
     ],
   },
@@ -1530,13 +1545,228 @@ ${modo(api, "marcos", {
   // =====================================================================
   // RUTA BUHARDILLA — Nora, o Nora y Marcos
   // =====================================================================
+  // TRAMO 2 — LA CUERDA: todos de vuelta, y Nora decide con quién sube
+  // =====================================================================
+
+  v5_cuerda: {
+    pov: "nora",
+    fondo: "assets/fondos/salon_noche.jpg",
+    ambiente: "interior",
+    musica: "terror_suave",
+    lugar: "comedor", hora: "03:42",
+    titulo: "La dispersión · La cuerda",
+    alEntrar: (api) => {
+      T1.forEach((r) => resolverRuta(api, r, false));
+      api.marcar("v_tramo", 2);
+      api.est("nora", "estres", 2);
+    },
+    texto: (api) => {
+      const h = H(api);
+      const porche = noraPorche(api);
+      const ic = ireneCon(api);
+      const sp = api.bandera("salida_porche");
+      const vn = api.bandera("vn1_nora");
+      const vuelta = porche ? (sp === "conflicto" ? `
+Entras sola. Dejas la puerta abierta a tu espalda y el frío entra contigo hasta la tabla. Álex tarda un minuto. Cuando entra, el coche está apagado y él tiene la cara de quien ha perdido una discusión que no ha tenido.` : sp === "acercamiento" ? `
+Entras con Álex del brazo. En la puerta, antes de soltarte, te dice bajo, sin mirarte:
+
+Álex: Marcos no me dejó verle llorar en cinco años. A ti te ha dejado en cinco meses. Cuídalo.
+
+Y entra como si no lo hubiera dicho. Como si fuera del frío.` : `
+Entráis juntos. Sin tocaros. Os entendéis y no os gustáis, y caben las dos cosas en una puerta.
+
+${api.sabe("nora", "irene_quiere_a_marcos") && !api.bandera("nora_cuenta_gente") ? "Nora: ¿Y a Irene qué le pasa conmigo?\n\nÁlex: Que le has quitado la camisa.\n\nSe ríe. No es una broma del todo. Y no dice más, porque ya está dentro." : ""}`) : vn === "escalera" ? `
+Sigues al pie de la escalera, con la mano en el pasamanos, cuando empiezan a volver.` : vn === "cocina" ? `
+Vuelves del arco de la cocina, donde has visto a Marcos con medio cuerpo detrás de una estantería, cuando empiezan a volver.` : `
+Sigues en tu silla, con el cuaderno, cuando empiezan a volver.`;
+      const llegan = [];
+      if (!porche) llegan.push(api.bandera("alex_grita_irene") ? `
+La puerta principal. Álex entra con el frío detrás.
+
+Álex: ¡Irene!
+
+A gritos. Hacia arriba.
+
+Irene: ¿Qué?
+
+Desde arriba. Desde el pasillo. Clara.
+
+Álex se queda con la mano en la puerta. Cierra despacio.
+
+Álex: Nada. Saber dónde estabas.` : `
+La puerta principal. Álex entra con el frío detrás y la cara de quien trae algo. Se sienta. No lo suelta. Todavía.`);
+      if (ic === "marcos") llegan.push(`
+La escalera. Irene y Marcos. Ella delante, con la sudadera puesta${api.bandera("huesped_sujeto") === "irene" ? " y la manga bajada hasta los nudillos" : ""}. Él detrás${api.bandera("huesped_quemo") ? ", con la mano derecha pegada al cuerpo, como se lleva una mano que duele" : ", mirando la puerta del baño por encima del hombro"}.`);
+      else {
+        if (api.bandera("v_marcos_libre")) llegan.push(`
+El arco de la cocina. Marcos. Con polvo en las rodillas y la cara de haber resuelto algo, o de no haberlo resuelto.${porche && h !== "marcos" && api.relv("marcos", "nora", "confianza") >= 55 ? " Te ve entrar con Álex y no hay nada en la mirada. Nada. Marcos no hace eso." : ""}`);
+        llegan.push(api.bandera("v_irene_callada") ? `
+Y la escalera. Irene. Con la sudadera. Baja despacio, con la mano en la barandilla y la otra en el cuello, y se sienta sin decir nada, y coge su vaso, y no bebe.` : `
+Y la escalera. Irene. Con la sudadera. Se sienta. Coge su vaso.`);
+      }
+      return `${vuelta}
+${llegan.join("\n")}
+
+Cuatro otra vez. En la mesa, o alrededor de la mesa. Nadie cuenta nada todavía. Es lo que pasa cuando cada uno vuelve de un sitio distinto: primero se mira a los otros, para ver si traen la misma cara. No la traen.
+
+Y la cuerda.
+
+${vn === "escalera" ? "La tienes delante, arriba, en el hueco del pasillo: la cuerda de la trampilla." : "Miras la escalera. Desde tu silla se ve el hueco, el pasamanos, la sombra del pasillo de arriba. Y en la sombra, la cuerda de la trampilla."} Y se mueve.
+
+Poco. Como un péndulo al que le queda poco. Ida y vuelta, ida y vuelta, y para.
+
+~ Corriente. La puerta ha estado abierta diez minutos. Claro que hay corriente.
+
+${h === "irene" ? "Irene también la mira. Es la única que la mira contigo. Con la mano en el cuello. Y no dice nada, y tú no sabes si es que no la ha visto moverse o es que sí." : "Nadie más la mira. Marcos está con la cerveza. Álex con el mechero. Irene con el vaso."}
+
+~ Quiero ver esa cuerda. Ahora. Con la casa llena y todos abajo, antes de que a alguien se le ocurra otra necesidad.
+
+${modo(api, "nora", {
+  lucido: "~ Con Marcos, porque si hay algo arriba quiero su mano en la escalera. Con Irene, porque llevo toda la noche sin hablar con ella a solas y arriba no hay nadie que nos oiga. Sola, que es como se miran las cosas de verdad. Cada uno cuesta algo.",
+  asustado: "~ No quiero subir sola. Y no quiero no subir. Quiero que suba alguien conmigo y que no me pregunte por qué.",
+  tenso: `~ ${api.bandera("nora_reaccion_beso") === "marcos" || api.bandera("nora_reaccion_beso") === "silencio" ? "Marcos con la cerveza. Sin mirarme. Después de lo de antes. Pues muy bien. Subo con quien sea." : "Como si no hubiera pasado nada. Como si Alda fuera un chiste. Y yo con ganas de decírselo a Irene a la cara, arriba, donde no nos oigan."}`,
+  ido: "~ Se ha movido con la puerta cerrada. Sin corriente. Tengo que verla. Con alguien o sin nadie.",
+  perdido: "~ Me llama. Con la cuerda. Como se llama a un perro con la mano. Y voy a ir. Súbete con alguien. Con quien sea.",
+  normal: "~ Álex con el mechero. Marcos con la cerveza. Irene con el vaso. Y arriba, una cuerda. Elige, Nora. Elige con quién.",
+})}`;
+    },
+    opciones: [
+      { texto: "Subir. Sola. A mirar la cuerda de la trampilla.", a: "v6_reparto2",
+        efecto: (api) => { api.marcar("v2_nora", "sola"); api.est("nora", "eje", 3); } },
+      { texto: "«Marcos. Ven conmigo arriba.»", a: "v6_reparto2", si: (api) => api.relv("nora", "marcos", "confianza") >= 45 || api.valor("nora", "miedo") >= 50,
+        efecto: (api) => { api.marcar("v2_nora", "marcos"); api.rel("marcos", "nora", "proteccion", 3); } },
+      { texto: "«Irene. Ven. Quiero enseñarte una cosa arriba.»", a: "v6_reparto2",
+        efecto: (api) => { api.marcar("v2_nora", "irene"); api.est("nora", "eje", 2); api.rel("irene", "nora", "tension", 3); api.rel("nora", "irene", "confianza", 2); } },
+      { texto: "Preguntar primero. «¿Alguien ha subido a la buhardilla esta noche?» A los tres.", a: "v6_reparto2", lucida: true,
+        efecto: (api) => { api.marcar("v2_nora", "sola"); api.marcar("nora_pregunto_buhardilla", true); api.est("nora", "lucidez", 1); } },
+    ],
+  },
+
+  v6_reparto2: {
+    pov: null,
+    fondo: "assets/fondos/salon_vacio.jpg",
+    musica: null,
+    titulo: "La dispersión · Arriba, y los que se quedan",
+    hora: "03:44",
+    alEntrar: (api) => repartir2(api),
+    texto: (api) => {
+      const nc = noraCon(api), q = quedan(api);
+      const pregunto = api.bandera("nora_pregunto_buhardilla") ? `
+Nora: ¿Alguien ha subido a la buhardilla esta noche?
+
+Álex: Yo no.
+
+Marcos: No.
+
+Irene no contesta. Irene mira la escalera.
+` : "";
+      const nora = nc === "irene" ? (api.bandera("v_irene_callada") ? `
+Nora: Irene. Ven. Quiero enseñarte una cosa arriba.
+
+Irene se levanta. No pregunta qué cosa. Va hacia la escalera como quien va a un sitio al que ya ha ido, con la mano en el cuello, y sube. Nora detrás. Dos escalones por debajo. El tercero. El séptimo. Irene no la mira ni una vez.` : `
+Nora: Irene. Ven. Quiero enseñarte una cosa arriba.
+
+Irene la mira desde su silla. Con esa cara: la de calcular.
+
+Irene: ¿A qué?
+
+Nora: A ver una cosa. Y a que no suba sola.
+
+Irene: Tú no subes sola. Subes.
+
+Pero se levanta. Suben las dos. Irene delante, descalza; Nora detrás, con el cuaderno. Es la primera vez en toda la noche que están a solas, y las dos lo saben, y ninguna lo dice.`) : nc === "marcos" ? `
+Nora: Marcos. Ven conmigo arriba.
+
+Marcos deja la cerveza. La mira.
+
+Marcos: ¿Arriba?
+
+Nora: Quiero ver una cosa.
+
+Marcos: Vale.
+
+No pregunta qué cosa. Va con ella.` : api.bandera("v_marcos_rechaza") ? `
+Nora: Marcos. Ven conmigo arriba.
+
+Marcos no deja la cerveza. No la mira.
+
+Marcos: Sube tú. Yo me quedo con estos.
+
+Lo dice sin maldad. Lo dice como se dice algo que no se quiere decir con maldad. Nora sube sola. El tercero. El séptimo.` : `
+Nora se levanta con el cuaderno. Mira la escalera.
+
+Nora: Voy a mirar una cosa arriba.
+
+Nadie pregunta qué cosa. Sube. El tercero. El séptimo.`;
+      const otros = q === "irene_alex" ? (api.bandera("v_irene_callada") ? `
+Irene se levanta en cuanto Nora y Marcos desaparecen por el hueco. Sin decir nada. Álex apaga el mechero, la mira subir, y va detrás.
+
+Álex: Te ayudo con la sudadera.
+
+Irene no contesta. Álex sube detrás, riéndose solo, con la mano donde la tiene siempre. Ella no se aparta y no se acerca. Sube.` : `
+Álex mira la escalera vacía. Mira a Irene.
+
+Álex: Nosotros también subimos.
+
+Irene: ¿A qué?
+
+Álex: A la sudadera.
+
+Irene: Ya la llevo puesta.
+
+Álex: Pues a quitártela.
+
+Irene se ríe con la nariz, que es como se ríe cuando va a decir que sí. Suben. Ella delante, descalza; él detrás, con la mano donde la tiene siempre. La casa, con dos parejas arriba y nadie abajo.`) : q === "alex_marcos" ? (api.bandera("v_marcos_libre") ? `
+Marcos mira a Álex. Mira el arco de la cocina.
+
+Marcos: Ven. Te enseño una cosa.
+
+Álex: ¿Ahora?
+
+Marcos: Ahora que no está Nora.
+
+Álex se guarda el mechero y va detrás. Se enciende la luz blanca. Se oye abrir la puerta del almacén. Y a Álex, dentro, decir «hostia» de una manera nueva.` : `
+Marcos cruza el arco de la cocina. Álex se guarda el mechero y va detrás.
+
+Álex: Voy contigo. Al sótano de los cadáveres.
+
+Marcos: Es un cuadro de luces.
+
+Álex: Todo es un cuadro de luces hasta que no lo es.
+
+Se enciende la luz blanca. Se oye abrir una puerta que no es la de la nevera. Y a Álex, riéndose de algo, dentro.`) : `
+Los tres se quedan. Álex con el mechero, dándole vueltas. Marcos con la cerveza. Irene con el vaso que no bebe. Levantan la cabeza los tres a la vez cuando Nora llega al séptimo escalón, y la bajan los tres a la vez cuando deja de crujir.`;
+      const grupoNora = nc === "marcos" ? "La buhardilla, con Nora y Marcos." : nc === "irene" ? "La buhardilla, con Nora e Irene." : "La buhardilla, con Nora.";
+      const c2 = carta2Tramo2(api);
+      const grupoOtro = !c2 ? "Y la mesa, con los tres." : c2.ruta === "dormitorio" ? "El dormitorio del fondo, con Irene y Álex." : "El almacén, con Marcos y Álex.";
+      return `${pregunto}${nora}
+${otros}
+
+${q ? "Y la casa se reparte otra vez. Cuatro personas en dos sitios, y ninguno ve a los otros dos." : "Y la casa se queda como estaba, menos una."}
+
+${grupoNora} ${grupoOtro}
+
+¿Qué quieres ver?`;
+    },
+    personajes: [
+      { id: "nora",
+        descripcion: (api) => noraCon(api) === "marcos" ? "La cuerda. La trampilla. Marcos detrás." : noraCon(api) === "irene" ? "La cuerda. La trampilla. Irene delante, descalza, y las dos solas por primera vez." : "La cuerda. La trampilla. Sola.",
+        a: "vb1_trampilla",
+        efecto: (api) => elegirRuta(api, "buhardilla") },
+      { id: "marcos", si: (api) => (carta2Tramo2(api) || {}).id === "marcos", descripcion: (api) => carta2Tramo2(api).desc, a: (api) => carta2Tramo2(api).a, efecto: (api) => elegirRuta(api, carta2Tramo2(api).ruta) },
+      { id: "irene", si: (api) => (carta2Tramo2(api) || {}).id === "irene", descripcion: (api) => carta2Tramo2(api).desc, a: (api) => carta2Tramo2(api).a, efecto: (api) => elegirRuta(api, carta2Tramo2(api).ruta) },
+      { id: "alex", si: (api) => (carta2Tramo2(api) || {}).id === "alex", descripcion: (api) => carta2Tramo2(api).desc, a: (api) => carta2Tramo2(api).a, efecto: (api) => elegirRuta(api, carta2Tramo2(api).ruta) },
+    ],
+  },
+
+  // =====================================================================
 
   vb1_trampilla: {
     pov: "nora",
     fondo: "assets/fondos/pasillo_oscuro.jpg",
     ambiente: "arriba",
     musica: "terror_suave",
-    lugar: "pasillo de arriba", hora: "03:35",
+    lugar: "pasillo de arriba", hora: "03:45",
     titulo: "La buhardilla · La cuerda",
     alEntrar: (api) => resolverRuta(api, "buhardilla", true),
     texto: (api) => {
@@ -1571,7 +1801,7 @@ El pasillo. La lámpara de llama falsa haciendo su ciclo. La alfombra roja, larg
 
 Y la cuerda.
 
-${api.bandera("buhardilla_descubierta") === "irene" ? (conIrene ? "Irene tiró de ella esta noche. Se abrió sola una escalera y ella la volvió a subir con las dos manos. Pasa por debajo sin mirarla. La mira." : "Irene tiró de ella esta noche. Se abrió sola una escalera y ella la volvió a subir con las dos manos. Te lo contó Álex, riéndose. La cuerda sigue ahí. Quieta.") : "Nadie la ha tocado esta noche. Que tú sepas. Alguien la vio balancearse desde abajo. Tú la viste. O viste balancearse la sombra."} El nudo a la altura de tu cara. Gastado por un lado.
+${api.bandera("buhardilla_descubierta") === "irene" ? (conIrene ? "Irene tiró de ella esta noche. Se abrió sola una escalera y ella la volvió a subir con las dos manos. Pasa por debajo sin mirarla. La mira." : "Irene tiró de ella esta noche. Se abrió sola una escalera y ella la volvió a subir con las dos manos. Lo contó ella en la mesa, con la voz de quien cuenta un chiste que no lo es. La cuerda sigue ahí. Quieta.") : "Nadie la ha tocado esta noche. Que tú sepas. Alguien la vio balancearse desde abajo. Tú la viste. O viste balancearse la sombra."} El nudo a la altura de tu cara. Gastado por un lado.
 
 ${pareja ? "Marcos la mira. Marcos mira la trampilla como se mira una cosa que va a tener que arreglar." : conIrene ? (callada ? "Irene se para debajo. Levanta la cara hacia la trampilla. Y se queda así, con la boca un poco abierta, como quien escucha una conversación al otro lado de una pared." : "Irene: Yo ahí no subo. Ni descalza ni con botas. Es tu cuerda.\n\nLo dice cruzándose de brazos bajo la sudadera. Pero no se va. Se queda. Irene, que nunca se queda donde no manda.") : "Estás sola con ella. Es lo que querías."}
 
@@ -1617,7 +1847,7 @@ ${modo(api, "nora", {
   vb2_desvan: {
     pov: "nora",
     fondo: "assets/fondos/buhardilla.jpg",
-    lugar: "buhardilla", hora: "03:38",
+    lugar: "buhardilla", hora: "03:48",
     titulo: "La buhardilla · Las huellas",
     texto: (api) => {
       const pareja = noraCon(api) === "marcos";
@@ -1747,7 +1977,7 @@ ${pareja ? "Marcos: Es una muñeca.\n\nLo dice como se dice «es una lámpara».
   vb4_irene_nora: {
     pov: "nora",
     titulo: "La buhardilla · Irene",
-    hora: "03:42",
+    hora: "03:52",
     alEntrar: (api) => {
       if (!api.bandera("irene_nora")) api.marcar("irene_nora", versionIreneNora(api));
       aplicarIreneNora(api, api.bandera("irene_nora"));
@@ -1837,7 +2067,7 @@ Irene: No fue teatro.
 
 Lo dice a la viga. No a ti.
 
-Irene: Lo de la mesa. Lo del aire. No fue teatro y tú lo sabes. ${api.bandera("nora_dijo_irene") ? "Dijiste mi nombre antes que nadie. Antes que Marcos. Lo oí." : "Me miraste antes que nadie. Con la cara de saberlo."}
+Irene: Lo de la mesa. Lo del aire. No fue teatro y tú lo sabes. ${api.bandera("nora_dijo_irene") ? "Dijiste mi nombre. Con los labios, sin voz. Antes que Marcos. Lo vi." : "Me miraste antes que nadie. Con la cara de saberlo."}
 
 Nora: Lo sé.
 
@@ -1949,7 +2179,7 @@ Una campanilla.
 Sin badajo. Por eso no sonaba. Alguien se lo quitó.
 
 La envuelves otra vez. La metes en la muñeca. La muñeca en la mochila. No piensas. No piensas.` : api.bandera("nora_toma_muneca") ? `
-La muñeca en la mochila. Entre el cuaderno y las velas. Pesa. Notas lo de dentro moverse contra tu espalda cuando te mueves.` : `
+La muñeca en la mochila. Entre el cuaderno y el péndulo. Pesa. Notas lo de dentro moverse contra tu espalda cuando te mueves.` : `
 La caja cerrada. La muñeca dentro. Te alejas de ella de espaldas, sin saber por qué de espaldas.`;
 
       if (!cerro) return `${abre}
@@ -2200,110 +2430,108 @@ ${modo(api, "nora", {
   // =====================================================================
 
   vq1_dormitorio: {
-    pov: (api) => H(api) === "irene" ? "irene" : "alex",
+    pov: (api) => H(api) === "irene" ? "alex" : "irene",
     fondo: "assets/fondos/dormitorio_alex.jpg",
     ambiente: "arriba",
     musica: "terror_suave",
-    lugar: "dormitorio del fondo", hora: "03:35",
-    titulo: "El dormitorio · La sudadera",
+    lugar: "dormitorio del fondo", hora: "03:46",
+    titulo: "El dormitorio · La cama",
     alEntrar: (api) => resolverRuta(api, "dormitorio", true),
     texto: (api) => {
       const h = H(api);
-      const agua = api.bandera("irene_oyo_agua");
+      const sombra = api.bandera("irene_vio_sombra");
       const clack = "Y desde el pasillo, un CLACK. Madera. La escalera plegable desplegándose con su traqueteo, el mismo de esta noche. La trampilla. Nora y Marcos, que han subido a mirar lo que Nora quería mirar.";
-      if (h === "irene") return `
-El dormitorio del fondo. La cama grande, deshecha desde la siesta. Enciendes la luz: la bombilla desnuda, amarilla, poca. Te agachas a la mochila. La sudadera, abajo del todo.
 
-Álex cierra la puerta con el pie. Se apoya en ella.
+      // Irene, sin el huésped: lo que ve por encima del hombro de Álex
+      if (h !== "irene") return `
+El dormitorio del fondo. La cama grande, deshecha desde la siesta. La bombilla desnuda, amarilla, poca. Álex cierra la puerta con el pie y se apoya en ella a mirarte, con esa cara: la de quien ya ha ganado y viene a cobrar.
 
-Álex: ¿Frío?
+Álex: ¿Otra vez la sudadera?
 
-Irene: Por dentro.
+Irene: Quítamela.
 
-Álex: Eso se arregla.
+Y viene. Te la saca por la cabeza y la tira donde caiga, y el top detrás, y te pone las manos donde las pone siempre, sobre las costillas, calientes, y te lleva a la cama con el peso, sin prisa, como se empuja una puerta que ya está abierta.
 
-Y viene. Y te quita la sudadera de las manos antes de que te la pongas, y la tira a la cama, y te pone las manos donde las pone siempre, por debajo del top, sobre las costillas, calientes, y tú te dejas. Te dejas porque es lo que hay que hacer. Porque es Álex. Porque llevas dos horas con la mano en el cuello y esto es lo contrario del cuello.
+El short. El suyo. Su boca en el cuello, en el pecho, bajando. Y abres las piernas porque es lo que hay que hacer, porque es Álex, porque durante un minuto entero no va a haber tabla ni vaso ni nombre.
 
-La cama. El peso de él. La boca de él, que sabe a lo de siempre. El short que se va. Su mano que baja y sabe el camino, y lo tomas, y cierras los ojos, y durante un minuto entero no hay tabla ni vaso ni nombre.
+Y entra.
+
+Despacio, la primera vez, mirándote, como entra Álex siempre: mirándote para vértelo en la cara. Y luego no despacio. El peso de él encima. Sus manos en el colchón, a los lados de tu cabeza. El somier que suena. Tus talones en su espalda, tus uñas donde caben, tu boca abierta contra su hombro para no hacer el ruido que haces y hacerlo igual.
+
+Está bien. Está muy bien. Está...
 
 ${clack}
 
-Álex se ríe contra tu cuello.
+Álex se ríe contra tu cuello. Sin parar.
 
 Álex: Van a por los cadáveres.
 
-Y sigue. Y tú sigues. Y está bien, está bien, está...
+Irene: Calla.
 
-Y el armario hace un ruido.
+Y sigue. Más. Con la bombilla encima, con el techo bajo, con el sudor de él cayéndote en la boca. Cierras los ojos. Los abres.
+
+Y por encima de su hombro, el armario.
+
+Estaba cerrado. Lo has visto cerrado al entrar, con la llave puesta, porque siempre miras el armario de una habitación que no es tuya. Ahora está abierto. Un palmo. Lo justo para el negro de dentro.
+
+${sombra ? `Y dentro, en el negro, entre los abrigos de otra gente, a la altura de una niña, algo blanco.
+
+Una cara. O una camisa doblada. O una cara.
+
+No se mueve. Y luego se mueve un poco, como se mueve alguien que lleva mucho rato quieto y ya no aguanta más.
 
 [toc]
 
 Toc.
 
-Uno. Desde dentro. A un metro de la cama.
+Desde dentro. A un metro de la cama. Una vez.
+
+Y te paras. Entera. Con Álex dentro y las piernas donde estaban y las manos en su espalda, como se para un animal que ha visto al otro animal.
+
+Álex: ¿Qué?
+
+No lo dice parando. Álex no se para por un armario.` : `[toc]
+
+Toc.
+
+Desde dentro. A un metro de la cama. Una vez. Y la puerta del armario, que se abre otro dedo, sola, con el ruido de una bisagra que nadie ha engrasado en cien años.
+
+Y te paras. Entera. Con Álex dentro y las piernas donde estaban.
+
+Álex: ¿Qué?
+
+No lo dice parando. Álex no se para por un armario.`}
 
 Álex: Aplausos.
 
-Se ríe. Sigue. No se ha parado ni medio segundo. Álex no se para por un armario.
-
-Y tú sí.
-
-Te paras. Entera. Con las manos en su espalda y las piernas donde estaban. Como una cuerda que alguien sujeta.
-
-Irene: Todavía no.
-
-Lo has dicho tú. Con tu voz. A nadie. A la habitación.
-
-Álex: ¿Todavía no qué?
-
-Irene: Nada.
-
-Álex: ¿Todavía no me corro? Porque eso lo controlo yo, cariño.
-
-Se ríe. Te besa. Se lo toma como un juego. Todo es un juego para Álex hasta que deja de serlo, y esto todavía lo es. Para él.
-
-Tú no sabes qué es «todavía no». Sabes que lo has dicho. Sabes que mientras lo decías tenías los ojos en el armario. Y sabes que hay un hueco. Entre el toc y tu voz. Un hueco con la forma de dos segundos que no están.
-
-~ Aliento.
-
-Eso ha llegado. Después. Como llega un sabor.
-
-${agua ? `Y el agua.
-
-Al otro lado de la pared. El baño. Un grifo abierto, el chorro contra la porcelana, con ese ruido que hace el agua cuando lleva rato cayendo.
-
-Irene: ¿Oyes eso?
-
-Álex: Oigo que te has parado.
-
-Irene: El agua.
-
-Álex: Será Nora.
-
-Nora está en la buhardilla. Con Marcos. Los has oído subir. El agua sigue.` : ""}
+Se ríe. Sigue. Y tú tienes los ojos en el palmo negro y la respiración de él en la oreja y el cuerpo en dos sitios a la vez.
 
 ${modo(api, "irene", {
-  lucido: "~ Dos segundos. Me faltan dos segundos y en ellos he dicho algo que no era mío. Y Álex se ríe. Mejor que se ría. Mientras se ríe no me mira la cara.",
-  asustado: "~ Me he parado como se para un motor. Y he hablado. Y no era yo la que hablaba y era mi boca.",
-  tenso: "~ Que se calle. Que se calle con lo de correrse. Que me deje oír.",
-  ido: "~ Álex se mueve y yo no, y el armario respira con los dos. Con el ritmo de él. No. Con el mío.",
-  perdido: "~ Le he dicho que todavía no. A lo del armario. Que espere. Que primero tiene que pasar lo otro.",
-  normal: "~ Todavía no. Por qué todavía no. De dónde ha salido todavía no.",
+  lucido: `~ Cerrado al entrar. Abierto ahora. Nadie se ha levantado de esta cama. ${sombra ? "Y lo de dentro es blanco y pequeño y no es una camisa, porque las camisas no esperan." : "Una bisagra vieja y una casa que se mueve con el frío. Y yo con el corazón en la garganta por una puerta."}`,
+  asustado: `~ ${sombra ? "Hay alguien dentro. Pequeño. Mirándonos. Mirándome a mí, porque él está de espaldas." : "Toc. Como los de la mesa. Como los que hacía yo con el talón. Y yo tengo los pies en su espalda."}`,
+  tenso: "~ Que se calle. Que se calle con lo de los aplausos. Que pare. Que no pare. Que se calle.",
+  ido: "~ El armario respira con nosotros. Con el ritmo de él. No. Con el mío.",
+  perdido: `~ ${sombra ? "Ha venido a ver. Se ha metido en el armario para vernos. Como se meten los niños para ver lo que no deben." : "Ha llamado. Desde dentro. Para que abra. Como se llama a una puerta cuando eres educado."}`,
+  normal: "~ Un armario. Un golpe. Una puerta que se abre sola. Y Álex, que sigue, que no ha visto nada, que no ve nunca nada.",
 })}`;
 
-      // Álex, con Irene normal: la casa entra sin que se vea nada. Él se lo toma como un juego.
+      // Álex, con Irene huésped: las uñas, la sangre, el mordisco. Y él decide si le gusta.
       return `
-El dormitorio del fondo. La cama grande, deshecha desde la siesta. Irene enciende la luz y se agacha a la mochila, y tú cierras la puerta con el pie y te apoyas en ella a mirarla buscar.
+El dormitorio del fondo. La cama grande, deshecha desde la siesta. La bombilla desnuda. Cierras la puerta con el pie y te apoyas en ella a mirarla.
+
+Irene no busca nada. La sudadera la lleva puesta y se la quita ella, por la cabeza, de un tirón, y el top detrás, y se queda de pie en mitad del cuarto mirándote con una cara que le has visto pocas veces y que te gusta mucho.
 
 Álex: ¿Frío?
 
-Irene: Por dentro.
+Irene: Ven.
 
-Álex: Eso se arregla.
+Y vas. Te coge de la camisa y te lleva a la cama, y se tumba debajo, y te trae encima con las piernas. Su boca sabe a cerveza y a ese licor de mierda y a otra cosa, fría, como si hubiera bebido agua de un grifo. El short. El tuyo. Su mano, que sabe el camino, y lo toma.
 
-Vas. Le quitas la sudadera de las manos antes de que se la ponga. La tiras a la cama. Le pones las manos donde las pones siempre, por debajo del top, sobre las costillas, y ella se deja, y luego no se deja: te empuja a la cama y se sube encima, con el short todavía puesto y la cara de las malas ideas, la suya, que es mejor que la tuya.
+Y entras.
 
-Y ya. La cama. El peso de ella. Su boca, que sabe a cerveza y a ese licor de mierda. El short que se va. Su mano, que sabe el camino, y lo toma, y durante un minuto entero no hay tabla ni vaso ni nombre.
+Despacio la primera vez, mirándola, para vérselo en la cara. Y se lo ves: los ojos se le van hacia arriba, hacia el techo, hacia más arriba del techo. Y luego no despacio. Sus talones en tu espalda. Sus uñas en tus hombros. El somier. Su boca abierta contra tu cuello para no hacer el ruido que hace y hacerlo igual.
+
+Está bien. Está muy bien. Está...
 
 ${clack}
 
@@ -2311,82 +2539,61 @@ Te ríes contra su cuello.
 
 Álex: Van a por los cadáveres.
 
-Irene: Calla.
+Irene no dice «calla». Irene no dice nada. Y las uñas bajan.
 
-Y sigue. Y sigues. Y está bien, está muy bien, está...
+De los hombros a la espalda. Despacio. Y aprietan. Primero es lo de siempre, lo que te gusta, lo que le has pedido otras veces. Y luego no: entran. Las diez. Y tiran hacia abajo, como se rastrilla, y notas la piel abrirse y el calor bajar por los costados, y hueles tu propia sangre antes de entender que es tuya.
 
-Y el armario hace un ruido.
+Álex: Irene.
+
+Y las caderas no paran. Ella no para. Va más fuerte. Con los ojos abiertos, fijos en el techo, sin verte, y la boca cerrada, y las uñas dentro. Y entonces la boca se abre y te muerde.
+
+En el cuello. Donde la tenía apoyada. Cierra y no suelta. Como muerde un animal que no va a soltar. Notas los dientes juntarse a través de ti y el ruido que hace eso dentro de tu cabeza, y su cuerpo debajo, que se mueve como si esto fuera lo que había venido a hacer.
 
 [toc]
 
 Toc.
 
-Uno. Desde dentro. A un metro de la cama.
+El armario. Desde dentro. A un metro de la cama. Una vez.
 
-Álex: Aplausos.
+Irene suelta. Con la boca roja. Te mira. No a ti: al armario, por encima de tu hombro. Y dice, bajo, con su voz, a nadie:
 
-Te ríes. Sigues. No te paras ni medio segundo. Tú no te paras por un armario.
+Irene: Todavía no.
 
-Irene sí. Un segundo. Con las manos en tu pecho y la cara girada hacia las dos puertas cerradas.
+Y las caderas siguen. Y las uñas siguen dentro. Y tú tienes la sangre bajando por la espalda hasta las sábanas y a Irene debajo con la cara de otra y el cuerpo de siempre, y llevas cinco años con ella y no la conoces.
 
-Irene: ¿Has oído?
-
-Álex: He oído que te has parado.
-
-Irene: El armario.
-
-Álex: Está aplaudiendo. Sigue.
-
-Y sigue. Pero ya no está. Está en el armario. Lo notas: Irene contigo encima es una cosa y Irene con la cabeza en otro sitio es otra, y llevas cinco años distinguiéndolas.
-
-${agua ? `Y entonces ella se queda quieta del todo.
-
-Irene: El agua.
-
-Álex: ¿Qué agua?
-
-Irene: En el baño. Hay un grifo abierto.
-
-Escuchas. Nada. La chimenea abajo, lejos. La cama. Tu respiración.
-
-Álex: No oigo nada.
-
-Irene: Está corriendo, Álex.
-
-Se baja de ti. Se pone el short. Se queda de pie mirando la pared que da al baño, con los brazos cruzados, y por primera vez esta noche no sabes qué cara tiene.` : `Y se baja. Antes de acabar. Se pone el short. Se sienta en el borde de la cama, de espaldas a ti, mirando el armario.
-
-Irene: Ha sonado dentro.
-
-Álex: Es una casa vieja.
-
-Irene: Ha sonado dentro, Álex.`}
+~ Cinco años. Nunca. Ni borracha, ni cabreada, ni la noche de Rubén. Nunca ha mordido.
 
 ${modo(api, "alex", {
-  lucido: "~ Un armario viejo, un golpe, e Irene que se corta. Lo del golpe lo entiendo. Lo de Irene no: a Irene no la corta nada. Nunca.",
-  asustado: "~ Ha sonado a un metro. Con los dos aquí. Y ha sonado como los de la mesa. Como los que hacía ella con el talón. Pero ella tiene los pies encima de mí.",
-  tenso: "~ Cojonudo. Un armario. Un armario me ha jodido lo único bueno de la noche.",
-  ido: "~ El armario ha dado un golpe justo cuando ella ha dicho «calla». Como si le contestara. Como si fuera educado.",
-  perdido: "~ Está dentro. Lo que subió por la escalera esta noche está dentro del armario y ha llamado para que Irene abra.",
-  normal: "~ Vale. Un golpe. Y ahora la parte en que Irene decide que no hay más. La conozco.",
+  lucido: "~ No es un juego. Los juegos se miran a la cara. Ella mira el armario. Me está haciendo esto mirando un armario, y lo de «todavía no» no iba conmigo.",
+  asustado: "~ Me ha mordido de verdad. Hasta el hueso. Y sigue. Y yo también sigo, y no sé por qué sigo.",
+  tenso: "~ Suéltame. Suéltame o te suelto yo. Y no lo digo. Y no lo hago.",
+  ido: "~ Su cuerpo va a un ritmo y el armario a otro y el mío al de ella. Toc. Toc. Como el talón en la mesa. Como el vaso.",
+  perdido: "~ No es Irene. Es lo que subió por la escalera esta noche y se metió en ella cuando dejó de respirar, y ahora quiere sangre y se la estoy dando.",
+  normal: "~ Vale. Vale. Irene se ha vuelto loca y me está gustando y me está dando miedo, y las dos cosas a la vez, y no sé cuál gana.",
 })}`;
     },
     opciones: [
-      // Irene huésped
-      { texto: "«Nada. Sigue.» Y seguir. Con los ojos cerrados.", a: "v9_regreso", si: (api) => H(api) === "irene",
-        efecto: (api) => { api.marcar("irene_tras_lapso", "sigue"); api.marcar("irene_cuenta", false); api.rel("alex", "irene", "afecto", 4); api.est("irene", "estres", 3); } },
-      { texto: "Levantarte. Ir al baño. Mirar el grifo.", a: "v9_regreso", si: (api) => H(api) === "irene",
-        efecto: (api) => { api.marcar("irene_tras_lapso", "grifo"); api.marcar("irene_cuenta", false); api.saber("irene", "agua_sola"); api.est("irene", "lucidez", 1); api.rel("alex", "irene", "tension", -3); } },
-      { texto: "Mirar a Álex. Ver si se ha dado cuenta de que no eras tú.", a: "v9_regreso", lucida: true, si: (api) => H(api) === "irene",
-        efecto: (api) => { api.marcar("irene_tras_lapso", "mira"); api.marcar("irene_cuenta", false); api.saber("irene", "lapso"); api.est("irene", "lucidez", 1); } },
-      // Álex
-      { texto: "Reírte. «Ahí arriba están los cadáveres.» Y tirar de ella otra vez.", a: "v9_regreso", si: (api) => H(api) !== "irene",
-        efecto: (api) => { api.marcar("alex_armario", "rie"); api.marcar("alex_abre_armario", false); api.est("alex", "eje", 2); api.rel("irene", "alex", "resentimiento", 3); } },
-      { texto: "Parar. «¿Estás bien?» De verdad. Sin la coña.", a: "v9_regreso", si: (api) => H(api) !== "irene",
-        efecto: (api) => { api.marcar("alex_armario", "para"); api.marcar("alex_abre_armario", false); api.rel("irene", "alex", "afecto", 5); api.rel("alex", "irene", "proteccion", 3); api.est("alex", "eje", -2); } },
-      { texto: "Ir al armario. Abrirlo de golpe. Con el pantalón a medias.", a: "v9_regreso", si: (api) => H(api) !== "irene",
-        efecto: (api) => { api.marcar("alex_armario", "abre"); api.marcar("alex_abre_armario", true); api.saber("alex", "marca_armario"); api.est("alex", "eje", 3); api.presenciar("alex", 1); } },
+      // Irene, sin el huésped: lo que hace con lo que ha visto
+      { texto: "«Álex. Para.» Sin quitar los ojos del armario.", a: "v9_regreso", si: (api) => H(api) !== "irene",
+        efecto: (api) => { api.marcar("irene_tras_sombra", "para"); api.marcar("irene_cuenta", false); api.saber("alex", "irene_asustada"); api.rel("alex", "irene", "tension", 3); api.est("irene", "lucidez", 1); } },
+      { texto: "Cerrar los ojos. Seguir. Que acabe. Que acabe ya.", a: "v9_regreso", si: (api) => H(api) !== "irene",
+        efecto: (api) => { api.marcar("irene_tras_sombra", "sigue"); api.marcar("irene_cuenta", false); api.rel("alex", "irene", "afecto", 4); api.est("irene", "estres", 5); api.est("irene", "eje", -2); } },
+      { texto: "Empujarle. Encender la luz grande. Abrir el armario tú misma.", a: "v9_regreso", lucida: true, si: (api) => H(api) !== "irene",
+        efecto: (api) => { api.marcar("irene_tras_sombra", "abre"); api.marcar("irene_abre_armario", true); api.marcar("irene_cuenta", false); api.saber("irene", "marca_armario"); api.presenciar("irene", 1); api.rel("alex", "irene", "tension", 3); api.est("irene", "lucidez", 1); } },
+      { texto: "«Mira.» Girarle la cara hacia el armario. Que lo vea él.", a: "v9_regreso", si: (api) => H(api) !== "irene" && api.bandera("irene_vio_sombra"),
+        efecto: (api) => { api.marcar("irene_tras_sombra", "mira"); api.marcar("irene_cuenta", true); api.saber("alex", "irene_vio_algo"); api.rel("alex", "irene", "confianza", -3); api.est("irene", "miedo", 4); } },
+      // Álex, con Irene huésped: si le gusta o no
+      { texto: "Te gusta. Reírte contra su boca roja y seguir. Más fuerte.", a: "v9_regreso", si: (api) => H(api) === "irene",
+        efecto: (api) => { api.marcar("alex_gusto", true); R().alimentar(api, 1); R().ofrenda(api, "sangre"); api.rel("alex", "irene", "afecto", 4); api.est("alex", "eje", 2); api.est("alex", "estres", 4); } },
+      { texto: "«Para. Irene. Para.» Sujetarle las muñecas contra el colchón.", a: "v9_regreso", si: (api) => H(api) === "irene",
+        efecto: (api) => { api.marcar("alex_gusto", false); api.marcar("alex_paro_irene", true); api.rel("alex", "irene", "tension", 6); api.est("alex", "miedo", 6); api.est("alex", "eje", -2); } },
+      { texto: "Salir de ella. Levantarte. Encender la luz grande y mirarle la cara.", a: "v9_regreso", lucida: true, si: (api) => H(api) === "irene",
+        efecto: (api) => { api.marcar("alex_gusto", false); api.marcar("alex_vio_lapso", true); api.saber("alex", "irene_lapso_visto"); api.est("alex", "lucidez", 1); api.est("alex", "miedo", 4); api.rel("alex", "irene", "tension", 4); } },
+      { texto: "Dejarla. Que muerda. Que haga lo que haga. Y mirar el armario mientras.", a: "v9_regreso", si: (api) => H(api) === "irene",
+        efecto: (api) => { api.marcar("alex_gusto", "deja"); R().alimentar(api, 1); R().ofrenda(api, "sangre"); api.est("alex", "eje", -3); api.est("alex", "miedo", 5); api.presenciar("alex", 1); } },
     ],
   },
+
 
   // =====================================================================
   // LOS QUE SE QUEDAN — Álex y Marcos en el almacén y en el porche (si Nora sube con Irene)
@@ -2397,12 +2604,13 @@ ${modo(api, "alex", {
     fondo: "assets/fondos/almacen.jpg",
     ambiente: "almacen",
     musica: "terror_suave",
-    lugar: "almacén", hora: "03:36",
+    lugar: "almacén", hora: "03:46",
     titulo: "El almacén · El candado",
     alEntrar: (api) => resolverRuta(api, "almacen_dos", true),
     texto: (api) => {
       const h = H(api);
       const arrastre = api.bandera("arrastre_almacen");
+      const segunda = api.bandera("v_resuelta_almacen") && api.bandera("v_marcos_libre");   // Marcos ya estuvo aquí a las tres y media
       if (h === "marcos") return `
 La cocina. La luz de tubo. La sartén de hierro en el fuego, con el piloto rojo encendido y el mando en cero. Lo miras. Lo mira Álex.
 
@@ -2414,15 +2622,15 @@ Marcos: No.
 
 La puerta del almacén, al lado de la nevera. Un escalón de piedra hacia abajo. Y el frío. No el de la casa: otro. El que sale de un sitio que no se calienta nunca. Te entra por los tobillos. Álex lo nota y no dice nada, que en Álex es raro.
 
-La bombilla de cuarenta vatios. Tres por tres, suelo de piedra. La estantería al fondo con tarros, una garrafa, cuerda, una caja de herramientas de alguien que ya no vive aquí. Y a la izquierda, la caja gris. El cuadro.
+La bombilla de cuarenta vatios. Tres por tres, suelo de piedra. La estantería al fondo con tarros, una garrafa, cuerda, una linterna grande de pilas, una caja de herramientas de alguien que ya no vive aquí. Y a la izquierda, la caja gris. El cuadro.
 
-Un diferencial bajado. Lo subes. Clac. Y detrás, en el salón, la luz sube de tono.
+${segunda ? "El diferencial ya está arriba. Lo subiste hace un cuarto de hora, sin nadie para verlo. Vas derecho a la estantería." : "Un diferencial bajado. Lo subes. Clac. Y detrás, en el salón, la luz sube de tono."}
 
-Marcos: Ya está.
+${segunda ? "Marcos: Ahí." : "Marcos: Ya está."}
 
-Álex: ¿Ya está qué?
+${segunda ? "Álex: ¿Ahí qué?" : "Álex: ¿Ya está qué?"}
 
-Marcos: La lámpara. Era esto.
+${segunda ? "Marcos: Mira la pared." : "Marcos: La lámpara. Era esto."}
 
 Álex no está mirando el cuadro. Está mirando la estantería. El hueco de dos dedos entre la madera y la pared. Y la pared, que no es de madera.
 
@@ -2495,15 +2703,15 @@ Marcos: No.
 
 Álex: Guay.
 
-El almacén. Un escalón de piedra hacia abajo y un frío que no es el de la casa. Marcos va al cuadro de luces como quien va a lo suyo. Tú vas a lo tuyo, que es todo lo demás.
+El almacén. Un escalón de piedra hacia abajo y un frío que no es el de la casa. ${segunda ? "Marcos no va al cuadro de luces: va derecho a la estantería del fondo, como quien vuelve a un sitio." : "Marcos va al cuadro de luces como quien va a lo suyo."} Tú vas a lo tuyo, que es todo lo demás.
 
-Tres por tres. Suelo de piedra. Una estantería con tarros y una garrafa y una caja de herramientas. Y detrás de la estantería, un hueco de dos dedos, y por el hueco, piedra. Piedra vieja. La única pared de piedra que has visto en esta casa.
+Tres por tres. Suelo de piedra. Una estantería con tarros, una garrafa, una linterna grande y una caja de herramientas. Y detrás de la estantería, un hueco de dos dedos, y por el hueco, piedra. Piedra vieja. La única pared de piedra que has visto en esta casa.
 
 Y aire. Frío. Saliendo por abajo, constante, como de una rendija que da a algún sitio.
 
 Álex: Marcos.
 
-Marcos: Un diferencial. Estaba bajado. Ya está.
+${segunda ? "Marcos: Ya lo sé. Por eso te he traído." : "Marcos: Un diferencial. Estaba bajado. Ya está."}
 
 Álex: Marcos, hay una puerta.
 
@@ -2565,14 +2773,14 @@ ${modo(api, "alex", {
       { texto: "Dejar que Álex lo intente otra vez. Mirar la puerta. Solo mirarla.", a: "vq3_porche_reto", si: (api) => H(api) === "marcos",
         efecto: (api) => { api.marcar("marcos_movio_estanteria", true); api.marcar("marcos_se_quedo", true); api.marcar("marcos_cuenta_puerta", false); api.marcar("marcos_cuenta_arrastre", false); api.est("marcos", "estres", 6); api.est("marcos", "lucidez", -2); } },
       { texto: "Coger la llave inglesa. Tú. Y quedártela en el bolsillo de atrás.", a: "vq3_porche_reto", lucida: true, si: (api) => H(api) === "marcos",
-        efecto: (api) => { api.marcar("marcos_movio_estanteria", true); api.marcar("llave_inglesa", "marcos"); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", api.bandera("arrastre_almacen") ? true : false); api.saber("marcos", "puerta_vista"); api.est("marcos", "lucidez", 1); } },
+        efecto: (api) => { api.marcar("marcos_movio_estanteria", true); api.marcar("llave_inglesa", "marcos"); R().coger(api, "marcos", "llave"); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", api.bandera("arrastre_almacen") ? true : false); api.saber("marcos", "puerta_vista"); api.est("marcos", "lucidez", 1); } },
       // Álex
       { texto: "«Documental número cuatro.» Grabar la puerta. El candado. La cara de Marcos.", a: "vq3_porche_reto", si: (api) => H(api) !== "marcos",
         efecto: (api) => { api.evidencia("video_puerta_almacen", "alex", "almacén", "video"); api.marcar("marcos_movio_estanteria", true); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", false); api.est("alex", "lucidez", 1); } },
       { texto: "«¿Lo has oído? Dime que lo has oído.» Otra vez. Hasta que lo diga delante de Nora.", a: "vq3_porche_reto", si: (api) => H(api) !== "marcos" && api.bandera("arrastre_almacen"),
         efecto: (api) => { api.marcar("marcos_movio_estanteria", true); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", api.lucido("marcos")); api.rel("alex", "marcos", "confianza", 4); api.rel("marcos", "alex", "resentimiento", 2); } },
       { texto: "Coger la llave inglesa. Por si acaso. Y salir del almacén el primero.", a: "vq3_porche_reto", si: (api) => H(api) !== "marcos",
-        efecto: (api) => { api.marcar("llave_inglesa", "alex"); api.marcar("marcos_movio_estanteria", true); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", false); api.est("alex", "eje", 2); } },
+        efecto: (api) => { api.marcar("llave_inglesa", "alex"); R().coger(api, "alex", "llave"); api.marcar("marcos_movio_estanteria", true); api.marcar("marcos_cuenta_puerta", true); api.marcar("marcos_cuenta_arrastre", false); api.est("alex", "eje", 2); } },
     ],
   },
 
@@ -2580,7 +2788,7 @@ ${modo(api, "alex", {
     pov: (api) => H(api) === "marcos" ? "marcos" : "alex",
     fondo: "assets/fondos/porche.jpg",
     ambiente: "exterior",
-    lugar: "porche", hora: "03:44",
+    lugar: "porche", hora: "03:50",
     titulo: "El porche · El reto",
     texto: (api) => {
       const h = H(api);
@@ -2808,10 +3016,11 @@ ${modo(api, yo, {
     fondo: "assets/fondos/salon_noche.jpg",
     ambiente: "interior",
     musica: "terror_suave",
-    lugar: "comedor", hora: "03:50",
+    lugar: "comedor", hora: "04:00",
     titulo: "La dispersión · Lo que cuenta cada uno",
     alEntrar: (api) => {
-      rutasDeConfig(api).forEach((r) => resolverRuta(api, r, false));
+      T2(api).forEach((r) => resolverRuta(api, r, false));
+      if (noraCon(api) === "marcos" && (api.bandera("nora_toma_muneca") || api.bandera("nora_cuenta_huellas"))) api.marcar("marcos_dijo_no_ratas", true);
       const q = quedan(api);
       // Quien cruzó de verdad vuelve marcado: miente sobre lo que vio, no cuenta la grava (Biblia §21)
       if (api.bandera("alex_cruzo")) { api.marcar("alex_cuenta_grava", false); api.est("alex", "estres", 4); }
@@ -2849,22 +3058,7 @@ ${modo(api, yo, {
       const inv = api.bandera("irene_nora");
 
       // 1. Cómo vuelve Nora
-      const vuelta = nc === "alex" ? (sp === "conflicto" ? `
-Entras sola. Dejas la puerta abierta a tu espalda y el frío entra contigo hasta la tabla. Álex tarda un minuto. Cuando entra, el coche está apagado y él tiene la cara de quien ha perdido una discusión que no ha tenido.
-
-La mesa, la tabla, las velas a medio consumir. Nadie más todavía.` : sp === "acercamiento" ? `
-Entras con Álex del brazo. En la puerta, antes de soltarte, te dice bajo, sin mirarte:
-
-Álex: Marcos no me dejó verle llorar en cinco años. A ti te ha dejado en cinco meses. Cuídalo.
-
-Y entra como si no lo hubiera dicho. Como si fuera del frío.
-
-La mesa, la tabla, las velas a medio consumir. Nadie más todavía.` : `
-Entráis juntos. Sin tocaros. Os entendéis y no os gustáis, y caben las dos cosas en una puerta.
-
-${api.sabe("nora", "irene_quiere_a_marcos") && !api.bandera("nora_cuenta_gente") ? "Nora: ¿Y a Irene qué le pasa conmigo?\n\nÁlex: Que le has quitado la camisa.\n\nSe ríe. No es una broma del todo. Y no dice más, porque la respuesta larga no es suya." : ""}${api.bandera("nora_cuenta_gente") ? "Nora: ¿Has visto eso?\n\nÁlex: ¿El qué?\n\nNora: En los árboles.\n\nÁlex: He oído. No he visto.\n\nY no pregunta más. Álex, que pregunta siempre." : ""}
-
-La mesa, la tabla, las velas a medio consumir. Nadie más todavía.`) : nc === "irene" ? `
+      const vuelta = nc === "irene" ? `
 Bajáis. El séptimo. El tercero. Irene delante, ${inv === "peligro" ? "descalza, con la mano metida en la manga hasta los nudillos, sin mirar atrás" : inv === "alianza" ? "descalza, y en el tercer escalón se gira a ver si sigues ahí" : "descalza, con el paso de siempre, como si vinierais del baño"}. ${api.bandera("nora_toma_muneca") ? "La mochila te pesa en un hombro con lo que lleva dentro." : ""}
 
 La mesa. La tabla. Nadie todavía. ${inv === "alianza" ? "Irene se sienta a tu lado. No en su silla: a tu lado. Álex lo va a ver cuando entre." : inv === "peligro" ? "Irene se sienta en su silla y se mira la mano. Tú te miras la muñeca. Rojo. Cuatro dedos." : "Irene se sienta en su silla. Tú en la tuya. Como siempre. Y no como siempre."}` : nc === "marcos" ? `
@@ -2877,35 +3071,15 @@ Bajas. El séptimo. El tercero. ${api.bandera("nora_toma_muneca") ? "La mochila 
 
 La mesa. La tabla. Las velas a medio consumir. Nadie todavía.`;
 
-      // 2. Quién llega
+      // 2. Quién llega, o quién sigue en la mesa
       const llegan = [];
       if (q === "irene_alex") llegan.push(`
-La escalera. Irene y Álex. Ella con la sudadera ${api.bandera("irene_paro_alex") ? "del revés, y no se ha dado cuenta" : "puesta, por fin, y el pelo de haber estado tumbada"}; él abrochándose la camisa que no abrocha nunca. ${api.bandera("alex_abre_armario") ? "Álex con la cara de haber abierto un armario y haber visto lo que había." : "Álex con la cara de quien trae un chiste."}`);
+La escalera. Irene y Álex. Ella con la sudadera ${api.bandera("irene_paro_alex") ? "del revés, y no se ha dado cuenta" : "puesta, por fin, y el pelo de haber estado tumbada"}; él abrochándose la camisa que no abrocha nunca.${api.hayEvidencia("mordisco_alex") ? " Y en el cuello, cuando se gira hacia la nevera, una marca. De dientes. Roja. Que a las tres no estaba. Se sube el cuello de la camisa como quien sabe que le miran." : ""}${api.bandera("irene_tras_sombra") === "para" || api.bandera("irene_tras_sombra") === "mira" ? " Irene no se sienta en su silla: se sienta en la que está de espaldas a la escalera." : ""}`);
       else if (q === "alex_marcos") llegan.push(api.bandera("reto_fin") === "cruza" ? `
-La puerta principal. ${api.bandera("alex_cruzo") ? "Álex entra con el frío detrás y la cara blanca. Marcos detrás de él, con la mano en su espalda, empujándole dentro como se empuja a alguien que se ha caído al agua." : "Marcos entra con el frío detrás y la cara de otro. Álex detrás, callado, que es lo más raro que ha hecho Álex en toda la noche."} Ninguno de los dos dice nada de fuera.` : `
-La puerta principal. Marcos y Álex. Marcos con polvo en las rodillas y Álex con la cara de quien trae algo. ${api.bandera("reto_fin") === "espera" ? "Álex mira a Marcos como se mira a alguien que ha hecho algo raro en la escalera de un porche." : ""}`);
-      else if (nc !== "alex") llegan.push(api.bandera("alex_grita_irene") ? `
-La puerta principal. Álex entra con el frío detrás.
-
-Álex: ¡Irene!
-
-A gritos. Hacia arriba.
-
-Irene: ¿Qué?
-
-Desde arriba. Desde el pasillo. Clara.
-
-Álex se queda con la mano en la puerta. Cierra despacio.
-
-Álex: Nada. Saber dónde estabas.` : `
-La puerta principal. Álex entra con el frío detrás y la cara de quien trae algo.`);
-      if (ic === "marcos") llegan.push(`
-La escalera. Irene y Marcos. Ella delante. ${api.bandera("huesped_quemo") ? "Él con la mano derecha pegada al cuerpo, como se lleva una mano que duele." : api.bandera("huesped_sujeto") === "irene" ? "Ella con la manga de la sudadera bajada hasta los nudillos." : "Sin mirarse."}`);
-      else if (nc !== "marcos" && !q) { if (api.bandera("v_marcos_libre")) llegan.push(`
-El arco de la cocina. Marcos. Con polvo en las rodillas y la cara de haber resuelto algo, o de no haberlo resuelto.${nc === "alex" && h !== "marcos" && api.relv("marcos", "nora", "confianza") >= 55 ? " Te ve entrar con Álex y no hay nada en la mirada. Ni una pregunta. Confía. Es lo que hace, y es lo que más te gusta de él." : ""}`); }
-      if (ic !== "marcos" && !q && nc !== "irene") llegan.push(api.bandera("v_irene_callada") ? `
-Y la escalera. Irene. Con la sudadera. Baja despacio, con la mano en la barandilla y la otra en el cuello, y se sienta sin decir nada, y coge su vaso, y no bebe.` : `
-Y la escalera. Irene. Con la sudadera. Se sienta. Coge su vaso.`);
+La puerta principal. ${api.bandera("alex_cruzo") ? "Álex entra con el frío detrás y la cara blanca. Marcos detrás de él, con la mano en su espalda, empujándole dentro como se empuja a alguien que se ha caído al agua." : "Marcos entra con el frío detrás y la cara blanca. Álex detrás de él, callado, que es lo más raro que ha hecho Álex en toda la noche."}` : `
+La puerta principal. Marcos y Álex. Marcos con polvo en las rodillas y Álex con la cara de quien trae algo. ${api.bandera("reto_fin") === "espera" ? "Álex mira a Marcos como se mira a alguien que ha hecho algo raro en un sitio donde no había nadie más para verlo." : ""}`);
+      else llegan.push(`
+Los tres en la mesa. Donde los dejaste. Álex con el mechero, Marcos con la cerveza, Irene con el vaso que no bebe. Levantan la cabeza los tres a la vez cuando llegas al séptimo escalón.`);
 
       // 3. Álex
       const alex = q === "irene_alex" ? (api.bandera("alex_cuenta") ? `
@@ -2913,11 +3087,11 @@ Y la escalera. Irene. Con la sudadera. Se sienta. Coge su vaso.`);
 
 Marcos: ¿Qué?
 
-Álex: Un golpe. Dentro. En el mejor momento. ${api.bandera("alex_abre_armario") ? "Lo he abierto. Abrigos de otra gente. Y una marca en el fondo, a esta altura, como si alguien pequeño hubiera estado apoyado ahí un siglo." : "No lo he abierto. Irene no me ha dejado."}
+Álex: Un golpe. Dentro. En el mejor momento. ${api.bandera("irene_abre_armario") ? "Irene lo ha abierto. Con la luz grande y yo con el pantalón a medias. Abrigos de otra gente. Y una marca en el fondo, a esta altura, como si alguien pequeño hubiera estado apoyado ahí un siglo." : "No lo he abierto. Irene no me ha dejado."}
 
 Lo cuenta riéndose. Irene no se ríe. ${api.bandera("irene_paro_alex") ? "Irene mira la mesa como si la mesa le hubiera dicho algo." : "Irene mira el techo. Hacia el dormitorio. Hacia el baño de al lado del dormitorio."}
 
-${api.bandera("irene_oyo_agua") ? "Irene: Y había un grifo abierto.\n\nÁlex: No había ningún grifo.\n\nIrene: Lo he oído.\n\nÁlex: Yo no.\n\nY se miran, y en esa mirada Álex pierde algo que no sabe que ha perdido." : ""}` : `
+${api.bandera("irene_tras_sombra") === "mira" ? "Irene: Había alguien dentro.\n\nÁlex: No había nadie.\n\nIrene: Lo he visto.\n\nÁlex: Yo he mirado.\n\nY se miran, y en esa mirada Álex pierde algo que no sabe que ha perdido." : ""}` : `
 Álex no cuenta nada. Se sienta con la camisa mal abrochada y coge una cerveza. Irene tampoco. Lo que haya pasado en ese dormitorio se ha quedado en ese dormitorio, y a ti te da igual, y no te da igual.`) : q === "alex_marcos" ? (api.bandera("alex_cuenta") ? `
 Álex: Vale. Escuchad. Hay una puerta.
 
@@ -3114,6 +3288,8 @@ ${api.bandera("nora_confronta_marcos") ? "Se lo has preguntado en la escalera. �
 Te miras la muñeca por debajo de la mesa. Cuatro marcas. Rojas. Donde estaban los dedos de Irene. Te bajas la manga de la camisa hasta los nudillos, como lleva ella la suya.
 
 ${api.bandera("nora_irene_dijo") === "mano" ? "Se lo has dicho arriba. «Irene. La mano.» Y se ha mirado la mano como si fuera de otra. Y era verdad. Se le veía que era verdad." : "No se lo has dicho. No sabes cómo se dice eso. Y menos a Irene."}`);
+      if (api.hayEvidencia("mordisco_alex") && !api.bandera("alex_cuenta")) marcas.push(`
+Álex se sube el cuello de la camisa cada vez que se inclina. Debajo, cuando se le olvida, una marca. Roja. Con la forma de una boca. Irene le mira el cuello y no sabe qué está mirando. Se le ve no saberlo.`);
       if (api.bandera("alex_cruzo") || api.bandera("marcos_cruzo")) marcas.push(api.bandera("alex_cruzo") ? `
 Álex tiene las zapatillas mojadas. Las dos. Hasta el cordón. Nadie le pregunta por qué. Él tampoco lo cuenta. Y cada poco mira la puerta, como se mira una puerta por la que va a entrar alguien.` : `
 Marcos tiene las zapatillas mojadas. Hasta el cordón. Y no lo explica. Marcos, que lo explica todo. Y cada poco mira la puerta.`);
@@ -3134,7 +3310,7 @@ ${huesped}
 
 Escribes. Debajo de ALDA y de AJOBA:
 
-03:50. ${api.bandera("alex_oyo_irene_fuera") && api.bandera("alex_cuenta") ? "Álex: Irene en los árboles." : q === "irene_alex" && api.bandera("alex_cuenta") ? "Álex: el armario." : q === "alex_marcos" && api.bandera("alex_cuenta") ? "Álex: una puerta con candado." : "Álex: nada."} ${api.bandera("irene_oyo_alex_puerta") && api.bandera("irene_cuenta") ? "Irene: Álex en la puerta." : api.bandera("irene_oyo_agua") && api.bandera("irene_cuenta") ? "Irene: un grifo." : "Irene: nada."} ${api.bandera("v_marcos_libre") || q === "alex_marcos" ? "Marcos: una puerta." : ic === "marcos" ? "Marcos: el grifo." : "Marcos: la trampilla."} Yo: ${api.bandera("nora_vio_gente") ? "gente entre los árboles." : api.bandera("huellas_vistas") ? (nc === "irene" ? "huellas. Siete marcas. La cuerda. Irene lo vio." : "huellas. Siete marcas.") : "nada."}
+04:00. ${api.bandera("alex_oyo_irene_fuera") && api.bandera("alex_cuenta") ? "Álex: Irene en los árboles." : q === "irene_alex" && api.bandera("alex_cuenta") ? "Álex: el armario." : q === "alex_marcos" && api.bandera("alex_cuenta") ? "Álex: una puerta con candado." : "Álex: nada."} ${api.bandera("irene_oyo_alex_puerta") && api.bandera("irene_cuenta") ? "Irene: Álex en la puerta." : (api.bandera("irene_vio_sombra") && api.bandera("irene_cuenta")) && api.bandera("irene_cuenta") ? "Irene: un grifo." : "Irene: nada."} ${api.bandera("v_marcos_libre") || q === "alex_marcos" ? (api.bandera("marcos_cuenta_puerta") ? "Marcos: una puerta." : "Marcos: el diferencial. Y algo que no cuenta.") : ic === "marcos" ? "Marcos: el grifo." : "Marcos: la trampilla."} Yo: ${api.bandera("nora_vio_gente") ? "gente entre los árboles." : api.bandera("huellas_vistas") ? (nc === "irene" ? "huellas. Siete marcas. La cuerda. Irene lo vio." : "huellas. Siete marcas.") : "nada."}
 
 ${modo(api, "nora", {
   lucido: "~ Cuatro versiones. Ninguna se toca con las otras. Cada uno ha visto lo suyo en su sitio y ninguno puede demostrar nada a nadie. Es como si esta casa supiera repartir.",

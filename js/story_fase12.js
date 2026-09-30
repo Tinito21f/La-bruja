@@ -28,8 +28,8 @@
   const linternaDisponible = (api) => { const q = R().quienLleva(api, "linterna"); return !q || q === "nora"; };
   const lugarCuerpo = (api, p) => {
     const m = M(api, p);
-    if (m.como === "bosque") return "en el bosque, en " + (m.donde || "el terraplén bajo los pinos");
-    if (m.como === "coche") return "en el coche, en " + (m.donde || "el camino, contra el pino grande");
+    if (m.como === "bosque") return m.fase === "X" ? "en la grava, a diez metros del porche" : "en el bosque, en " + (m.donde || "el terraplén bajo los pinos");
+    if (m.como === "coche") return m.fase === "X" ? "en el coche, contra el pino grande de la entrada, a veinte metros de la puerta" : "en el coche, en " + (m.donde || "el camino, contra el pino grande");
     if (m.como === "banera") return "en la bañera de arriba, sin agua";
     if (m.como === "huesped") return "en " + (m.donde || "la bañera del baño de arriba") + ", con las cuatro marcas";
     if (m.como === "amigo") return "en " + (m.donde || "el baño de arriba") + ", con la cabeza abierta";
@@ -74,7 +74,8 @@
   function decidirFinal(api) {
     if (api.bandera("final")) return;
     const luz = hayLuz(api);
-    const A = R().ofrendas(api) >= 5 || !luz;
+    const entrega = ["nombre", "apaga", "campanilla"].includes(api.bandera("xii5_nora"));   // la séptima ofrenda es ella
+    const A = !luz || entrega || R().ofrendas(api) >= 7;
     api.marcar("final", A ? "A" : "B");
     api.marcar("nora_final", A ? "NORA_DEAD" : "NORA_UNKNOWN");
     api.marcar("nora_bajo_con_luz", luz);
@@ -96,16 +97,17 @@
     const u = U(api);
     const hIX = orden.find((p) => M(api, p).como === "amigo" && M(api, p).fase === "IX") || u;
     const L = [];
-    if (E.cuaderno_triada) L.push(`${hora("cuaderno_triada", "00:58")}. Espino, pelo negro, diente de leche.`);
-    if (E.cuaderno_alda) L.push(`${hora("cuaderno_alda", "01:41")}. ALDA.`);
-    if (E.cuaderno_ajoba) L.push(`${hora("cuaderno_ajoba", "01:49")}. AJOBA. Con jota.`);
-    if (E.cuaderno_buhardilla) L.push(`${hora("cuaderno_buhardilla", "02:40")}. Buhardilla. Huellas pequeñas. Descalzas. Cuatro marcas en la viga. Una muñeca con los ojos cosidos. He contado solo lo de la trampilla.`);
-    if (E.cuaderno_dispersion) L.push(`${hora("cuaderno_dispersion", "03:05")}. Nos hemos separado. He apuntado quién con quién. No sirve de nada.`);
-    if (E.cuaderno_pasos) L.push(`${hora("cuaderno_pasos", "03:40")}. Pasos arriba. Los he contado. Van hacia la trampilla.`);
-    if (E.cuaderno_imposible) L.push(`${hora("cuaderno_imposible", "04:10")}. Alguien ha subido. Le hemos visto los cuatro.`);
+    if (E.cuaderno_triada) L.push(`${hora("cuaderno_triada", "02:35")}. Espino, pelo negro, diente de leche.`);
+    if (E.cuaderno_alda) L.push(`${hora("cuaderno_alda", "03:10")}. ALDA.`);
+    if (E.cuaderno_ajoba) L.push(`${hora("cuaderno_ajoba", "03:15")}. AJOBA. Con jota.`);
+    if (E.cuaderno_reparto) L.push(`${hora("cuaderno_reparto", "03:35")}. Álex fuera. Irene arriba. Marcos en el cuadro. Yo con la tabla.`);
+    if (E.cuaderno_buhardilla) L.push(`${hora("cuaderno_buhardilla", "03:50")}. Buhardilla. Huellas pequeñas. Descalzas. Siete marcas en la viga. Una muñeca con los ojos cosidos. He contado solo lo de la trampilla.`);
+    if (E.cuaderno_dispersion) L.push(`${hora("cuaderno_dispersion", "04:00")}. Nos hemos separado. He apuntado quién con quién. No sirve de nada.`);
+    if (E.cuaderno_pasos) L.push(`${hora("cuaderno_pasos", "04:05")}. Pasos arriba. Los he contado. Van hacia la trampilla.`);
+    if (E.cuaderno_imposible) L.push(`${hora("cuaderno_imposible", "04:28")}. Alguien ha subido. Le hemos visto los cuatro.`);
     if (E.cuaderno_generador) L.push("04:53. Han salido. Han vuelto. Sangre en la chapa.");
-    if (E.cuaderno_muerte1) L.push(`${hora("cuaderno_muerte1", "05:50")}. ${N[p1]}. ${(M(api, p1).donde || "Fuera").charAt(0).toUpperCase() + (M(api, p1).donde || "Fuera").slice(1)}. Cuatro marcas en el cuello. En el vídeo el vaso se mueve sin nadie.`);
-    if (E.cuaderno_ataque) L.push(`${hora("cuaderno_ataque", "06:20")}. ${N[hIX]}. Las manos. «Todavía no.»`);
+    L.push(`05:30. ${N[p1]}. ${p1 === "alex" ? "El terraplén. Cuatro marcas en el cuello." : "El coche. La curva del pino. Cuatro marcas en el cuello."}${api.bandera("vaso_en_video") ? " El vaso se mueve solo en el vídeo." : ""}`);
+    if (E.cuaderno_ataque) L.push(`${hora("cuaderno_ataque", "06:10")}. ${N[hIX]}. Las manos. «Todavía no.»`);
     const enIX = orden.filter((p) => M(api, p).fase === "IX");
     L.push(`06:38. ${enIX.length ? "Dos. " + N[enIX[0]] + ". Arriba." : "Uno."}${api.bandera("sarten_humo") ? " La sartén humea sola." : ""}${api.bandera("arrastre_mesa") ? " Lo de abajo está debajo de la mesa." : ""} Quedamos ${enIX.length ? "dos" : "tres"}.`);
     if (E.cuaderno_puerta) L.push("06:45. La puerta no abre. Nadie la sujeta.");
@@ -126,12 +128,12 @@
     const cuerpos = orden.map((p, i) => {
       const m = M(api, p);
       let d = `${ordinal[i] || "Luego"}, a ${N[p]}, ${lugarCuerpo(api, p)}.`;
-      if (m.como === "bosque") d += " Con la cara hacia la casa. A doscientos metros de la puerta, que es como se muere en un bosque de verdad: cerca.";
-      if (m.como === "coche") d += " El motor en marcha hasta que se acabó la gasolina. Las luces de dentro encendidas.";
+      if (m.como === "bosque") d += m.fase === "X" ? " Boca abajo, con la mano abierta hacia la casa. Y en el hombro, un agujero del tamaño de un dedo." : " Con la cara hacia la casa. A doscientos metros de la puerta, que es como se muere en un bosque de verdad: cerca.";
+      if (m.como === "coche") d += (api.bandera("viii_hallazgo") === "llave" || m.fase === "X" ? " El motor apagado." : " El motor en marcha hasta que se acabó la gasolina.") + " Las luces de dentro encendidas.";
       if (m.como === "banera") d += " Con el pelo mojado. Sin una gota en el suelo.";
       if (m.como === "huesped") d += ` El informe dice que fue ${N[u]}. ${N[u]} no está para decir que no.`;
-      if (m.como === "amigo" && m.fase !== "XI") d += ` El informe dice que fue ${N[api.bandera("mato_" + Object.keys(N).find((k) => api.bandera("mato_" + k) === p)) || "otro"]}. Defensa propia, dice.`;
-      if (m.como === "amigo" && m.fase === "XI") d += " Con una llave inglesa al lado que tenía las huellas de Nora. Eso el informe sí lo dice.";
+      if (m.como === "amigo" && m.fase !== "XI") d += ` El informe dice que fue ${N[Object.keys(N).find((k) => api.bandera("mato_" + k) === p) || "otro"]}. Defensa propia, dice.`;
+      if (m.como === "amigo" && m.fase === "XI") d += " Con " + (R().OBJETOS[api.bandera("arma_xi")] || (api.bandera("arma_xi") === "martillo" ? "un martillo" : "una llave inglesa")) + " al lado, con las huellas de Nora. Eso el informe sí lo dice.";
       if (m.como === "nina") d += " Lo que le faltaba no lo encontraron.";
       return d;
     });
@@ -146,7 +148,7 @@
     if (E.video_marcos_ouija) q.push("El móvil de Marcos: la ouija desde el otro lado. Se ve a Álex empujar. En la palabra que Nora apuntó, no empuja.");
     if (E.video_cobertizo) q.push("El vídeo del cobertizo. El generador. Los golpes en la chapa desde fuera.");
     if (E.video_coche_luz) q.push("El coche con la luz de dentro encendida, grabado desde el porche, con nadie dentro.");
-    if (E.movil_alex_bosque || api.bandera("alex_graba_bosque")) q.push(api.bandera("movil_alex_hallado") ? "El móvil de Álex, en el bosque. Su voz: «Venga. Si estás ahí, sal.» Y detrás, la de Irene, que estaba dentro de la casa." : "El móvil de Álex no apareció.");
+    if (E.movil_alex_bosque || api.bandera("alex_graba_bosque")) q.push(api.bandera("video_bosque_borrado") ? "El móvil de Álex. Vacío: alguien borró el último vídeo esa noche, y el informe no dice quién." : api.bandera("movil_alex_hallado") ? "El móvil de Álex, en el bosque. Su voz: «Venga. Si estás ahí, sal.» Y detrás, la de Irene, que estaba dentro de la casa." : "El móvil de Álex no apareció.");
     if (E.video_irene_bano || E.audio_irene_bano) q.push("Diez segundos de Irene en el baño de arriba. El grifo. Y una voz de hombre diciendo su nombre desde el otro lado de una puerta que da a un pasillo.");
     if (E.video_techo) q.push("Un vídeo del techo del salón. Cuatro segundos. Nadie se pone de acuerdo en qué se ve.");
     if (E.video_trampilla || E.video_escalera) q.push("Un vídeo de la escalera, con la trampilla abierta al fondo, y un ruido de cuerda.");
@@ -156,13 +158,21 @@
     if (E.simbolo_mesa) q.push("La foto del símbolo de la mesa, con la mano de Nora al lado para dar la escala.");
     if (E.boton_irene) q.push("Un botón de la camisa de Irene, entre dos páginas.");
     if (E.foto_sarten || E.foto_sarten_2) q.push("La sartén. Humeando. Con el mando en el cero.");
+    if (E.foto_cuadro) q.push("La foto del cuadro de luces, con el diferencial subido y la hora en la esquina.");
+    if (E.foto_buhardilla) q.push("La foto de la buhardilla: la viga con las siete marcas y la muñeca en su caja, antes.");
+    if (E.foto_arboles) q.push("La foto de los árboles desde el porche. Troncos. Y entre dos troncos, algo que puede ser un tronco.");
+    if (E.video_puerta_almacen) q.push("El vídeo de la puerta del almacén: el candado, la piedra, y la cara de Marcos.");
+    if (E.video_brindis) q.push("El vídeo del brindis. «Documental número uno.» Cuatro personas riéndose.");
+    if (E.audio_golpes) q.push("Un audio de la mesa: golpes en la madera, y alguien contando.");
+    if (E.marca_brazo_irene || E.marca_tobillo_nora || E.marca_muneca_nora || E.quemadura_marcos || E.aranazos_alex) q.push("Las marcas de antes de morir: " + [E.marca_brazo_irene ? "cuatro dedos en el brazo de Irene" : "", E.marca_tobillo_nora ? "cuatro dedos en el tobillo de Nora" : "", E.marca_muneca_nora ? "cuatro dedos en la muñeca de Nora" : "", E.quemadura_marcos ? "la mano quemada de Marcos" : "", E.aranazos_alex ? "la espalda de Álex, con diez surcos, y una boca en el cuello" : ""].filter(Boolean).join("; ") + ".");
+    if (E.campanilla && A) q.push("Una campanilla sin badajo, en el bolsillo de Nora.");
     if (E.escalon_roto) q.push("El escalón roto de la escalera plegable.");
     if (E.coche_volcado) q.push("El coche.");
     q.push("El tablero. El vaso en la O. El péndulo. Las velas consumidas hasta el plato.");
     q.push(`Y abajo. La escalera de piedra que no estaba en los planos. El poste quemado. La argolla. La palabra en la piedra, cortada con algo pequeño.${A ? " Y debajo, una letra nueva." : ""}`);
 
     const s = [];
-    if (api.sabe("irene", "ahogo_real")) s.push(`Irene lo sabía desde la una: que el ahogo fue de verdad. ${api.cree("marcos", "ahogo_real") || api.bandera("marcos_cree_irene") ? "Marcos la creyó." : "Nadie la creyó."}`);
+    if (api.sabe("irene", "ahogo_real")) s.push(`Irene lo sabía desde las tres: que el ahogo fue de verdad. ${api.cree("marcos", "ahogo_real") || api.bandera("marcos_cree_irene") ? "Marcos la creyó." : "Nadie la creyó."}`);
     if (api.sabe("marcos", "aliento_frio")) s.push("Marcos notó el frío al hacerle la respiración. No lo dijo. Se lo achacó a las setas, o al susto, o a nada.");
     if (api.sabe("alex", "no_elegi_alda")) s.push("Álex fue el único que supo con certeza que no eligió las palabras. Nadie le creyó. Ni él, al final.");
     if (api.bandera("alda_visto") || api.sabe("nora", "alda")) s.push("Y Nora sabía lo de la palabra. Que nadie podía conocerla. Lo apuntó. No se lo dijo a nadie.");
@@ -184,7 +194,7 @@ Un bar de carretera. La misma carretera. Fuera, la lluvia de marzo. Agus tiene l
 
 Danna no ha tocado el café.
 
-Agus: Los encontraron el martes. Por el coche. Un tipo del pueblo lo vio desde la carretera y llamó, y tardaron dos horas en subir porque nadie del pueblo quiso subir con ellos.
+Agus: Los encontraron el martes. ${M(api, "marcos").como === "coche" && M(api, "marcos").fase !== "X" ? "Por el coche. Un tipo del pueblo lo vio desde la carretera y llamó," : "Por el generador. Siguió sonando dos días, y un tipo del pueblo llamó por el ruido,"} y tardaron dos horas en subir porque nadie del pueblo quiso subir con ellos.
 
 Agus: Cuatro. Dos parejas. Una noche.
 
@@ -192,7 +202,7 @@ ${cuerpos.join("\n\n")}
 
 ${nora}
 
-Agus: El informe dice hipotermia. Dice caída. Dice un coche a cuarenta por hora contra un pino. Y en los tres, cuatro marcas en el cuello. Eso el informe no lo dice. Eso lo dicen las fotos.
+Agus: El informe dice hipotermia. Dice caída. ${M(api, "marcos").como === "coche" ? "Dice un coche a cuarenta por hora contra un pino. " : ""}Y en los tres, cuatro marcas en el cuello. Eso el informe no lo dice. Eso lo dicen las fotos.
 
 Danna: ¿Y qué quedó?
 
@@ -302,7 +312,7 @@ El boli. Lo tienes en la mano. No recuerdas haberlo cogido.`;
     alEntrar: (api) => {
       R().tick(api);
       R().lapso(api);
-      api.marcar("video_final_movil", api.hayEvidencia("video_mesa") || !api.bandera("marcos_graba_ouija") ? "irene" : "marcos");
+      api.marcar("video_final_movil", api.bandera("marcos_graba_ouija") && (api.hayEvidencia("video_irene_bano") || api.hayEvidencia("audio_irene_bano")) ? "marcos" : "irene");
       api.presenciar("nora", 2);
     },
     texto: (api) => {
@@ -312,7 +322,7 @@ El boli. Lo tienes en la mano. No recuerdas haberlo cogido.`;
       return `
 ${inicio}
 
-La tabla. La sacas de la caja. Pesa lo que pesaba a la una. La pones en la mesa, donde estuvo, con las letras hacia ti. El vaso. Boca abajo. En el centro.
+La tabla. La sacas de la caja. Pesa lo que pesaba a las tres. La pones en la mesa, donde estuvo, con las letras hacia ti. El vaso. Boca abajo. En el centro.
 
 Y el móvil de ${N[c]}. En la mesa, donde lleva toda la noche, boca abajo. ${c === "irene" ? "El que grabó la broma, el ahogo, el apagón, el rescate. El que nunca grabó el frío." : "El que grabó la ouija desde el otro lado. Las manos de Álex empujando. Las manos de Álex sin empujar."} Lo coges. Batería: nueve por ciento. Grabar. Lo apoyas contra la caja de la tabla, con la cámara hacia la mesa.
 
@@ -320,7 +330,7 @@ Y el móvil de ${N[c]}. En la mesa, donde lleva toda la noche, boca abajo. ${c =
 
 Te sientas. En tu silla. Sola en una mesa de cuatro, con tres sillas vacías mirándote.
 
-Las manos en el vaso. Los dos dedos, como enseñó Álex. Sin peso.
+Las manos en el vaso. Los dos dedos, como le enseñaste a Álex. Sin peso.
 
 ~ Aliento.
 
@@ -331,11 +341,11 @@ ${modo(api, "nora", {
   asustado: "~ Tres sillas vacías. Y noto los tres pesos. Y noto el cuarto, debajo, que no es de nadie de la mesa.",
   tenso: "~ Pregunta. Pregunta y acaba. Pregunta y baja.",
   ido: "~ El vaso está frío por dentro. Se nota por los dedos. Como si alguien lo hubiera tenido en la boca.",
-  perdido: "~ Me ha sentado aquí. Como me sentó a la una. Y ahora sé para qué.",
-  normal: "~ Vale. Como a la una. Dos dedos. Sin peso. Y que conteste.",
+  perdido: "~ Me ha sentado aquí. Como me sentó a las tres. Y ahora sé para qué.",
+  normal: "~ Vale. Como a las tres. Dos dedos. Sin peso. Y que conteste.",
 })}
 
-Y el vaso está frío. Como el vidrio a la una. Como todo lo de esta noche: frío como lo que lleva mucho tiempo en un sitio cerrado.`;
+Y el vaso está frío. Como el vidrio a las tres. Como todo lo de esta noche: frío como lo que lleva mucho tiempo en un sitio cerrado.`;
     },
     opciones: [
       { texto: "«¿Dónde están?»", a: "xii3_almacen",
@@ -368,7 +378,7 @@ Y el vaso está frío. Como el vidrio a la una. Como todo lo de esta noche: frí
       const obj = R().mano(api, "nora");
       const respuesta = p === "quien" ? "Nora: ¿Quién eres?\n\nY el vaso va.\n\nSin que lo empujes. Miras tus manos: quietas, encima, sin peso. Y el vaso va.\n\nA.\n\nL.\n\nD.\n\nA.\n\nLo sabías. Lo has leído antes de que llegara a la D.\n\nY sin preguntar, sin soltar, el vaso sigue:\n\nA. B. A. J. O."
         : p === "irme" ? "Nora: ¿Puedo irme?\n\nY el vaso va. A la esquina. Rápido, como se contesta a una tontería.\n\nNO.\n\nY vuelve al centro. Y sigue. Despacio. Como quien escribe con la mano de otro.\n\nA. B. A. J. O."
-        : p === "nada" ? "No preguntas.\n\nY el vaso va igual. Como quien contesta a una pregunta que se hizo a la una.\n\nSin que lo empujes. Miras tus manos: quietas, encima, sin peso. Y el vaso va.\n\nA. B. A. J. O."
+        : p === "nada" ? "No preguntas.\n\nY el vaso va igual. Como quien contesta a una pregunta que se hizo a las tres.\n\nSin que lo empujes. Miras tus manos: quietas, encima, sin peso. Y el vaso va.\n\nA. B. A. J. O."
         : "Nora: ¿Dónde están?\n\nY el vaso va.\n\nSin que lo empujes. Miras tus manos: quietas, encima, sin peso. Y el vaso va.\n\nA.\n\nB.\n\nA.\n\nJ.\n\nO.";
       return `
 ${respuesta}
@@ -397,11 +407,11 @@ Y el candado.
 
 Cerrado.
 
-Cuelga del arco, cerrado, como si nadie hubiera bajado por aquí en cien años. Como si tuvieras que abrirlo tú.
+Lo dejaste abierto hace media hora, colgando, y ella bajó por esta puerta. Ahora cuelga del arco, cerrado, como si nadie hubiera bajado por aquí en cien años. Como si tuvieras que abrirlo tú.
 
 ~ Abajo.
 
-La llave inglesa. ${obj === "llave" ? "La tienes en la mano desde antes. Pesa lo que pesa." : "En la caja de herramientas, en el estante, donde la vio Marcos a las tres y media." + (obj ? " Sueltas " + R().OBJETOS[obj] + "." : "")}
+La llave inglesa. ${obj === "llave" ? "La tienes en la mano desde antes. Pesa lo que pesa." : (R().quienLleva(api, "llave") && R().quienLleva(api, "llave") !== "nora" ? "No está en la caja: se la llevó " + N[R().quienLleva(api, "llave")] + " en el bolsillo, y está donde está. El martillo, sí. De la misma caja." : "En la caja de herramientas, en el estante, al lado de donde estaba la linterna.") + (obj ? " Sueltas " + R().OBJETOS[obj] + "." : "")}
 
 Un golpe. Dos. El arco salta al cuarto, con un ruido que se oye en toda la casa y que no le importa a nadie.
 
@@ -472,7 +482,7 @@ Tu voz. Desde abajo. Diciendo lo que dijiste tú.
 ~ Lo que la casa ha aprendido. Los llamó así. A todos. Con la voz que más pesaba. Y a mí me llama con la mía.
 
 ${modo(api, "nora", {
-  lucido: "~ Mi voz desde abajo, diciendo lo que dije a las dos. No me está imitando: me está esperando. Ya estoy allí para ella. Lo que baja por la escalera es lo que sobra.",
+  lucido: "~ Mi voz desde abajo, diciendo lo que dije esta noche. No me está imitando: me está esperando. Ya estoy allí para ella. Lo que baja por la escalera es lo que sobra.",
   asustado: "~ Mi voz. Con mi ritmo. Desde abajo. Y suena a alguien que ya no tiene prisa.",
   tenso: "~ No contestes. No contestes. Cuenta. El octavo. El noveno.",
   ido: "~ Las voces salen de la piedra. La piedra las ha guardado como guarda el frío. Y las suelta a quien baja.",
@@ -531,7 +541,7 @@ La madera.
 
 Un poste. En el centro. Quemado. Negro hasta arriba, brillante donde ${luz ? "la luz toca" : "no llega la luz"}, como el carbón. Con una argolla de hierro a media altura y una cadena corta en el suelo, con el último eslabón abierto. Y alrededor, en la piedra, el círculo donde no crece ni el polvo.
 
-~ La encerraron. Le prendieron fuego. Lo dijo Álex a las doce y media con la boca llena de cerveza, y se rieron todos.
+~ La encerraron. Le prendieron fuego. Lo dijo Álex a las dos y media con la boca llena de cerveza, y se rieron todos.
 
 Y en la piedra. Detrás del poste. A la altura de una niña. Letras. Cortadas con algo pequeño, durante mucho tiempo.
 
@@ -618,11 +628,11 @@ Te suelta. Caes. ${luzTipo === "linterna" && x5 !== "apaga" ? "La linterna rueda
 
 Y lo de abajo.
 
-No lo ves entero. Nadie lo ha visto entero. Ves una mano en tu tobillo. Donde estaban las cuatro marcas de las cinco de la mañana. Y tira.
+No lo ves entero. Nadie lo ha visto entero. Ves una mano en tu tobillo. Donde ${api.hayEvidencia("marca_tobillo_nora") ? "estaban las cuatro marcas de las cuatro menos veinte" : "no había nada, hasta ahora"}. Y tira.
 
 La piedra en la espalda. El poste. La cadena, que alguien cierra en tu tobillo con un ruido de hierro viejo que has oído antes esta noche, en la puerta principal.
 
-Y la niña, que se sienta a mirar. Con la campanilla en el regazo. Como se mira un fuego.
+Y la niña, que se sienta a mirar. Con ${api.bandera("xii5_nora") === "campanilla" ? "las manos vacías, por primera vez" : "la campanilla en el regazo"}. Como se mira un fuego.
 
 Lo que hace lo de abajo no se cuenta entero. Se cuenta así: duele. Y luego duele menos. Y luego lo que duele es de otra, y tú lo miras desde un poco más lejos, como se mira un fuego.
 

@@ -22,12 +22,13 @@
   const N = { nora: "Nora", marcos: "Marcos", alex: "Álex", irene: "Irene" };
   const fem = (id) => id === "nora" || id === "irene";
   const U = (api) => R().ultimo(api) || "marcos";
+  const llaveFuera = (api) => { const q = R().quienLleva(api, "llave"); return Boolean(q && q !== "nora"); };   // alguien se llevó la llave inglesa en el bolsillo
   // Lo que Nora recuerda de cada uno: lo de siempre, y lo de la V solo si pasó con ella
   const recuerdo = (api, u) => {
     const con = api.bandera("v_nora_con");
     if (u === "marcos") return "Marcos. El del primer domingo con la boca abierta. El de la rodilla debajo de la mesa. " + (con === "marcos" ? "El que me sujetó por la cintura en los dos últimos peldaños." : api.bandera("v_marcos_libre") ? "El que bajó al almacén a las tres y media a arreglar la luz para que no nos quedáramos a oscuras." : "El que dijo «madera vieja» cuando se movió el péndulo.");
     if (u === "irene") return "Irene. La que se ahogó en la mesa. La que va descalza desde las doce. " + (con === "irene" ? "La que me dijo lo de la camisa. La que gritó «hay alguien debajo» conmigo en la buhardilla." : "La que me leía como se lee un libro, y acertaba.");
-    return "Álex. El que contó la leyenda con la boca llena de cerveza. El que llevó el vaso toda la noche y no eligió las palabras. " + (con === "alex" ? "El de «tú no eres una lámpara»." + (api.bandera("nora_pregunta") === "manipula" ? " El que me contó lo de Rubén en el porche, como quien no quiere la cosa." : "") : "El que me dijo «confía en mí» y lo decía en serio.");
+    return "Álex. El que contó la leyenda con la boca llena de cerveza. El que llevó el vaso toda la noche y no eligió las palabras. " + (api.bandera("v_nora_porche") ? "El de «tú no eres una lámpara»." + (api.bandera("nora_pregunta") === "manipula" ? " El que me contó lo de Rubén en el porche, como quien no quiere la cosa." : "") : "El que me dijo «confía en mí» y lo decía en serio.");
   };
 
   Object.assign(HISTORIA.presupuestoAnomalias, { XI: 6 });
@@ -43,9 +44,9 @@
       const d = h === "marcos" ? "alex" : "marcos";
       ["fase6_completa", "fase7_completa", "fase8_completa", "fase9_completa", "fase10_completa", "evento_imposible", "luz_vuelta", "apagon", "video_mesa_visto", "las_siete", "puerta_no_abre"].forEach((f) => api.marcar(f, true));
       api.marcar("generador_quien", d); api.marcar("primer_cruce", d); api.marcar("desaparecido", d);
-      R().cruzar(api, d); R().matar(api, d, d === "alex" ? "bosque" : "coche", "x", "nora");
+      api.marcar("fase_actual", "VIII"); R().cruzar(api, d); R().matar(api, d, d === "alex" ? "bosque" : "coche", d === "alex" ? "el terraplén bajo los pinos" : "el camino, contra el pino grande", "nora"); api.marcar("cuerpo_" + d, d === "alex" ? "terraplen" : "coche");
       const s = h === "marcos" ? "irene" : (d === "alex" ? "marcos" : "alex");
-      R().matar(api, s, s === "irene" ? "banera" : s === "alex" ? "bosque" : "coche", "x", "nora"); api.marcar("segundo_muerte", s);
+      api.marcar("fase_actual", "X"); R().matar(api, s, s === "irene" ? "banera" : s === "alex" ? "bosque" : "coche", s === "irene" ? "la bañera del baño de arriba" : s === "alex" ? "la grava, a diez metros del porche" : "el pino grande de la entrada, dentro del coche", "nora"); api.marcar("segundo_muerte", s); api.marcar("cuerpo_" + s, s === "irene" ? "banera" : s === "alex" ? "bosque" : "coche");
       api.marcar("intimo_tono", h === "marcos" ? "pareja" : h === "irene" ? "espina" : "distancia");
     }
     R().fase(api, "XI", 5, 3);
@@ -184,7 +185,7 @@ Tin.`;
       api.marcar("nina_vista", true);
       api.saber(u, "nina"); api.saber("nora", "nina");
       api.presenciar(u, 3); api.presenciar("nora", 3);
-      api.marcar("nina_muerde", R().ofrendas(api) >= 4);
+      api.marcar("nina_muerde", R().ofrendas(api) >= 5);   // cinco ofrendas: la casa alimentada (§23.1)
       if (H(api) === u) R().lapso(api);
     },
     texto: (api) => {
@@ -297,7 +298,7 @@ Bajáis. La escalera. El tercero. El séptimo. Sin contarlos. La barandilla, la 
 
 Y la niña baja detrás.
 
-No por la escalera. Por el techo. Como bajó la mujer del baño: sin caer. Con las manos y los pies en la madera del techo, boca abajo, con el vestido colgando, con la campanilla sonando a cada mano.
+No por la escalera. Por el techo. Como bajan las cosas de esta casa que no caen. Con las manos y los pies en la madera del techo, boca abajo, con el vestido colgando, con la campanilla sonando a cada mano.
 
 [campanilla]
 
@@ -397,7 +398,7 @@ Y ${fem(u) ? "ella" : "él"} lo sabe. Se le ve saberlo. Y aprieta.
 
 Y la niña baja. Por la pared. Con la campanilla. Despacio. A ver.
 
-${obj ? `${R().OBJETOS[obj].charAt(0).toUpperCase() + R().OBJETOS[obj].slice(1)}. En la mano. Lo notas antes de pensarlo.` : "Nada en la mano. La caja de herramientas, en el estante, a un palmo. La llave inglesa. Lo notas antes de pensarlo."}
+${obj ? `${R().OBJETOS[obj].charAt(0).toUpperCase() + R().OBJETOS[obj].slice(1)}. En la mano. Lo notas antes de pensarlo.` : "Nada en la mano. La caja de herramientas, en el estante, a un palmo. " + (llaveFuera(api) ? "La llave inglesa no está: se la llevó " + N[R().quienLleva(api, "llave")] + ". El martillo, sí." : "La llave inglesa.") + " Lo notas antes de pensarlo."}
 
 ${modo(api, "nora", {
   lucido: `~ Me está matando ${N[u]}. La única persona que me queda. Con la niña mirando. Y sé que no es ${fem(u) ? "ella" : "él"}, y saberlo no me sirve para el aire, y tengo algo en la mano.`,
@@ -409,10 +410,10 @@ ${modo(api, "nora", {
 })}`;
     },
     opciones: [
-      { texto: (api) => "Herir" + (R().mano(api, "nora") ? ". Con " + R().OBJETOS[R().mano(api, "nora")] + "." : ". Con la llave inglesa.") + " Hasta que no se levante.", a: "xi5_tercera",
-        efecto: (api) => { api.marcar("xi_final", "mata"); api.marcar("nora_mato", true); api.est("nora", "estres", 15); api.est("nora", "lucidez", -6); } },
-      { texto: (api) => "Herir" + (R().mano(api, "nora") ? ". Con " + R().OBJETOS[R().mano(api, "nora")] + "." : ". Con la llave inglesa.") + " Lo justo. Que suelte.", a: "xi5_tercera",
-        efecto: (api) => { api.marcar("xi_final", "hiere"); api.est("nora", "estres", 10); } },
+      { texto: (api) => "Herir" + (R().mano(api, "nora") ? ". Con " + R().OBJETOS[R().mano(api, "nora")] + "." : llaveFuera(api) ? ". Con el martillo." : ". Con la llave inglesa.") + " Hasta que no se levante.", a: "xi5_tercera",
+        efecto: (api) => { api.marcar("xi_final", "mata"); api.marcar("nora_mato", true); api.marcar("arma_xi", R().mano(api, "nora") || (llaveFuera(api) ? "martillo" : "llave")); api.est("nora", "estres", 15); api.est("nora", "lucidez", -6); } },
+      { texto: (api) => "Herir" + (R().mano(api, "nora") ? ". Con " + R().OBJETOS[R().mano(api, "nora")] + "." : llaveFuera(api) ? ". Con el martillo." : ". Con la llave inglesa.") + " Lo justo. Que suelte.", a: "xi5_tercera",
+        efecto: (api) => { api.marcar("xi_final", "hiere"); api.marcar("arma_xi", R().mano(api, "nora") || (llaveFuera(api) ? "martillo" : "llave")); api.est("nora", "estres", 10); } },
       { texto: "Huir. Por la escalera de piedra. Abajo. Donde " + "no llegue.", a: "xi5_tercera", impulsiva: true,
         efecto: (api) => { api.marcar("xi_final", "huye"); api.marcar("nora_bajo_antes", true); api.est("nora", "miedo", 10); } },
       { texto: "No defenderte. Mirarle. Es " + "la última persona que te queda.", a: "xi5_tercera",
@@ -430,7 +431,7 @@ ${modo(api, "nora", {
       const u = api.bandera("huesped_anterior") || U(api);
       const f = api.bandera("xi_final");
       const obj = R().mano(api, "nora");
-      const arma = obj ? R().OBJETOS[obj] : "la llave inglesa";
+      const arma = obj ? R().OBJETOS[obj] : llaveFuera(api) ? "el martillo" : "la llave inglesa";
       if (f === "mata") return `
 ${arma.charAt(0).toUpperCase() + arma.slice(1)}. En la mano. Y la levantas, y baja.
 
@@ -633,7 +634,7 @@ Y te llega.
 
 ~ Abajo.
 
-Con tu voz. Sin que lo pienses. Una palabra sola, en tu cabeza, con tu voz. Como le llegó a Marcos frente a una estantería. Como le llegó a Irene en un espejo.
+Con tu voz. Sin que lo pienses. Una palabra sola, en tu cabeza, con tu voz. Como les llegaba a ellos. Ahora lo sé.
 
 ~ Abajo.
 

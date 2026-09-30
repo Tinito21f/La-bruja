@@ -67,7 +67,7 @@
       if (tipo === "sangra") R.ofrenda(api, "sangre");
       if (tipo === "cojera" && como === "fractura") R.ofrenda(api, "hueso");
       if (tipo === "mano" && como === "mordisco") R.ofrenda(api, "carne");
-      if (tipo === "mano" || tipo === "cojera") api.marcar("mano_" + id, null);
+      if (tipo === "mano") api.marcar("mano_" + id, null);   // la cojera cierra correr y cargar, no sujetar (§19)
       return true;
     },
     herido: (api, id, tipo) => Boolean((api.bandera("herida_" + id) || {})[tipo]),
@@ -89,7 +89,7 @@
     // ---------- Objetos a mano, sin inventario: uno, y el texto lo dice ----------
     OBJETOS: {
       sarten: "la sartén de hierro", atizador: "el atizador", linterna: "la linterna grande",
-      cuerda: "la cuerda de la trampilla", botella: "la botella", llave: "la llave inglesa",
+      cuerda: "la cuerda de la trampilla", botella: "la botella", llave: "la llave inglesa", martillo: "el martillo",
     },
     mano: (api, id) => api.bandera("mano_" + id) || null,
     coger: (api, id, obj) => { const antes = api.bandera("mano_" + id) || null; api.marcar("mano_" + id, obj); return antes; },
@@ -145,10 +145,10 @@
     // ---------- Las voces ----------
     // Lo que la casa ha aprendido: primero lo que el jugador eligió que dijeran; si no hay nada, un catálogo mínimo de la fiesta.
     CATALOGO: {
-      nora:   ["Para la luz.", "Luego que las noticias digan que nadie podía preverlo.", "No fumo.", "Quería pruebas."],
-      marcos: ["Madera vieja.", "Efecto ideomotor. Lo digo para que conste.", "Esta casa de los cojones.", "Todo el mundo se queda aquí."],
-      alex:   ["Confía en mí.", "Ahí arriba están los cadáveres.", "Documental número tres.", "Venga. Si estás ahí, sal."],
-      irene:  ["Estoy bien. Seguid.", "Tengo frío por dentro.", "Mi héroe.", "Descalza no subo ni a un taburete."],
+      nora:   ["Para la luz.", "No fumo.", "Nada.", "¿Qué?"],
+      marcos: ["Efecto ideomotor. Lo digo para que conste.", "Todo el mundo se queda aquí.", "Ratas.", "Voy a mirar el cuadro de luces."],
+      alex:   ["Confía en mí.", "Venga. Si estás ahí, sal.", "Salgo a fumar. Aquí dentro huele a velatorio.", "¿Vienes? Lío otro."],
+      irene:  ["Estoy bien. Seguid.", "Ya.", "Nada.", "Tengo frío."],
     },
     voz: (api, id, n) => {
       const d = typeof api.dicho === "function" ? api.dicho(id, n) : null;
@@ -198,8 +198,10 @@
       if (api.bandera("v1_nora") === undefined) api.marcar("v1_nora", "marcos");
       if (api.bandera("v_nora_con") === undefined) api.marcar("v_nora_con", "marcos");
       if (api.bandera("v_irene_con") === undefined) api.marcar("v_irene_con", null);
-      if (api.bandera("v_quedan") === undefined) api.marcar("v_quedan", "irene_alex");
-      if (api.bandera("v_marcos_libre") === undefined) api.marcar("v_marcos_libre", false);
+      if (api.bandera("v_quedan") === undefined) api.marcar("v_quedan", null);
+      if (api.bandera("v_marcos_libre") === undefined) api.marcar("v_marcos_libre", true);
+      if (api.bandera("v_nora_porche") === undefined) api.marcar("v_nora_porche", false);
+      if (api.bandera("v2_nora") === undefined) api.marcar("v2_nora", "marcos");
       if (api.bandera("huellas_vistas") === undefined) api.marcar("huellas_vistas", true);
       if (api.bandera("nora_toma_muneca") === undefined) api.marcar("nora_toma_muneca", true);
       if (api.bandera("alex_oyo_irene_fuera") === undefined) api.marcar("alex_oyo_irene_fuera", true);

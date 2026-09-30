@@ -50,7 +50,7 @@
       const d = h === "marcos" ? "alex" : "marcos";
       ["fase6_completa", "fase7_completa", "fase8_completa", "evento_imposible", "luz_vuelta", "apagon"].forEach((f) => api.marcar(f, true));
       api.marcar("generador_quien", d); api.marcar("primer_cruce", d); api.marcar("desaparecido", d);
-      R().cruzar(api, d); R().matar(api, d, d === "alex" ? "bosque" : "coche", d === "alex" ? "el terraplén bajo los pinos" : "el camino, contra el pino grande", "nora");
+      api.marcar("fase_actual", "VIII"); R().cruzar(api, d); R().matar(api, d, d === "alex" ? "bosque" : "coche", d === "alex" ? "el terraplén bajo los pinos" : "el camino, contra el pino grande", "nora");
       api.marcar("cuerpo_" + d, d === "alex" ? "terraplen" : "coche"); api.marcar("video_mesa_visto", true);
     }
     R().fase(api, "IX", 4, 3);
@@ -138,9 +138,9 @@
       return `
 Las seis y dos minutos. Cincuenta y ocho para las siete. Los cuentas hacia atrás ahora. Es lo único que sabes hacer con la boca cerrada.
 
-Tres. La silla vacía. ${api.hayEvidencia("camisa_en_cuerpo") || api.bandera("camisa_en_cuerpo") ? "Tú con la camiseta, con el frío por dentro, sin la camisa, que se ha quedado en una zanja tapando una cara." : "Tú con la camisa de Marcos, que huele a él y a esta noche."} Irene ${h === "irene" ? "con la mano en el cuello y los ojos en la silla vacía, quieta, como quien escucha a alguien sentado en ella" : "con las rodillas en el pecho, temblando de una manera que ya no es de frío"}. ${o ? N[o] + (h === o ? ", con las manos en la mesa, quieto, mirándolas como se miran las manos de otro." : seg === o ? ", con la mirada en la ventana, en lo que solo ve él." : ", con las manos en la mesa, sin nada que arreglar.") : ""}
+Tres. La silla vacía. ${api.bandera("camisa_en_cuerpo") ? "Tú con la camiseta, con el frío por dentro, sin la camisa, que se ha quedado en una zanja tapando una cara." : "Tú con la camisa de Marcos, que huele a él y a esta noche."} Irene ${h === "irene" ? "con la mano en el cuello y los ojos en la silla vacía, quieta, como quien escucha a alguien sentado en ella" : "con las rodillas en el pecho, temblando de una manera que ya no es de frío"}. ${o ? N[o] + (h === o ? ", con las manos en la mesa, quieto, mirándolas como se miran las manos de otro." : seg === o ? ", con la mirada en la ventana, en lo que solo ve él." : ", con las manos en la mesa, sin nada que arreglar.") : ""}
 
-${h === "marcos" ? "Marcos no ha hablado desde el hallazgo. Ni una explicación. Ni un chiste. Marcos, que cuando deja de hacer chistes hay que correr. Lo dijiste tú, riéndote, a la una menos veinte." : "Irene no ha leído a nadie desde el hallazgo. Irene, que va un segundo por delante de lo que dice la gente, va ahora un minuto por detrás. Y mira a " + (o ? N[o] : "ti") + " como se mira a alguien que acaba de conocer."}
+${h === "marcos" ? "Marcos no ha hablado desde el hallazgo. Ni una explicación. Ni un chiste. Marcos, que cuando deja de hacer chistes es que pasa algo. Lo sabes desde marzo, sin que nadie te lo dijera." : "Irene no ha leído a nadie desde el hallazgo. Irene, que va un segundo por delante de lo que dice la gente, va ahora un minuto por detrás. Y mira a " + (o ? N[o] : "ti") + " como se mira a alguien que acaba de conocer."}
 
 Y las necesidades. La casa las tiene todas contadas. Frío. Sed. Una herida que sangra y hay que lavar. Mear. Fumar. Lo que hace que la gente se levante de una mesa.
 
@@ -148,7 +148,7 @@ ${salidaV}
 
 ${v !== "nora" ? `Y ${N[h]} se levanta detrás.
 
-${h === "marcos" ? "Sin decir nada. Con la mano vendada. Sin el atizador, que deja apoyado en la silla. Marcos, que no sube escaleras si no se lo piden, sube la escalera detrás de Irene." : "Sin decir nada. Descalza. Irene, que no va a ningún sitio detrás de nadie, va detrás de " + N[o] + "."}
+${h === "marcos" ? "Sin decir nada. " + (R().herido(api, "marcos", "sangra") ? "Con la mano vendada. " : "") + (R().lleva(api, "marcos", "atizador") ? "Sin el atizador, que deja apoyado en la silla. " : "") + "Marcos, que no sube escaleras si no se lo piden, sube la escalera detrás de Irene." : "Sin decir nada. Descalza. Irene, que no va a ningún sitio detrás de nadie, va detrás de " + N[o] + "."}
 
 Nora: ${N[h]}.
 
@@ -192,7 +192,7 @@ Dos cosas pasan a la vez. ${v === "nora" ? "En la cocina, contigo. Y dentro de "
       return `
 ${v === "nora" ? "La cocina. La luz de tubo. El grifo. Y " + N[h] + " en el arco, detrás." : "El baño de arriba. La bañera de patas. El grifo. Y " + N[h] + " en la puerta, detrás."}
 
-La víctima, que todavía no sabe que lo es. Y el huésped, que lo sabe desde dentro y no puede decirlo.
+${N[V(api)]}, que se levanta de la mesa y no sabe lo que se levanta detrás. Y ${N[H(api)]}, que lo sabe desde dentro y no puede decirlo.
 
 ¿A quién quieres llevar?`;
     },
@@ -239,7 +239,7 @@ ${N[v]} te ve en el espejo. La cara. Tu cara. Y algo en tu cara que no es tuyo, 
 ${N[v]}: ${N[h]}.
 
 Y tú oyes tu nombre como se oye desde el fondo de una piscina.` : `
-La cocina. La luz de tubo. Nora con la mano bajo el grifo, la del paño, con el agua fría llevándose lo que llevaba el paño. De espaldas a ti.
+La cocina. La luz de tubo. Nora ${R().herido(api, "nora", "mano") ? "con la mano bajo el grifo, la del paño, con el agua fría llevándose lo que llevaba el paño" : "con las manos bajo el grifo, con el agua fría, como quien se lava algo que no se ve"}. De espaldas a ti.
 
 Y tú en el arco. Y luego no en el arco: a un paso de ella. No te acuerdas del paso.
 
@@ -286,7 +286,7 @@ ${N[h]}: Nada.
 
 Y se pone detrás de ti. A un paso. Lo ves en el espejo. Con la cara. Con algo en la cara que no es ${fem(h) ? "suya" : "suyo"}, y lo ves, y se te va el color.
 
-${yaMarcada ? "Lo has visto antes. En " + (v === "irene" ? "el pasillo, con la mano en tu brazo" : "la buhardilla, con la mano en tu muñeca") + ". Es la misma cara. Y ahora sabes lo que viene después de esa cara." : "Es la cara de la mesa. La de cuando no respirabas, o la de cuando sopló. La misma."}` : `
+${yaMarcada ? "Lo has visto antes. En " + (v === "irene" ? "el pasillo, con la mano en tu brazo" : v === "marcos" ? "la cocina, con la mano bajo el agua" : "la buhardilla, con la mano en tu muñeca") + ". Es la misma cara. Y ahora sabes lo que viene después de esa cara." : "Es la cara de la mesa. La de cuando no respirabas, o la de cuando sopló. La misma."}` : `
 La cocina. La luz de tubo. El grifo. La mano bajo el agua fría, la del paño, y el agua llevándose lo que llevaba el paño, rosa por el desagüe.
 
 Y ${N[h]} en el arco. Y luego no en el arco: a un paso, detrás. No le has oído dar el paso.
@@ -339,7 +339,7 @@ ${modo(api, v, {
         efecto: (api) => resolverAtaque(api, "hiere") },
       { texto: (api) => "Herir" + (objeto(api, V(api)) ? ". Con " + R().OBJETOS[objeto(api, V(api))] + ". Hasta que no se levante." : ". Con la piedra de la encimera. Con la bañera. Hasta que no se levante."), a: "ix4_despues", si: (api) => api.bandera("ataque_pov") !== "huesped", impulsiva: true,
         efecto: (api) => resolverAtaque(api, "mata") },
-      { texto: "No defenderte. Es " + "él. Es ella. Va a parar. Tiene que parar.", a: "ix4_despues", si: (api) => api.bandera("ataque_pov") !== "huesped",
+      { texto: (api) => "No defenderte. Es " + (fem(H(api)) ? "ella" : "él") + ". Va a parar. Tiene que parar.", a: "ix4_despues", si: (api) => api.bandera("ataque_pov") !== "huesped",
         efecto: (api) => resolverAtaque(api, "muere") },
     ],
   },
@@ -398,7 +398,7 @@ ${N[h0]}: Todavía no.
 
 Y sale de la cocina. Sin correr. Como se sale de una habitación donde ya has hecho lo que venías a hacer.
 
-Te miras la mano. La del paño. Y no es el paño: es la muñeca, hinchada, torcida, con los dedos que no cierran. Te la ha roto al soltar, o al apretar, o en medio.
+Te miras la mano. ${R().herido(api, "nora", "mano") ? "La del paño. Y no es el paño: es la muñeca" : "La muñeca"}, hinchada, torcida, con los dedos que no cierran. Te la ha roto al soltar, o al apretar, o en medio.
 
 ~ Todavía no. A mí no. A mí todavía no. Me guarda. Me guarda para el final.
 
@@ -486,7 +486,7 @@ No lo ves. Lo notas. Como cuando se te destapa un oído. Un aire que sale de la 
 
 Y ya.
 
-~ Le he matado. A ${N[h0]}. ${h0 === "marcos" ? "Al que explica las cosas. Al que me sujetó el pelo. Al que" : "A la que lee a la gente. A la que se ahogó en la mesa. A la que"} me estaba matando con las manos.
+~ Le he matado. A ${N[h0]}. ${h0 === "marcos" ? "Al que explica las cosas. Al que le sujeté el pelo. Al que" : "A la que lee a la gente. A la que se ahogó en la mesa. A la que"} me estaba matando con las manos.
 
 ~ Y no me estaba matando ${fem(h0) ? "ella" : "él"}. Lo sé. Lo sabía mientras. Y he seguido.
 
@@ -637,7 +637,7 @@ Irene: ${dest === "alex" ? "Álex. Mírame. Tú sabes cuándo actúo. Lo sabes d
 
 Lo dice sin la voz de nada. Con la voz de debajo. Y es la voz más verdadera que le has oído en toda la noche, y por eso no te fías, porque Irene sabe exactamente cuál es la voz más verdadera y cuándo usarla.
 
-Irene: Desde la mesa. Desde que no respiraba. Hay algo que se me metió y no sé qué es y me hace cosas. Me hace coger a la gente. Me hace decir «todavía no». ${dest === "alex" ? "Te lo dije en la cama. «Todavía no.» Y te reíste. Y tenías que reírte, porque era una broma, y no era una broma." : "Lo has visto. Me lo has visto hacer."} Y ahora ha parado. Ha parado porque ${res === "hiere" ? "me has hecho daño" : "me has mirado"}, y cuando me miras no puede. ${dest === "alex" ? "Tú eres el único que me mira de verdad. El único. Por eso te quiero, imbécil." : "Contigo delante no puede."}
+Irene: Desde la mesa. Desde que no respiraba. Hay algo que se me metió y no sé qué es y me hace cosas. Me hace coger a la gente. Me hace decir «todavía no». ${dest === "alex" ? (api.bandera("irene_paro_alex") ? "Te lo dije en la cama. «Todavía no.» Con los dientes en tu cuello. Y seguiste." : "Lo he dicho delante de ti. Y te reíste. Y tenías que reírte, porque era una broma, y no era una broma.") : "Lo has visto. Me lo has visto hacer."} Y ahora ha parado. Ha parado porque ${res === "hiere" ? "me has hecho daño" : "me has mirado"}, y cuando me miras no puede. ${dest === "alex" ? "Tú eres el único que me mira de verdad. El único. Por eso te quiero, imbécil." : "Contigo delante no puede."}
 
 ${dest === "alex" ? "Y te lo da. Lo que quieres oír. Exactamente. Con las palabras que llevas cinco años esperando y que nunca dice. Y lo sabes. Y funciona igual." : "Y te lee. Aunque no pueda. Te lee lo justo para saber qué frase, y la dice."}
 
@@ -697,7 +697,7 @@ ${modo(api, dest, {
       const h = H(api), o = O(api), sr = api.bandera("suplica_resultado");
       const vivos = R().vivos(api);
       const puede = api.bandera("ix6_puede_salir");
-      const estadoH = sr === "atado" ? `${N[h]} en la silla, con las manos a la espalda, atad${fem(h) ? "a" : "o"} con el cinturón de ${fem(h) ? "Álex" : "Marcos"}. Sin decir nada. Mirando la mesa.` : sr === "encerrado" ? `${N[h]} en el almacén. Con el cerrojo echado por fuera. Se oye, de vez en cuando, un golpe. Una vez. Como un nudillo. Y luego nada.` : sr === "cree" ? `${N[h]} al lado de ${N[destinatario(api)]}. Con la mano cogida. Con la cara puesta. Y frío. Se le ve el frío.` : sr === "no_cree" ? `${N[h]} al otro lado de la mesa. Lejos. Con las manos encima de la madera, a la vista. Y ${N[destinatario(api)]} con ${objeto(api, destinatario(api)) ? R().OBJETOS[objeto(api, destinatario(api))] : "las manos"} sin soltar.` : !R().vivo(api, h) || api.bandera("huesped_anterior") ? `Dos. O tres. Los que quedan. Y ${N[h]} con frío, frotándose el pecho.` : `${N[h]} en su silla.`;
+      const estadoH = sr === "atado" ? `${N[h]} en la silla, con las manos a la espalda, atad${fem(h) ? "a" : "o"} con ${R().vivo(api, "alex") ? "el cinturón de Álex" : h === "marcos" ? "su propio cinturón" : "el cinturón de Marcos"}. Sin decir nada. Mirando la mesa.` : sr === "encerrado" ? `${N[h]} en el almacén. Con el cerrojo echado por fuera. Se oye, de vez en cuando, un golpe. Una vez. Como un nudillo. Y luego nada.` : sr === "cree" ? `${N[h]} al lado de ${N[destinatario(api)]}. Con la mano cogida. Con la cara puesta. Y frío. Se le ve el frío.` : sr === "no_cree" ? `${N[h]} al otro lado de la mesa. Lejos. Con las manos encima de la madera, a la vista. Y ${N[destinatario(api)]} con ${objeto(api, destinatario(api)) ? R().OBJETOS[objeto(api, destinatario(api))] : "las manos"} sin soltar.` : !R().vivo(api, h) || api.bandera("huesped_anterior") ? `Dos. O tres. Los que quedan. Y ${N[h]} con frío, frotándose el pecho.` : `${N[h]} en su silla.`;
       const sale = puede ? (o === "alex" ? `
 Y Álex se levanta.
 
@@ -714,7 +714,7 @@ Nora: Con la puerta abierta. Y yo en la puerta.
 Álex: Con la puerta abierta.` : `
 Y Marcos se levanta.
 
-Marcos: El coche. Si a las siete no arranca, quiero saberlo ahora. Y quiero las llaves de ${N[api.bandera("desaparecido")]}... quiero mi mando. Está en el coche.
+Marcos: El coche. Si a las siete no arranca, quiero saberlo ahora. El mando de casa se quedó en la guantera, y el cargador. Quiero saber si arranca. Quiero saber algo.
 
 Nora: Marcos.
 
@@ -802,7 +802,7 @@ ${modo(api, "nora", {
       const sarten = api.bandera("sarten_humo") ? `
 Y en la cocina, la sartén.
 
-La de hierro. En el fuego. Con el mando en cero, que lo miró Marcos a la una, y a las tres, y todas las veces.
+La de hierro. En el fuego. Con el mando en cero, que lo miró Marcos a las dos, y a las tres y media, y todas las veces.
 
 Humea.
 
@@ -815,7 +815,7 @@ Y en la cocina, la sartén. En el fuego. Con el mando en cero. Quieta. La miras 
       const grifo = api.bandera("grifo_arriba") ? `
 Y arriba, el grifo.
 
-Se oye desde la mesa. El chorro contra la porcelana. El baño de arriba. ${api.bandera("banera_llena") ? "La bañera, que alguien llenó, que se cerró, que está cerrada." : "El grifo que Irene cerró apretando, a la una, y Marcos oyó a las tres y media."} Corriendo. Con ese ruido que hace el agua cuando lleva rato cayendo.
+Se oye desde la mesa. El chorro contra la porcelana. El baño de arriba. ${api.bandera("banera_llena") ? "La bañera, que alguien llenó, que se cerró, que está cerrada." : "El grifo que Irene cerró apretando, a las dos" + (api.sabe("marcos", "grifo_corria") ? ", y Marcos oyó a las tres y media" : "") + "."} Corriendo. Con ese ruido que hace el agua cuando lleva rato cayendo.
 
 Nadie sube a cerrarlo.` : "";
       const arrastre = api.bandera("arrastre_mesa") ? `
@@ -825,7 +825,7 @@ Y debajo de la mesa.
 
 Un arrastre.
 
-Bajo. Una vez. Como algo pesado que se mueve un palmo sobre piedra y se para. Marcos lo oyó detrás de la estantería del almacén. Álex también. Ahora no está detrás de la estantería. Está debajo. Justo debajo. Debajo de la madera donde tenéis las manos.
+Bajo. Una vez. Como algo pesado que se mueve un palmo sobre piedra y se para. ${api.bandera("arrastre_almacen") ? (api.sabe("marcos", "arrastre") ? "Marcos lo oyó detrás de la estantería del almacén. " : "") + (api.bandera("alex_oyo_arrastre") ? "Álex también. " : "") : ""}Ahora no está detrás de la estantería. Está debajo. Justo debajo. Debajo de la madera donde tenéis las manos.
 
 Nadie quita las manos de la mesa. Nadie las quita porque quitarlas sería admitir que hay algo debajo que las ha oído.` : "";
       return `

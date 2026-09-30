@@ -733,7 +733,7 @@
     const reveladas = lineasEscena.filter((l, i) => i < lineasEscena.length - golpes.length);
     const entrada = {
       id: estado.escena, titulo: ui.titulo.textContent, hora: estado.hora, lugar: estado.lugar, pov: estado.pov,
-      lineas: reveladas.slice(0, 120), eleccion: op ? String(resolver(op.texto) || (PJS[op.id] ? PJS[op.id].nombre : "")) : null,
+      lineas: reveladas.slice(0, 120), eleccion: op ? String(resolver(op.texto) || (PJS[resolver(op.id)] ? PJS[resolver(op.id)].nombre : "")) : null,
     };
     estado.historial = estado.historial || [];
     estado.historial.push(entrada);
@@ -895,17 +895,17 @@
     ui.personajes.innerHTML = "";
     const lista = (escena.personajes || []).filter((c) => !c.si || c.si(api));
     lista.forEach((c, i) => {
-      const base = PJS[c.id] || {};
+      const cid = resolver(c.id); const base = PJS[cid] || {};
       const btn = document.createElement("button");
       btn.className = "carta"; btn.type = "button";
       btn.style.animationDelay = (retraso + i * 0.15) + "s";
       const imagen = c.imagen || base.imagen;
       if (imagen) {
-        const img = document.createElement("img"); img.src = imagen; img.alt = base.nombre || c.id;
+        const img = document.createElement("img"); img.src = imagen; img.alt = base.nombre || cid;
         img.addEventListener("error", () => { const ph = document.createElement("div"); ph.className = "sin-imagen"; ph.textContent = "?"; img.replaceWith(ph); });
         btn.appendChild(img);
       }
-      const n = document.createElement("span"); n.className = "carta-nombre"; n.textContent = base.nombre || c.id;
+      const n = document.createElement("span"); n.className = "carta-nombre"; n.textContent = base.nombre || cid;
       if (base.color) n.style.color = base.color; btn.appendChild(n);
       const desc = resolver(c.descripcion);
       if (desc) { const d = document.createElement("span"); d.className = "carta-desc"; d.textContent = desc; btn.appendChild(d); }
@@ -1016,6 +1016,8 @@
     if (escena.pov !== undefined) estado.pov = resolver(escena.pov);
     const cambioPov = estado.pov && estado.pov !== povAnterior;
     const relAntes = cambioPov ? null : relPrev;
+    if (escena.lugar !== undefined) estado.lugar = resolver(escena.lugar);
+    if (escena.hora !== undefined) estado.hora = resolver(escena.hora);
     if (!estado.visitadas[id] && typeof escena.alEntrar === "function") escena.alEntrar(api);
     estado.visitadas[id] = true;
 
@@ -1027,8 +1029,6 @@
     ponerFondo(resolver(escena.fondo));
     musica.poner(resolver(escena.musica));
     ambiente.poner(resolver(escena.ambiente));
-    if (escena.lugar !== undefined) estado.lugar = resolver(escena.lugar);
-    if (escena.hora !== undefined) estado.hora = resolver(escena.hora);
     ui.negro.classList.remove("visible");
 
     povAnterior = estado.pov;

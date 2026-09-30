@@ -43,7 +43,7 @@
       const d = h === "marcos" ? "alex" : "marcos";
       ["fase6_completa", "fase7_completa", "fase8_completa", "fase9_completa", "evento_imposible", "luz_vuelta", "apagon", "video_mesa_visto"].forEach((f) => api.marcar(f, true));
       api.marcar("generador_quien", d); api.marcar("primer_cruce", d); api.marcar("desaparecido", d);
-      R().cruzar(api, d); R().matar(api, d, d === "alex" ? "bosque" : "coche", d === "alex" ? "el terraplén bajo los pinos" : "el camino, contra el pino grande", "nora");
+      api.marcar("fase_actual", "VIII"); R().cruzar(api, d); R().matar(api, d, d === "alex" ? "bosque" : "coche", d === "alex" ? "el terraplén bajo los pinos" : "el camino, contra el pino grande", "nora");
       api.marcar("ataque_victima", h === "marcos" ? "irene" : (d === "alex" ? "marcos" : "alex")); api.marcar("ataque_resultado", "hiere"); api.marcar("huesped_retirado", true); api.marcar("suplica_resultado", "no_cree");
     }
     R().fase(api, "X", 4, 3);
@@ -55,7 +55,7 @@
     const s = api.bandera("segundo_muerte") || segundo(api);
     if (!s || !R().vivo(api, s)) return;
     const como = s === "irene" ? "banera" : s === "alex" ? "bosque" : "coche";
-    const donde = s === "irene" ? "la bañera del baño de arriba" : s === "alex" ? "el borde de los pinos" : "el camino, contra el pino grande";
+    const donde = s === "irene" ? "la bañera del baño de arriba" : s === "alex" ? "la grava, a diez metros del porche" : "el pino grande de la entrada, dentro del coche";
     R().matar(api, s, como, donde, vistoPor);
     api.marcar("cuerpo_" + s, como);
     api.horror(5);
@@ -108,7 +108,7 @@ Nora: Me da igual. Con luz o sin luz. Cogemos las cosas y salimos a la carretera
 
 ${vs.length === 3 ? "Nadie discute. Ya no queda nadie que discuta." : "No discute. Ya no queda quien discuta."}
 
-La mochila. El cuaderno dentro. ${api.bandera("nora_toma_muneca") ? "La muñeca, no: la muñeca se queda en la mesa con los ojos cosidos hacia arriba." : ""} El móvil al doce por ciento. Las llaves de la casa en tu bolsillo, que ${R().vivo(api, "marcos") ? "Marcos te ha dado sin que se las pidieras" : "cogiste del bolsillo de Marcos y no piensas en eso"}.
+La mochila. El cuaderno dentro. ${api.bandera("nora_toma_muneca") ? "La muñeca, no: la muñeca se queda en la mesa con los ojos cosidos hacia arriba." : ""} El móvil al doce por ciento. Las llaves de la casa en tu bolsillo, que ${R().vivo(api, "marcos") ? "Marcos te ha dado sin que se las pidieras" : "estaban puestas por dentro desde que salió Marcos, y no piensas en eso"}.
 
 La puerta.
 
@@ -201,7 +201,7 @@ ${inicio}
 
 Y arriba, el grifo.
 
-Lo oyes tú primero. Siempre lo oyes tú primero: el chorro contra la porcelana, largo, y el rebosadero tragando con su ruido de garganta. El baño de arriba. La bañera que ${api.bandera("banera_llena") ? "se llenó una vez esta noche y no se vació" : "goteaba a la una y corría a las tres y media"}.
+Lo oyes tú primero. Siempre lo oyes tú primero: el chorro contra la porcelana, largo, y el rebosadero tragando con su ruido de garganta. El baño de arriba. La bañera que ${api.bandera("banera_llena") ? "se llenó una vez esta noche y no se vació" : "goteaba a las dos y corría a las tres y media"}.
 
 Y por el hueco de la escalera, bajando como baja una alfombra, un olor. Dulce. A fruta pasada. Y otro debajo: a hierro. A moneda en la boca.
 
@@ -227,7 +227,7 @@ ${N[voz]}: Ya. Ven.
 
 Y no es una grabación. Una grabación no contesta. Una grabación no sabe que ${N[voz]} está muerto.` : `Irene. Ven. Que el agua sale rara.
 
-Las palabras exactas. Las tuyas. Las de esta noche, en el baño de arriba, ${api.bandera("v_irene_con") === "marcos" ? "cuando le dijiste a Marcos «ven, el agua sale rara»" : "las que le dijiste a Marcos hace tres horas"}. Devueltas. Con la voz de un muerto.`}
+Las palabras exactas. Las tuyas. Las de esta noche: «${R().voz(api, "irene", 0)}». Devueltas. Con la voz de un muerto.`}
 
 ~ Es él. No es él. Es su voz. Su voz está en el vídeo, en la mesa, en mi cabeza. Y en la casa, que se lo quedó todo.
 
@@ -308,7 +308,7 @@ Y desde fuera, desde el porche, con la voz de ${N[voz]}:
 
 Marcos. ${voz === "alex" ? "Tu coche." : "Ven."}
 
-${voz === "alex" ? "Sus palabras. Las que te gritó desde el porche a las tres y media: «¡Marcos! ¡Tu coche!». Devueltas. Con su voz. La de la zanja." : "La voz de Nora. Desde fuera. Y Nora está aquí, a un metro, con las manos en la mesa, y no ha abierto la boca."}
+${voz === "alex" ? "Sus palabras. " + (api.bandera("alex_llamo_marcos") ? "Las que te gritó desde el porche a las tres y media: «¡Marcos! ¡Tu coche!»." : "Las de esta noche: «" + R().voz(api, "alex", 0) + "».") + " Devueltas. Con su voz. La de la zanja." : "La voz de Nora. Desde fuera. Y Nora está aquí, a un metro, con las manos en la mesa, y no ha abierto la boca."}
 
 ${inter ? `Marcos: ¿${N[voz]}?
 
@@ -350,7 +350,7 @@ ${modo(api, "marcos", {
       if (!s) return `
 Dos. Y diez minutos. Y la casa esperando.
 
-Lo que queda se ve desde Nora. No hay otro sitio desde donde verlo.`;
+Lo que queda lo ve Nora. No hay nadie más para verlo.`;
       return `
 ${N[s]} de pie. ${s === "irene" ? "Mirando la escalera. Con los pies descalzos ya en el primer escalón." : s === "alex" ? "Mirando la ventana. Con la mano levantada para el tercero." : "Mirando la ventana. Con la mano en el bolsillo donde están las llaves, que no están."}
 
@@ -390,7 +390,7 @@ Y ${N[H(api)] === N[s] ? "" : R().vivo(api, H(api)) ? N[H(api)] + ", sonriendo u
       if (!s) return `
 Dos. Tú y ${N[ultimo(api)]}. En la mesa. Con las manos en la madera.
 
-Y la casa, alrededor, moviéndose. El grifo de arriba. La sartén, que vuelve a humear en el fregadero, bajo el agua, que es donde no puede humear nada. El arrastre debajo de la mesa, un palmo, y otro palmo, como quien se acomoda.
+Y la casa, alrededor, moviéndose. El grifo de arriba. ${R().lleva(api, "alex", "sarten") ? "La sartén, que humea en el suelo, al lado de la silla vacía de Álex, donde la dejó" : api.bandera("sarten_tirada") ? "La sartén, que vuelve a humear en el fregadero, bajo el agua, que es donde no puede humear nada" : "La sartén, que vuelve a humear en el fuego apagado"}. El arrastre debajo de la mesa, un palmo, y otro palmo, como quien se acomoda.
 
 Y los dos quietos. Como se está quieto en un coche cuando pasa algo grande por el arcén.
 
@@ -430,13 +430,13 @@ Te mira. Como se mira un fuego.
 
 Y la voz de ${N[voz]}, ahora, sale de ella. De la boca de ella. Con las palabras exactas:
 
-Irene. Ven. Que el agua sale rara.
+Irene. Ven.
 
 Y vas.
 
 No lo decides. El cuerpo. Un pie en la bañera, y el agua caliente, y el otro pie, y te sientas, y el agua sube por el top, por el cuello, hasta la barbilla, con su olor. Y la mujer del techo baja. No cae: baja. Despacio. Como baja una cosa que cuelga cuando alguien suelta la cuerda. Con el pelo primero. Con las manos.
 
-Y las manos te cogen la cabeza. Como te la cogió Marcos en la mesa para soplar. Con cuidado.
+Y las manos te cogen la cabeza. ${api.bandera("marcos_accion") === "rescate" ? "Como te la cogió Marcos en la mesa para soplar. Con cuidado." : "Como se coge una cara para soplar dentro. Con cuidado."}
 
 Y te meten dentro.
 
@@ -446,7 +446,7 @@ Y por encima del agua, borroso, el techo. Y en el techo, ya no hay nadie. La muj
 
 ~ Álex. Álex, la de verdad. La de hace tres años. Ayúdame tú ahora.
 
-~ Marcos me sopló dentro. Se llevó lo que había. Y lo que había vuelve a por lo que dejó.
+~ ${api.bandera("marcos_accion") === "rescate" ? "Marcos me sopló dentro. Se llevó lo que había." : "Algo me sopló dentro en la mesa. Se llevó lo que había."} Y lo que había vuelve a por lo que dejó.
 
 Y lo último no es negro. Es el color del agua.
 
@@ -582,7 +582,7 @@ ${modo(api, "nora", {
       if (s === "marcos" && pov === "marcos") return `
 Las llaves.
 
-Metes la mano en el bolsillo y están. Las del coche. Las que no estaban. Las que estaban en el contacto de un coche boca arriba. Están. Frías.
+Metes la mano en el bolsillo y están. Las del coche. Frías. Como si las hubieran tenido en la nevera.
 
 Y el cerrojo de la puerta principal suena. Solo. Y la puerta se abre hacia fuera con el gris.
 
@@ -590,11 +590,11 @@ Nora: ¡MARCOS!
 
 Y vas. El porche. Los escalones. La grava. Y el coche.
 
-Tu coche. Aquí. A veinte metros, donde siempre. Entero. Con la luz de dentro encendida. Con la puerta del conductor abierta. Como si nunca hubiera bajado por el camino.
+Tu coche. A veinte metros, donde siempre. Con la luz de dentro encendida, otra vez. Con la puerta del conductor abierta, que tú cerraste.
 
 Y en el asiento del conductor, con las manos en el volante, tú.
 
-Con la camisa de cuadros. Con la mano vendada. Mirando al frente. Y giras la cabeza, el de dentro, y te miras, y sonríes con tu cara, que no sonríe así.
+Con la camisa de cuadros. ${R().herido(api, "marcos", "sangra") ? "Con la mano vendada. " : ""}Mirando al frente. Y giras la cabeza, el de dentro, y te miras, y sonríes con tu cara, que no sonríe así.
 
 Marcos: Ven. Que se te ha quedado abierto.
 
@@ -608,9 +608,11 @@ Tin.
 
 Y el de dentro sale. Y te deja el asiento. Y te sientas. Y las llaves en el contacto, y el motor a la primera, y la fiesta en la radio, y el camino.
 
-Y la curva. Y el pino. Y Nora en la carretera con las mangas hasta los nudillos.
+Bajas. Cien metros. La curva. Y la carretera, que devuelve el coche: la curva otra vez, la misma, y el camino subiendo hacia la casa que acabas de dejar, con la luz del porche al fondo.
 
-Y el pie va solo al freno, otra vez, porque a Nora no se le da, y el volante a la derecha, y el pino.
+Y Nora en el camino. De pie. Con las mangas hasta los nudillos. A diez metros. A cinco.
+
+Y el pie va solo al freno, porque a Nora no se le da, y el volante a la derecha, y el pino. El grande. El de la entrada. A veinte metros de la puerta.
 
 Y esta vez lo sabes desde antes. Lo sabes desde el porche. Y no sirve para el pie.
 
@@ -626,7 +628,7 @@ Y esta vez lo sabes desde antes. Lo sabes desde el porche. Y no sirve para el pi
       return `
 Marcos saca las llaves del bolsillo.
 
-Las del coche. Las que no tenía. Las que se quedaron en un contacto boca arriba. Las mira como quien mira una cosa que ha vuelto sola.
+Las del coche. Las mira como quien mira una cosa que le han puesto en la mano.
 
 Y el cerrojo de la puerta suena. Solo. Y la puerta se abre hacia fuera.
 
@@ -634,28 +636,40 @@ Nora: ¡MARCOS!
 
 Sale. Como se sale cuando te llaman con la voz que va contigo. ${R().vivo(api, h) && h !== "marcos" ? N[h] + " no se levanta. Sonríe un milímetro." : ""}
 
-Vas a la puerta. Con las manos en el marco. La grava gris. Y Marcos andando hacia donde estaba el coche, que no está, que está en la curva con un faro al cielo. Andando hacia veinte metros de grava vacía con las llaves en la mano.
+Vas a la puerta. Con las manos en el marco. La grava gris. Y Marcos andando hacia el coche, que sigue a veinte metros, donde siempre, con la luz de dentro encendida otra vez. Andando con las llaves en la mano.
 
-Se para. Donde estaría la puerta del conductor. Abre una puerta que no hay. Se agacha. Se sienta en el aire, a la altura de un asiento.
+Se para. Abre la puerta del conductor, que ya estaba abierta. Se sienta.
 
 Y arranca.
 
-Lo oyes. El motor. A la primera, como siempre. Y la fiesta, la carcajada de Irene, los vasos, saliendo de veinte metros de grava vacía.
+Lo oyes. El motor. A la primera, como siempre. Y la fiesta, la carcajada de Irene, los vasos, saliendo de la radio a todo volumen.
 
-Y Marcos, sentado en nada, con las manos en un volante que no hay, girando la cabeza hacia ti. Levantando la mano. Con la palma abierta.
+Y Marcos, con las manos en el volante, girando la cabeza hacia ti. Levantando la mano. Con la palma abierta.
 
-Y se va. No hacia el camino: hacia abajo. Como se hunde una cosa en el agua. Despacio. Con las manos en el volante hasta el final.
+Y se va. Por el camino. Los faros bajando entre los pinos, la curva, y nada.
 
-~ No había coche. He visto la grava. He visto a Marcos sentarse en el aire y arrancar y hundirse. Y he oído el motor. Y he oído la fiesta.
+Un minuto.
+
+Y los faros vuelven. Subiendo. Deprisa. Como no se sube ese camino. Y en el cono de luz, delante del coche, en mitad del camino, una figura de pie con las mangas hasta los nudillos.
+
+Tú.
+
+No te has movido. Tienes las manos en el marco. Y estás en el camino, con la cara levantada hacia los faros.
+
+Y el coche gira. A la derecha. Y el pino grande, el de la entrada, a veinte metros de la puerta.
+
+El ruido lo oyes con el cuerpo.
+
+~ Yo estaba en el camino. Yo estaba en la puerta. Las dos cosas. Y ha girado para no darme a mí, y le ha dado al pino, y yo no me he movido de aquí.
 
 No sales. El marco de la puerta te sujeta las manos como si fueran de la puerta.
 
 ${modo(api, "nora", {
-  lucido: "~ Un coche que no está. Un motor que se oye. Un hombre que se hunde en la grava. Ya no hay explicación y no la busco. Solo cuento. Dos.",
-  asustado: "~ Se lo ha tragado. La grava. Como se traga un camino.",
-  tenso: "~ Marcos. MARCOS. Que vuelva. Que vuelva a subir como sube uno que se ha caído al agua.",
-  ido: "~ Se ha hundido con las manos en el volante. Como firma. Marcos conduce como firma.",
-  perdido: "~ El coche ha venido a por él. Le ha llamado con mi voz y ha venido, y se lo ha llevado abajo, donde van los coches de esta casa.",
+  lucido: "~ Un coche que baja y vuelve solo. Yo en dos sitios a la vez. Un pino a veinte metros. Ya no hay explicación y no la busco. Solo cuento. Dos.",
+  asustado: "~ Ha girado para no darme. A mí, que estaba aquí. Y se ha matado por mí.",
+  tenso: "~ Marcos. MARCOS. Que salga del coche. Que salga como sale uno de un coche.",
+  ido: "~ Ha vuelto por el camino como vuelve el agua por el desagüe. Hacia abajo, aunque subiera.",
+  perdido: "~ El coche ha venido a por él. Le ha llamado con mi voz y ha venido, y me ha puesto en el camino para que girara.",
   normal: "~ Marcos. Marcos, joder. Marcos.",
 })}`;
     },
@@ -714,25 +728,27 @@ Y en el cuello, cuatro marcas. Rojas. Como cuatro dedos. Como las suyas en el br
 
 Y en la mano derecha, cerrada, algo. Le abres los dedos. Fríos. Ya.
 
-Un botón. El del top. El que aguantaba. El tercero, que hace tiempo que no estaba.
+Un botón. El del top. El segundo, el que aguantaba. El tercero hace tiempo que no estaba.
 
 ~ Se ha ahogado en una bañera seca. Se ha ahogado con el agua que no hay. Y la casa ha secado la bañera después, como se seca una mesa.` : s === "alex" ? `
-El porche. Los escalones. Y en la grava, a diez metros, Álex.
+Sales. Ahora sí. El marco te suelta como suelta una mano. El porche. Los escalones. Y en la grava, a diez metros, Álex.
 
 Boca abajo. Con la mano abierta hacia la casa. Con la camisa estampada abierta y los collares enredados debajo del cuerpo. Y en la espalda, en el hombro, un agujero. Redondo. Del tamaño de un dedo. Como el que deja un diente de rastrillo. Y alrededor, nada: ni sangre en la grava, ni pisadas, ni hierro.
 
 Le das la vuelta. Pesa lo que pesa. Los ojos abiertos. La boca abierta con grava dentro. Y en el cuello, cuatro marcas. Rojas. Como cuatro dedos.
 
 ~ Diez metros de grava. Sin nadie. Y un agujero de rastrillo en el hombro. Yo vi la grava vacía. Él vio otra cosa. Y le mató lo que vio él.` : `
-La grava. Vacía. Veinte metros hasta donde estaba el coche, que no está, que está en la curva.
+Sales. Ahora sí. El marco te suelta como suelta una mano. La grava. Veinte metros.
 
-Y en la grava, donde se sentó en el aire, Marcos.
+El coche. Contra el pino grande, al borde de la grava, con el morro doblado y el motor todavía haciendo tic, tic, como un reloj que se enfría. La luz de dentro encendida. La radio, apagada por fin.
 
-Boca arriba. Con las manos cerradas delante del pecho, en la posición de un volante. Con la camisa de cuadros. Con el paño en la mano. Con los ojos abiertos. Y la cabeza hacia un lado, donde no va una cabeza, como en el coche, como si el pino le hubiera alcanzado aquí.
+Y dentro, Marcos.
+
+Con las manos en el volante. Con la camisa de cuadros. ${R().herido(api, "marcos", "sangra") ? "Con el paño en la mano, oscuro. " : ""}Con los ojos abiertos. Y la cabeza hacia un lado, donde no va una cabeza.
 
 Y en el cuello, cuatro marcas. Rojas. Como cuatro dedos.
 
-~ Se ha matado contra un pino que está a cien metros. Sentado en la grava. Con las manos en un volante que no hay. Y le mató lo que vio él.`;
+~ Ha salido y ha vuelto. Y en la vuelta había alguien en el camino, y era yo, y yo no me he movido de la puerta. Se ha matado contra el pino de la entrada, a veinte metros de la casa. Y le mató lo que vio él.`;
       return `${desdeDentro}${cuerpo}
 
 Dos.
@@ -790,7 +806,7 @@ ${modo(api, "nora", {
       const x5 = api.bandera("x5_nora");
       const inicio = x5 === "tapa" ? `${fem(api.bandera("segundo_muerte") || "irene") ? "La" : "Le"} has tapado. Con una toalla, con una manta, con lo que había. Y has bajado. Y has cerrado.` : x5 === "foto" ? "Has fotografiado las marcas. Cuatro. Como las otras cuatro. Como las cuatro de tu tobillo, o de tu muñeca, o de tu cuello, que no tienes, todavía." : x5 === "boton" ? "El botón de Irene, en el cuaderno, entre la página de ALDA y la de las huellas. Un botón. Es lo más pequeño que has guardado esta noche y es lo que más pesa." : "Has cerrado la puerta de ese cuarto. Con la llave que había. Y has bajado. Y no vas a volver a subir.";
       const dos = u === "marcos" ? (tono === "pareja" ? `
-Marcos te espera al pie de la escalera. Con la mano vendada. ${h === "marcos" ? "Con frío." : ""} Y te abraza. Así, sin más, como se abraza a alguien que ha vuelto de un sitio. Con la cara en tu pelo.
+Marcos te espera al pie de la escalera. ${R().herido(api, "marcos", "sangra") ? "Con la mano vendada. " : ""}${h === "marcos" ? "Con frío." : ""} Y te abraza. Así, sin más, como se abraza a alguien que ha vuelto de un sitio. Con la cara en tu pelo.
 
 Marcos: Estás.
 
@@ -801,7 +817,7 @@ Marcos: Vale. Vale.
 Y es Marcos. La voz, las manos, la manera de decir «vale» dos veces. ${h === "marcos" ? "Y el frío. Las manos frías en tu espalda, que no se calientan con tu espalda. Y no dices nada. No hay nada que decir que no sea peor." : "Entero. Con todo lo que ha pasado encima, y entero."}
 
 Os sentáis. En la misma silla, casi. Con la rodilla contra la rodilla, como a la una menos veinte. Y os cogéis la mano por encima de la mesa, no por debajo, porque ya no hay nadie a quien esconderla.` : `
-Marcos al pie de la escalera. Con la mano vendada. ${h === "marcos" ? "Con frío." : ""} Y no te abraza. Se queda a un metro. Con las manos a la vista.
+Marcos al pie de la escalera. ${R().herido(api, "marcos", "sangra") ? "Con la mano vendada. " : ""}${h === "marcos" ? "Con frío." : ""} Y no te abraza. Se queda a un metro. Con las manos a la vista.
 
 Marcos: ¿Estás bien?
 
@@ -830,7 +846,7 @@ Nora: Las dos.
 Irene: Qué gracia.
 
 Y no tiene gracia, y lo dice como se dice la hora. Os sentáis. En sillas distintas. Con la mesa entre las dos y la camisa de Marcos, si la llevas, entre las dos también.`) : (tono === "cercania" ? `
-Álex al pie de la escalera. Con el pie hinchado. ${h === "alex" ? "Con frío." : ""} Y te abraza. Álex. A ti. Sin la mano donde la pone siempre: con las dos manos en la espalda, como se abraza a alguien que has visto volver de un sitio.
+Álex al pie de la escalera. ${R().herido(api, "alex", "cojera") ? "Con el pie hinchado. " : ""}${h === "alex" ? "Con frío." : ""} Y te abraza. Álex. A ti. Sin la mano donde la pone siempre: con las dos manos en la espalda, como se abraza a alguien que has visto volver de un sitio.
 
 Álex: Estás.
 
@@ -839,7 +855,7 @@ Nora: Estoy.
 Álex: Tú no eres una lámpara.
 
 Y se ríe. Corto. Y tú también. Porque hace falta. Os sentáis juntos.` : `
-Álex al pie de la escalera. Con el pie hinchado. ${h === "alex" ? "Con frío." : ""} Y no te abraza. Se queda a un metro. Sin sonrisa. Sin cámara. Con las manos vacías.
+Álex al pie de la escalera. ${R().herido(api, "alex", "cojera") ? "Con el pie hinchado. " : ""}${h === "alex" ? "Con frío." : ""} Y no te abraza. Se queda a un metro. Sin sonrisa. Sin cámara. Con las manos vacías.
 
 Álex: Quedamos tú y yo.
 
@@ -1013,7 +1029,7 @@ Lo miras. Lo has escrito tú. No sabes qué quiere decir. Sí lo sabes: que empe
 ~ Empieza fuera. Los tres salieron. Álex, Marcos, Irene. Cada uno de una manera. Y yo no he salido. Yo llevo toda la noche dentro, con el cuaderno. Y por eso sigo, y por eso me guarda.
 
 ${modo(api, "nora", {
-  lucido: `~ Dos. ${N[u]} y yo. Y ${h === u ? "lo que " + N[u] + " lleva dentro, que quiere bajar" : "el frío, que está en alguna parte"}. Y una puerta abajo con candado que Marcos vio a las tres y media. Y yo con un cuaderno. Es todo lo que hay, y es más de lo que tenía a las doce y cuarenta, porque a las doce y cuarenta no sabía nada.`,
+  lucido: `~ Dos. ${N[u]} y yo. Y ${h === u ? "lo que " + N[u] + " lleva dentro, que quiere bajar" : "el frío, que está en alguna parte"}. Y una puerta abajo con candado${api.bandera("cuadro_visto") ? " que Marcos vio a las tres y media" : ", detrás de una estantería, que vimos al apagarse la luz"}. Y yo con un cuaderno. Es todo lo que hay, y es más de lo que tenía a las doce y cuarenta, porque a las doce y cuarenta no sabía nada.`,
   asustado: "~ Empieza fuera. Y termina abajo. Lo sé como se sabe una hora. Y no me lo ha dicho nadie.",
   tenso: "~ Las siete y ocho. Sin luz. Sin puerta. Pues sin luz y sin puerta. Andando por dentro, entonces.",
   ido: "~ La letra de «empieza fuera» no es mía. Es más redonda. Como la de alguien que aprende a escribir. Como la de una niña.",

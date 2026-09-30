@@ -406,6 +406,37 @@ La fase escrita se mantiene. Se rehace el reparto y se añaden unas seis escenas
 - Nombres orientativos de escenas nuevas: `vq1_dormitorio` (Irene y Álex),
   `vq2_almacen_dos` y `vq3_porche_reto` (Álex y Marcos), `vb4_irene_nora` (buhardilla).
 
+### Fase V — Reestructura en dos tramos (30-09-2026, aplicada) · +4 escenas (`vn1_mesa`, `v5_cuerda`, `v6_reparto2`, `vq1_dormitorio` reescrita)
+La V se juega en dos tramos, porque la subida a la buhardilla vuelve en la VI y el porche
+con Álex tenía que ir antes, no en lugar de subir.
+
+- **Tramo 1 (03:30–03:40, necesidades).** Álex al porche con el porro; Irene arriba (con
+  Marcos si se lo pide o si él la sigue); Marcos al cuadro de luces si queda libre. Nora
+  decide solo dos cosas: salir al porche con Álex (`v_nora_porche`) o quedarse en la mesa
+  con la tabla (`vn1_mesa`: la casa sonando alrededor, el cuaderno, la cuerda quieta).
+  Segunda carta: el grupo de la huésped. Todas las rutas del tramo 1 terminan en
+  `v5_cuerda`.
+- **Tramo 2 (03:42–04:00, la cuerda).** Todos de vuelta a la mesa; nadie cuenta nada
+  todavía; la cuerda de la trampilla se mueve (corriente, claro). Nora decide con quién
+  sube (`v2_nora`: sola, Marcos si confía o tiene miedo, Irene) y `v6_reparto2` reparte a
+  los que quedan: Nora con Marcos → Irene y Álex al dormitorio; Nora con Irene → Álex sigue
+  a Marcos al almacén (segunda visita si ya estuvo: `segunda`) y al porche; Nora sola → los
+  tres en la mesa. `v_nora_con` guarda con quién subió (lo leen VI, VII, IX, XI).
+- **El dormitorio (`vq1_dormitorio`).** Irene y Álex en mitad del acto, ella debajo. Sin el
+  huésped (POV Irene): por encima del hombro de Álex, el armario que estaba cerrado, abierto
+  un palmo, y dentro, a la altura de una niña, algo blanco que se mueve (`irene_vio_sombra`,
+  semilla SHADOW_SMALL dentro del presupuesto); el toc; Irene decide (parar, seguir con los
+  ojos cerrados, abrir el armario ella, hacérselo mirar a él). Con Irene huésped (POV Álex):
+  las uñas entran en la espalda hasta sangrar, el mordisco en el cuello que no suelta,
+  «Todavía no» al armario; Álex decide si le gusta (alimenta al huésped y da la ofrenda de
+  sangre), si la para, si enciende la luz para verle la cara, o si la deja. Quedan
+  `aranazos_alex` y `mordisco_alex` como marcas que Nora ve en el reagrupamiento y que el
+  epílogo cita.
+- **Reagrupamiento (`v9_regreso`, 04:00).** Los que quedan llegan del dormitorio o del
+  almacén, o siguen en la mesa; Marcos corrobora las huellas si subió con Nora
+  (`marcos_dijo_no_ratas`, que la VI cobra cuando dice «Ratas»); la credibilidad de Irene
+  con Nora abre la carta de la VI (`cree_irene_nora`).
+
 ### Fase VI — Evidencia compartida (HORROR 2 → 3) · `js/story_fase6.js` (escrita 29-09-2026) · 8 escenas
 Huésped a nivel 2 (§18). Violencia: heridas leves (§20). Anomalías: 4.
 
