@@ -542,6 +542,19 @@
       const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.8, t + 0.25); g.gain.linearRampToValueAtTime(0.6, t + 1.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
       n.connect(f); f.connect(g); this.salida(g); n.start(t); n.stop(t + 1.7);
     },
+    // Grabaciones opcionales en assets/sfx (si faltan, se usa el sonido sintetizado). maxSeg corta con un fundido corto.
+    audios: {},
+    cargar(clave) { try { const a = new Audio("assets/sfx/" + clave + ".mp3"); a.preload = "auto"; this.audios[clave] = a; } catch (e) { /* sin grabación */ } },
+    muestra(clave, maxSeg, volumen = 0.9) {
+      const a = this.audios[clave];
+      if (!a || a.error || a.readyState < 2 || ambiente.silenciado) return false;
+      try {
+        clearTimeout(a._t1); clearInterval(a._t2); a.pause(); a.currentTime = 0; a.volume = volumen;
+        const p = a.play(); if (p && p.catch) p.catch(() => {});
+        if (maxSeg) a._t1 = setTimeout(() => { a._t2 = setInterval(() => { if (a.volume > 0.12) a.volume -= 0.12; else { clearInterval(a._t2); a.pause(); } }, 20); }, Math.max(0, maxSeg * 1000 - 160));
+      } catch (e) { return false; }
+      return true;
+    },
     impacto() {   // el susto: caída grave, estallido de ruido y una punzada disonante arriba
       if (!this.listo()) return;
       const c = ambiente.ctx, t = c.currentTime;
@@ -571,6 +584,7 @@
       r.connect(rg); this.salida(rg); r.start(t); r.stop(t + 0.85);
     },
     chirrido() {   // bisagra vieja: un tono que sube y tiembla
+      if (this.muestra("chirrido", 4)) return;
       if (!this.listo()) return;
       const c = ambiente.ctx, t = c.currentTime;
       const o = c.createOscillator(); o.type = "sawtooth"; o.frequency.setValueAtTime(380, t); o.frequency.linearRampToValueAtTime(620, t + 0.7); o.frequency.linearRampToValueAtTime(540, t + 1.3);
@@ -598,6 +612,7 @@
       });
     },
   };
+  sfx.cargar("chirrido"); sfx.cargar("grito");
 
   function ajustarSonido(activo) {
     prefs.sonido = activo; guardarPrefs();
@@ -900,7 +915,7 @@
       case "temblor": if (!rapido) { ui.app.classList.remove("temblor"); void ui.app.offsetWidth; ui.app.classList.add("temblor"); setTimeout(() => ui.app.classList.remove("temblor"), 700); } break;
       case "golpe": case "toc": case "clic": case "campanilla": case "arrastre": case "impacto": case "portazo": case "chirrido": case "crujido": case "goteo": if (!rapido) sfx[d](); break;
       case "flash": if (!rapido) destello(); break;
-      case "susto": if (!rapido) { sfx.impacto(); destello(); ui.app.classList.remove("temblor"); void ui.app.offsetWidth; ui.app.classList.add("temblor"); setTimeout(() => ui.app.classList.remove("temblor"), 700); } break;
+      case "susto": if (!rapido) { sfx.impacto(); sfx.muestra("grito", 0.5); destello(); ui.app.classList.remove("temblor"); void ui.app.offsetWidth; ui.app.classList.add("temblor"); setTimeout(() => ui.app.classList.remove("temblor"), 700); } break;
       case "corte": musica.cortar(); break;
       case "silencio": musica.poner(null); break;
       case "musica": musica.poner(arg || null); break;

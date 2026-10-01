@@ -41,6 +41,7 @@ fav=$(base64 -w0 assets/favicon.png 2>/dev/null || true)
 # La música va al lado del archivo, sin incrustar: pesa demasiado y el navegador la carga a medida que suena.
 rm -rf dist/assets/musica
 cp -r assets/musica dist/assets/musica
+rm -rf dist/assets/sfx; [ -d assets/sfx ] && cp -r assets/sfx dist/assets/sfx
 # Comprobación: ninguna ruta de imagen se ha quedado sin incrustar (la música sí va por ruta)
 restantes=$(grep -oE 'assets/(fondos|personajes)/[A-Za-z0-9_./-]+' "$out" | sort -u)
 [ -z "$restantes" ] || echo "AVISO: rutas de imagen sin incrustar en $out: $restantes" >&2
