@@ -614,10 +614,40 @@
     },
   };
   ["chirrido", "grito", "huesos", "crujido", "susurro"].forEach((k) => sfx.cargar(k));
+  try { sfx.audios.crujido_fondo = new Audio("assets/sfx/crujido.mp3"); sfx.audios.crujido_fondo.preload = "auto"; } catch (e) { /* sin grabación */ }
+  // Fondo de miedo: la madera en bucle, muy baja, y un susurro de vez en cuando. Suena con la casa hostil
+  // (horror 5 o más) y en la buhardilla. Usa las grabaciones de assets/sfx; si faltan, no hace nada.
+  const miedo = {
+    activo: false, vol: 0, t: null, s: null,
+    poner(on) {
+      const a = sfx.audios.crujido_fondo;
+      if (!a) return;
+      this.activo = Boolean(on) && !ambiente.silenciado;
+      clearInterval(this.t);
+      const meta = this.activo ? 0.16 : 0;
+      if (this.activo && a.paused) { a.loop = true; a.volume = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); }
+      this.t = setInterval(() => {
+        this.vol += Math.sign(meta - this.vol) * 0.01;
+        if (Math.abs(meta - this.vol) < 0.011) { this.vol = meta; clearInterval(this.t); if (!meta) a.pause(); }
+        a.volume = Math.max(0, Math.min(1, this.vol));
+      }, 120);
+      clearTimeout(this.s);
+      if (this.activo) this.susurrar();
+    },
+    susurrar() {
+      this.s = setTimeout(() => {
+        if (!this.activo) return;
+        const u = sfx.audios.susurro;
+        if (u && u.paused) sfx.muestra("susurro", 5, 0.22);
+        this.susurrar();
+      }, 28000 + Math.random() * 30000);
+    },
+  };
 
   function ajustarSonido(activo) {
     prefs.sonido = activo; guardarPrefs();
     musica.silenciar(!activo); ambiente.silenciar(!activo);
+    miedo.poner(activo && miedo.activo);
     ui.musica.classList.toggle("silenciado", !activo);
     ui.musica.setAttribute("aria-pressed", String(activo));
     if (ui.menuSonido) ui.menuSonido.textContent = activo ? "Sonido: activado" : "Sonido: silenciado";
@@ -1198,6 +1228,7 @@
     ponerFondo(resolver(escena.fondo));
     musica.poner(resolver(escena.musica));
     ambiente.poner(resolver(escena.ambiente));
+    miedo.poner(["X", "XI", "XII"].includes(estado.fase) && !/^xii[78]/.test(id) || /^vb|^vi4/.test(id));
     ui.negro.classList.remove("visible");
 
     povAnterior = estado.pov;
@@ -1267,6 +1298,7 @@
   }
   // Botón del final: se borra la partida y se vuelve a la pantalla de inicio (portada), sin arrancar otra
   function volverAlPrincipio() {
+    miedo.poner(false);
     borrarGuardado();
     estado = estadoInicial(); fondoActual = null; povAnterior = null; relPrev = null;
     anularCartel(); clearTimeout(autoTimer);
