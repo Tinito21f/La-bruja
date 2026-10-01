@@ -1017,6 +1017,8 @@ ${modo(api, "alex", {
       const olor = api.bandera("buhardilla_descubierta") === "irene" ? "Como lo que olía la buhardilla esta noche, cuando se abrió." : "Como a fruta pasada. Como a algo que fue dulce.";
 
       if (!pareja) return `
+[crujido]
+
 La escalera. El tercero. El séptimo. Los conoces ya como se conoce una casa en la que has vivido, y llevas aquí ocho horas.
 
 El pasillo. La lámpara de llama falsa haciendo su ciclo: sube, baja, sube. La alfombra roja bajo los pies descalzos, fría. ${cuerda}

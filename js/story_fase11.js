@@ -240,6 +240,8 @@ ${h === u ? `Y dentro de ti, lo que llevas dentro se mueve. Como se mueve un per
 
 Y no sabes si es tuya la palabra o es de lo que lleva la campanilla.` : ""}
 
+[susurro]
+
 Ayúdame.
 
 Lo dice. Con voz de niña. Con voz de niña que lleva mucho tiempo sin usarla. Y da un paso.
@@ -308,6 +310,8 @@ ${modo(api, u, {
       const inicio = x2 === "delante" ? `${N[u]} te aparta. Con el brazo. Se pone delante. Entre tú y ella. ${mord ? "Con la mano que ya no es una mano, goteando en la alfombra." : "Con las manos abiertas, como se para un coche."}\n\nY la niña le huele. Y sonríe. Y no le mira a él: te mira a ti por encima de su hombro.` : x2 === "huye" ? `${N[u]} tira de ti. Hacia la escalera. El primer escalón. El segundo. ${mord ? "Con la mano que ya no es una mano dejando un rastro en la barandilla." : ""}\n\nY la niña no corre. Anda. Detrás. Al ritmo de la campanilla.` : x2 === "coge" ? (mord ? `${N[u]} la coge. En brazos. Como se coge a una niña. Y la niña se deja. Y le rodea el cuello con los brazos de dos colores. Y le muerde.\n\nLa mano. La que la sujeta por debajo. Hasta el hueso. ${Y(u)} la suelta, y la niña cae de pie, y sonríe con la boca roja.` : `${N[u]} la coge. En brazos. Como se coge a una niña. Y la niña se deja. Y le rodea el cuello con los brazos de dos colores. Y le huele. El cuello. Donde estaban las cuatro marcas de los otros.\n\nY se descuelga. Como se descuelga un gato. Cae de pie. Y sonríe.`) : `${N[u]}: Aquí está.\n\nLo dice señalándote. Con la mano. Con su voz. Mirándote. Y la niña te mira. Y da un paso hacia ti.\n\nY se para. A un palmo. Te huele. Y sonríe. Y dice, con la voz de ${N[u]}:\n\nTodavía no.`;
       return `
 ${inicio}
+
+[crujido]
 
 Bajáis. La escalera. El tercero. El séptimo. Sin contarlos. La barandilla, la alfombra, el salón.
 
@@ -452,7 +456,7 @@ ${modo(api, "nora", {
       if (f === "mata") return `
 ${arma.charAt(0).toUpperCase() + arma.slice(1)}. En la mano. Y la levantas, y baja.
 
-[golpe]
+[huesos]
 
 En la cabeza. De lado. Un ruido de hueso. ${N[u]} suelta. Se va hacia atrás con la mano en la sien, y entre los dedos, sangre, y la cara, la suya, un segundo, mirándote.
 

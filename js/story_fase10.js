@@ -237,6 +237,8 @@ La voz de ${N[voz]}.
 
 ${voz === "alex" ? "La de la mesa. La de «documental número uno». La que está en una zanja con la boca llena." : "La de la ouija. La de «Irene, Irene, mírame». La que está en un coche boca arriba con la fiesta en la radio."}
 
+[susurro]
+
 Irene. Ven.
 
 ${inter ? `Irene: ¿Qué?
@@ -430,6 +432,8 @@ ${modo(api, "nora", {
       if (s === "irene" && pov === "irene") return `
 Subes.
 
+[crujido]
+
 No lo decides. Las piernas. El tercero. El séptimo. La alfombra roja bajo los pies descalzos, fría, y luego no fría: mojada. Hay agua en la alfombra. Un hilo. Desde la puerta del baño hasta la escalera, como un dedo que señala.
 
 El pasillo. La lámpara de llama falsa. La trampilla cerrada. La puerta del baño, con la luz encendida por debajo.
@@ -492,6 +496,8 @@ No la decide: la ves levantarse como se levanta alguien a quien han llamado por 
 Nora: ¡Irene!
 
 No se gira. ${sonrie(api, "irene") ? sonrie(api, "irene") + " Y tú no puedes con eso ahora." : ""}
+
+[crujido]
 
 Subes detrás. El tercero. El séptimo. El pasillo. La puerta del baño, cerrada. La luz por debajo. Y el agua, cayendo, y el rebosadero tragando.
 
@@ -779,6 +785,8 @@ Sales. Ahora sí. El marco te suelta como suelta una mano. La grava. Veinte metr
 El coche. Contra el pino grande, al borde de la grava, con el morro doblado y el motor todavía haciendo tic, tic, como un reloj que se enfría. La luz de dentro encendida. La radio, apagada por fin.
 
 Y dentro, Marcos.
+
+[huesos]
 
 Con las manos en el volante. Con la camisa de cuadros. ${R().herido(api, "marcos", "sangra") ? "Con el paño en la mano, oscuro. " : ""}Con los ojos abiertos. Y la cabeza hacia un lado, donde no va una cabeza.
 

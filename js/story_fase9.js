@@ -504,6 +504,8 @@ ${modo(api, pov, {
       return `
 El ruido. Arriba. Un golpe, y agua, y luego nada. Y el nada dura más que el golpe.
 
+[crujido]
+
 Subes. El tercero. El séptimo. El pasillo. La puerta del baño, cerrada.
 
 La abres.

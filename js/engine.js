@@ -11,7 +11,7 @@
  *                                      "Nombre: …" diálogo · "~ …" pensamiento · "..." silencio
  *                                      "[directiva]" línea invisible que dispara un efecto al llegar a ella:
  *                                        [negro] [luz] [parpadeo] [temblor] [golpe] [toc] [clic] [campanilla]
- *                                        [impacto] [portazo] [chirrido] [crujido] [goteo] [flash] [susto] (impacto + pantallazo negro + temblor)
+ *                                        [impacto] [portazo] [chirrido] [crujido] [goteo] [huesos] [susurro] (grabaciones de assets/sfx) [flash] [susto] (impacto + pantallazo negro + temblor)
  *                                        [arrastre] [corte] (la música se corta en seco) [silencio] (se funde)
  *                                        [musica:clave]
  *     fondo:    ruta de imagen,
@@ -594,6 +594,7 @@
       o.connect(f); f.connect(g); this.salida(g); o.start(t); l.start(t); o.stop(t + 1.45); l.stop(t + 1.45);
     },
     crujido() {   // madera que cede bajo un peso: tres chasquidos desiguales
+      if (this.muestra("crujido", 3, 0.8)) return;
       if (!this.listo()) return;
       const c = ambiente.ctx, t = c.currentTime;
       [0, 0.11, 0.27].forEach((d, i) => {
@@ -612,7 +613,7 @@
       });
     },
   };
-  sfx.cargar("chirrido"); sfx.cargar("grito");
+  ["chirrido", "grito", "huesos", "crujido", "susurro"].forEach((k) => sfx.cargar(k));
 
   function ajustarSonido(activo) {
     prefs.sonido = activo; guardarPrefs();
@@ -914,6 +915,8 @@
       case "parpadeo": if (!rapido) { ui.fondo.classList.remove("parpadeo"); void ui.fondo.offsetWidth; ui.fondo.classList.add("parpadeo"); sfx.clic(); setTimeout(() => ui.fondo.classList.remove("parpadeo"), 1700); } break;
       case "temblor": if (!rapido) { ui.app.classList.remove("temblor"); void ui.app.offsetWidth; ui.app.classList.add("temblor"); setTimeout(() => ui.app.classList.remove("temblor"), 700); } break;
       case "golpe": case "toc": case "clic": case "campanilla": case "arrastre": case "impacto": case "portazo": case "chirrido": case "crujido": case "goteo": if (!rapido) sfx[d](); break;
+      case "huesos": if (!rapido) sfx.muestra("huesos", 2.5); break;
+      case "susurro": if (!rapido) sfx.muestra("susurro", 6, 0.7); break;
       case "flash": if (!rapido) destello(); break;
       case "susto": if (!rapido) { sfx.impacto(); sfx.muestra("grito", 0.5); destello(); ui.app.classList.remove("temblor"); void ui.app.offsetWidth; ui.app.classList.add("temblor"); setTimeout(() => ui.app.classList.remove("temblor"), 700); } break;
       case "corte": musica.cortar(); break;

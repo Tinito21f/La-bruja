@@ -721,6 +721,8 @@ Te lo quedas. Como se queda un sabor. Miras a Álex. Miras a Marcos. No sabes a 
 
 ${voz ? `Y entonces, desde fuera, desde el porche, a través de la puerta cerrada con llave:
 
+[susurro]
+
 Irene.
 
 Con la voz de Marcos.

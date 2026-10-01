@@ -304,6 +304,8 @@ Los tres salieron.
 
 ~ Los tres salieron. ${orden.map((p) => N[p]).join(". ")}. Cada uno de una manera. Yo no. Yo llevo toda la noche dentro, con esto en la mano. Y por eso sigo. Y por eso me ha guardado.
 
+[susurro]
+
 ~ Abajo.
 
 Con tu voz. Y ya no preguntas quién.
@@ -505,6 +507,8 @@ Cuentas. El primero. El segundo. El tercero.
 
 El séptimo.
 
+[susurro]
+
 Y desde abajo, con el frío, las voces.
 
 ${N[o1]}: ${R().voz(api, o1, 0)}
@@ -677,6 +681,8 @@ No lo ves entero. Nadie lo ha visto entero. Ves una mano en tu tobillo. Donde ${
 La piedra en la espalda. El poste. La cadena, que alguien cierra en tu tobillo con un ruido de hierro viejo que has oído antes esta noche, en la puerta principal.
 
 Y la niña, que se sienta a mirar. Con ${api.bandera("xii5_nora") === "campanilla" ? "las manos vacías, por primera vez" : "la campanilla en el regazo"}. Como se mira un fuego.
+
+[huesos]
 
 Lo que hace lo de abajo no se cuenta entero. Se cuenta así: duele. Y luego duele menos. Y luego lo que duele es de otra, y tú lo miras desde un poco más lejos, como se mira un fuego.
 

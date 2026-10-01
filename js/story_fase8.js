@@ -555,6 +555,8 @@ Y el pie ya está en el aire.
 
 Porque corrías. Porque hacia la luz se corre. Porque la realidad que no ves te mata, y la has visto un segundo tarde.
 
+[huesos]
+
 Caes.
 
 No es largo. Es cuatro metros. Es el hombro contra una piedra, y algo que se rompe con un ruido que oyes desde dentro, y el cuello contra la siguiente, y las piedras blancas que ya no son blancas.

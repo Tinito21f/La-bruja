@@ -279,6 +279,8 @@ ${cartas.some((c) => c.id === "alex") ? "Álex: Subo yo. Que los cadáveres son 
 
 ${api.valor("nora", "eje") >= 45 && !api.bandera("fascinacion_rota") ? "Nora: Yo subo. Es mi cuerda. Era.\n\nMarcos la mira. No dice que no. No dice que sí." : "Nora no dice nada. Ha dejado de querer subir en algún momento de esta noche y no sabe cuándo."}
 
+[crujido]
+
 La escalera. El tercero. El séptimo. Y arriba, el pasillo, y la trampilla con el pestillo suelto.
 
 ¿Quién sube?`;
@@ -360,6 +362,8 @@ ${muneca ? "Y la caja. La de madera, junto a la pared. Abierta. Vacía. La muñe
 
 ${voz ? `Y entonces, desde la pared caliente, bajo, muy bajo, como se cuenta en un juego:
 
+[susurro]
+
 Uno.
 
 Una voz. De niña. Sin cuerpo. Sin dirección. En la madera.
@@ -388,6 +392,8 @@ ${herido === "marcos" ? `Sube. El primer peldaño. El segundo. El tercero. El cu
 [susto]
 
 CRACK.
+
+[huesos]
 
 La madera se parte y el pie de Marcos se va con ella, hasta la rodilla, y el resto de Marcos se queda colgado de los brazos, y ${atiz ? "el atizador cae a la alfombra" : "el móvil cae a la alfombra, con la linterna hacia arriba,"} con un ruido que oye toda la casa.
 
@@ -452,6 +458,8 @@ Y sube. El primer peldaño. El segundo. El cuarto, descalza, cede del todo.
 
 CRACK.
 
+[huesos]
+
 La madera se parte y el pie de Irene se va con ella, hasta la rodilla, y el resto de Irene se queda colgado de los brazos, gritando algo que no es una palabra.
 
 La sujetas por la cintura. Saca la pierna. El tobillo torcido hacia un sitio que no es el suyo. Un arañazo largo por la pantorrilla, con la madera dentro.
@@ -515,6 +523,8 @@ Subes. El primer peldaño. El segundo. El cuarto cede del todo.
 
 CRACK.
 
+[huesos]
+
 La madera se parte y el pie se va con ella, hasta la rodilla, y el móvil sale volando y cae en la alfombra grabando el techo, y tú te quedas colgado de los brazos con el tobillo torcido hacia un sitio que no es el suyo.
 
 Álex: Joder. Joder, joder, joder.
@@ -548,6 +558,8 @@ Subes. El primer peldaño. El segundo. El tercero. El cuarto cede del todo.
 [susto]
 
 CRACK.
+
+[huesos]
 
 La madera se parte y el pie se va con ella, hasta la rodilla, y el resto de ti se queda colgado de los brazos, y ${atiz ? "el atizador cae a la alfombra con un ruido que oye toda la casa" : "el móvil cae a la alfombra y sigue encendido, iluminando el techo"}.
 
