@@ -1266,6 +1266,8 @@ La lámpara sube. Baja. Sube. Baja. Tres veces. Cuatro. Has contado cuatro y no 
 
 El agua se para.
 
+[chirrido]
+
 La puerta se abre.
 
 Y estás ahí. Justo ahí. A un palmo. Más cerca de lo que estabas. Con la mano en el marco de la puerta, a la altura de su cara.
@@ -2646,6 +2648,8 @@ La cocina. La luz de tubo. La sartén de hierro en el fuego, con el piloto rojo 
 Marcos: No.
 
 Álex: Guay.
+
+[chirrido]
 
 La puerta del almacén, al lado de la nevera. Un escalón de piedra hacia abajo. Y el frío. No el de la casa: otro. El que sale de un sitio que no se calienta nunca. Te entra por los tobillos. Álex lo nota y no dice nada, que en Álex es raro.
 

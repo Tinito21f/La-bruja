@@ -849,6 +849,8 @@ Irene: ¿Qué hace?
 
 ${esAlex ? "Marcos" : "Álex"}: ${nombre}. ¡${nombre.toUpperCase()}!
 
+[chirrido]
+
 Y en ese momento se abre la puerta principal.
 
 Con el frío. Con el olor a pino. Con ${nombre}, ${esAlex ? "con el porro en la boca y las manos en los bolsillos" : "con las manos en los bolsillos y la cara de quien no ha visto arrancar nada"}, entrando desde el porche.

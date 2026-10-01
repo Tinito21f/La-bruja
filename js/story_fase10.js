@@ -505,6 +505,8 @@ Y el agua para.
 
 El grifo. El rebosadero. Todo. De golpe. Como se para una frase.
 
+[chirrido]
+
 Y la puerta se abre. Sola. Hacia dentro.
 
 El baño. La bañera de patas. Vacía. Seca. Sin una gota, sin vaho, con el esmalte desconchado y el tapón puesto. El espejo, con tu cara. La ventana, con el gris. Nadie.
@@ -612,6 +614,8 @@ Las llaves.
 
 Metes la mano en el bolsillo y están. Las del coche. Frías. Como si las hubieran tenido en la nevera.
 
+[chirrido]
+
 Y el cerrojo de la puerta principal suena. Solo. Y la puerta se abre hacia fuera con el gris.
 
 Nora: ¡MARCOS!
@@ -657,6 +661,8 @@ Y esta vez lo sabes desde antes. Lo sabes desde el porche. Y no sirve para el pi
 Marcos saca las llaves del bolsillo.
 
 Las del coche. Las mira como quien mira una cosa que le han puesto en la mano.
+
+[chirrido]
 
 Y el cerrojo de la puerta suena. Solo. Y la puerta se abre hacia fuera.
 

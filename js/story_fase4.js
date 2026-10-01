@@ -1577,6 +1577,8 @@ ${noraOsc === "irene" ? "Nora. Nora está de rodillas a tu lado, y te toca la ca
 
 Con otra voz. Por fin con otra voz.
 
+[chirrido]
+
 Y de pronto, sin nadie, la puerta se abre.
 
 Inspiras. El ruido que haces te da vergüenza incluso ahora. Toses. Otra vez. Estás.
@@ -1690,6 +1692,8 @@ Con otra voz. Por fin con otra voz.
 [clic]
 
 Luz. Blanca. De la cocina. Llega hasta el borde de la mesa.
+
+[chirrido]
 
 Y de pronto, sin nadie, la puerta se abre.
 
