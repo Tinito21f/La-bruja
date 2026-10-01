@@ -549,6 +549,8 @@ Es una antorcha. Una sola, clavada en la tierra, con las polillas dando vueltas,
 
 Lo ves un segundo. Un segundo entero. La antorcha que es la luz que no es el porche. El borde. El aire.
 
+[susto]
+
 Y el pie ya está en el aire.
 
 Porque corrías. Porque hacia la luz se corre. Porque la realidad que no ves te mata, y la has visto un segundo tarde.
@@ -631,6 +633,8 @@ El volante a la derecha. Las ruedas que patinan en la tierra mojada. El pino gra
 Y el segundo. Un segundo entero, antes del pino, con los faros ya en el tronco, en el que miras al retrovisor y ves el camino vacío. Nadie. Ninguna Nora. La carretera sola.
 
 Porque Nora está en la casa. Con las manos en el marco de la puerta. Y lo has sabido todo el rato, y no te ha servido para el pie.
+
+[susto]
 
 El pino.
 

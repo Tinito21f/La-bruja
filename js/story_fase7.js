@@ -70,6 +70,8 @@ Cuatro sillas juntas. Cuatro personas de cara a la escalera. La lámpara amarill
 
 Cuatro y cuarenta. Nadie habla desde hace seis minutos. Lo sabes porque los has contado.
 
+[golpe]
+
 Y la luz se va.
 
 [corte]

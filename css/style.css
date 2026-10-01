@@ -542,3 +542,10 @@ html, body {
   #cabecera { padding: 8px 12px; }
   #titulo-juego { display: none; }
 }
+
+/* Pantallazo negro de los sustos: golpe a negro y vuelta en dos tiempos */
+#negro.flash { animation: flash 0.4s linear; }
+@keyframes flash {
+  0% { opacity: 1; } 35% { opacity: 1; } 45% { opacity: 0.15; } 55% { opacity: 0.85; } 100% { opacity: 0; }
+}
+#negro.visible.flash { animation: none; }

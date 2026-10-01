@@ -124,6 +124,8 @@ La puerta principal. La llave. Gira. El cerrojo sale con su ruido de hierro viej
 
 Y tiras.
 
+[chirrido]
+
 Y la puerta viene.
 
 Así. Sin peso. Como viene una puerta. Se abre hacia dentro con el chirrido de siempre, y entra el frío, y entra el gris, y entra el olor.
@@ -151,6 +153,8 @@ Das el paso.
 Porque es lo que hay. Porque detrás no hay nada y delante hay algo, aunque sea esto. La alfombra bajo el pie. Se hunde. Es la alfombra. Roja. Húmeda. Con el hilo de agua que baja desde el baño.
 
 ${Y(u)} detrás. ${h === u ? "Sin que tires. Entra como quien vuelve a su casa." : "Porque le tiras de la mano."}
+
+[portazo]
 
 Y la puerta, detrás, se cierra. Sola. Y cuando te giras no es la puerta principal: es la puerta del baño. Cerrada. Con la luz por debajo.
 
@@ -253,6 +257,8 @@ Y da otro paso. Y otro. Y huele. A dulce. A lo del armario y la buhardilla y el 
 ~ No pide ayuda. Lo dijo Álex: parece pedir ayuda. Parece. Es lo que hace.
 
 ${muerde ? `Y llega.
+
+[susto]
 
 Es rápida como no es rápida una niña. Un paso y está en tu mano. La mano. La coge con las dos suyas, la grande y la pequeña, y la boca se abre más de lo que se abre una boca, y los dientes entran.
 
@@ -397,6 +403,8 @@ Y las manos.
 
 Suben. Las dos. ${R().herido(api, u, "mano") ? "La que es una mano y la que ya no." : ""} Despacio. A la altura de tu cuello. Con la cara de la mesa, la de la cocina, la de la escalera. Con «${R().intrusion(api, u, 3)}» en la boca, bajo, a nadie.
 
+[susto]
+
 Y cierran.
 
 Como en la cocina. Como a los otros. Los dedos alrededor, apretando. Y te empuja contra la estantería, contra los tarros, que caen, que se rompen, y el olor a tierra y a dulce, y la puerta baja detrás, abierta, con la escalera de piedra bajando hacia el negro.
@@ -443,6 +451,8 @@ ${modo(api, "nora", {
       const la = fem(u) ? "la" : "le";
       if (f === "mata") return `
 ${arma.charAt(0).toUpperCase() + arma.slice(1)}. En la mano. Y la levantas, y baja.
+
+[golpe]
 
 En la cabeza. De lado. Un ruido de hueso. ${N[u]} suelta. Se va hacia atrás con la mano en la sien, y entre los dedos, sangre, y la cara, la suya, un segundo, mirándote.
 

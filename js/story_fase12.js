@@ -449,7 +449,11 @@ Lo dejaste abierto hace media hora, colgando, y ella bajó por esta puerta. Ahor
 
 ${conQue}
 
+[golpe]
+
 Un golpe. Dos. El arco salta al cuarto, con un ruido que se oye en toda la casa y que no le importa a nadie.
+
+[chirrido]
 
 La puerta antigua. Tiras. Viene. Y el frío que sube no es el del almacén. Es otro. Más viejo. Con olor a piedra mojada y a madera quemada hace mucho.
 
@@ -666,6 +670,8 @@ Te suelta. Caes. ${luzTipo === "linterna" && x5 !== "apaga" ? "La linterna rueda
 
 Y lo de abajo.
 
+[susto]
+
 No lo ves entero. Nadie lo ha visto entero. Ves una mano en tu tobillo. Donde ${api.hayEvidencia("marca_tobillo_nora") ? "estaban las cuatro marcas de las cuatro menos veinte" : "no había nada, hasta ahora"}. Y tira.
 
 La piedra en la espalda. El poste. La cadena, que alguien cierra en tu tobillo con un ruido de hierro viejo que has oído antes esta noche, en la puerta principal.
@@ -739,6 +745,8 @@ Nada.
 ${A ? "Ni un ruido desde abajo. Lo último que cogió el micrófono fue una voz de mujer diciendo «ya», bajo, como se dice al colgar." : "Ni pasos. Ni campanilla. Ni el vaso, que sigue fuera de plano."} Ni la sartén. La casa quieta, como se queda una habitación cuando ya ha pasado lo que tenía que pasar en ella.
 
 Dos por ciento.
+
+[crujido]
 
 Y en el segundo veinte del último minuto, sin que nada lo justifique, en la esquina del encuadre, en la silla vacía, se hunde el asiento. Un dedo. Como cuando se sienta alguien que no pesa.
 

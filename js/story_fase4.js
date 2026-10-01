@@ -1134,6 +1134,8 @@ Nora se levanta.
 
 Otro fogonazo. La cara de Álex, sin sonrisa, un instante.
 
+[impacto]
+
 [corte]
 
 [negro]
@@ -1190,6 +1192,8 @@ Nora se levanta.
 
 Otro fogonazo. La cara de Álex, sin sonrisa, un instante.
 
+[impacto]
+
 [corte]
 
 [negro]
@@ -1245,6 +1249,8 @@ Te levantas.
 [parpadeo]
 
 Otro fogonazo. La cara de Álex, sin sonrisa, un instante.
+
+[impacto]
 
 [corte]
 

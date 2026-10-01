@@ -11,6 +11,7 @@
  *                                      "Nombre: …" diálogo · "~ …" pensamiento · "..." silencio
  *                                      "[directiva]" línea invisible que dispara un efecto al llegar a ella:
  *                                        [negro] [luz] [parpadeo] [temblor] [golpe] [toc] [clic] [campanilla]
+ *                                        [impacto] [portazo] [chirrido] [crujido] [goteo] [flash] [susto] (impacto + pantallazo negro + temblor)
  *                                        [arrastre] [corte] (la música se corta en seco) [silencio] (se funde)
  *                                        [musica:clave]
  *     fondo:    ruta de imagen,
@@ -541,6 +542,61 @@
       const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.8, t + 0.25); g.gain.linearRampToValueAtTime(0.6, t + 1.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
       n.connect(f); f.connect(g); this.salida(g); n.start(t); n.stop(t + 1.7);
     },
+    impacto() {   // el susto: caída grave, estallido de ruido y una punzada disonante arriba
+      if (!this.listo()) return;
+      const c = ambiente.ctx, t = c.currentTime;
+      const o = c.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(28, t + 0.6);
+      const g = c.createGain(); g.gain.setValueAtTime(1.0, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      o.connect(g); this.salida(g); o.start(t); o.stop(t + 1);
+      const n = ambiente.ruido(1); const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(6000, t); f.frequency.exponentialRampToValueAtTime(300, t + 0.35);
+      const ng = c.createGain(); ng.gain.setValueAtTime(0.95, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+      n.connect(f); f.connect(ng); this.salida(ng); n.start(t); n.stop(t + 0.45);
+      [311, 329, 466].forEach((hz) => {
+        const s = c.createOscillator(); s.type = "sawtooth"; s.frequency.setValueAtTime(hz * 2, t); s.frequency.exponentialRampToValueAtTime(hz, t + 0.5);
+        const sg = c.createGain(); sg.gain.setValueAtTime(0.16, t); sg.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+        s.connect(sg); this.salida(sg); s.start(t); s.stop(t + 0.75);
+      });
+    },
+    portazo() {   // una puerta que se cierra sola: golpe de hoja y marco que vibra
+      if (!this.listo()) return;
+      const c = ambiente.ctx, t = c.currentTime;
+      const o = c.createOscillator(); o.type = "triangle"; o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.18);
+      const g = c.createGain(); g.gain.setValueAtTime(0.95, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+      o.connect(g); this.salida(g); o.start(t); o.stop(t + 0.4);
+      const n = ambiente.ruido(1); const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1400; f.Q.value = 0.7;
+      const ng = c.createGain(); ng.gain.setValueAtTime(0.8, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      n.connect(f); f.connect(ng); this.salida(ng); n.start(t); n.stop(t + 0.14);
+      const r = c.createOscillator(); r.type = "sine"; r.frequency.value = 62;
+      const rg = c.createGain(); rg.gain.setValueAtTime(0.0001, t + 0.05); rg.gain.linearRampToValueAtTime(0.3, t + 0.09); rg.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+      r.connect(rg); this.salida(rg); r.start(t); r.stop(t + 0.85);
+    },
+    chirrido() {   // bisagra vieja: un tono que sube y tiembla
+      if (!this.listo()) return;
+      const c = ambiente.ctx, t = c.currentTime;
+      const o = c.createOscillator(); o.type = "sawtooth"; o.frequency.setValueAtTime(380, t); o.frequency.linearRampToValueAtTime(620, t + 0.7); o.frequency.linearRampToValueAtTime(540, t + 1.3);
+      const l = c.createOscillator(); l.frequency.value = 23; const lg = c.createGain(); lg.gain.value = 45; l.connect(lg); lg.connect(o.frequency);
+      const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = 6;
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.22, t + 0.15); g.gain.linearRampToValueAtTime(0.16, t + 1.0); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+      o.connect(f); f.connect(g); this.salida(g); o.start(t); l.start(t); o.stop(t + 1.45); l.stop(t + 1.45);
+    },
+    crujido() {   // madera que cede bajo un peso: tres chasquidos desiguales
+      if (!this.listo()) return;
+      const c = ambiente.ctx, t = c.currentTime;
+      [0, 0.11, 0.27].forEach((d, i) => {
+        const n = ambiente.ruido(1); const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 500 + i * 260; f.Q.value = 3;
+        const g = c.createGain(); g.gain.setValueAtTime(0.45 - i * 0.1, t + d); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.07);
+        n.connect(f); f.connect(g); this.salida(g); n.start(t + d); n.stop(t + d + 0.09);
+      });
+    },
+    goteo() {   // dos gotas en porcelana
+      if (!this.listo()) return;
+      const c = ambiente.ctx, t = c.currentTime;
+      [0, 0.62].forEach((d) => {
+        const o = c.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(1500, t + d); o.frequency.exponentialRampToValueAtTime(620, t + d + 0.07);
+        const g = c.createGain(); g.gain.setValueAtTime(0.22, t + d); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.16);
+        o.connect(g); this.salida(g); o.start(t + d); o.stop(t + d + 0.18);
+      });
+    },
   };
 
   function ajustarSonido(activo) {
@@ -834,13 +890,17 @@
   }
 
   const EFECTOS_VISUALES = ["negro", "luz", "parpadeo", "temblor", "corte"];
+  // Un pantallazo negro de un cuarto de segundo: acompaña a los impactos
+  function destello() { ui.negro.classList.remove("flash"); void ui.negro.offsetWidth; ui.negro.classList.add("flash"); setTimeout(() => ui.negro.classList.remove("flash"), 420); }
   function ejecutarDirectiva(d, arg, rapido) {
     switch (d) {
       case "negro": ui.negro.classList.add("visible"); break;
       case "luz": ui.negro.classList.remove("visible"); break;
       case "parpadeo": if (!rapido) { ui.fondo.classList.remove("parpadeo"); void ui.fondo.offsetWidth; ui.fondo.classList.add("parpadeo"); sfx.clic(); setTimeout(() => ui.fondo.classList.remove("parpadeo"), 1700); } break;
       case "temblor": if (!rapido) { ui.app.classList.remove("temblor"); void ui.app.offsetWidth; ui.app.classList.add("temblor"); setTimeout(() => ui.app.classList.remove("temblor"), 700); } break;
-      case "golpe": case "toc": case "clic": case "campanilla": case "arrastre": if (!rapido) sfx[d](); break;
+      case "golpe": case "toc": case "clic": case "campanilla": case "arrastre": case "impacto": case "portazo": case "chirrido": case "crujido": case "goteo": if (!rapido) sfx[d](); break;
+      case "flash": if (!rapido) destello(); break;
+      case "susto": if (!rapido) { sfx.impacto(); destello(); ui.app.classList.remove("temblor"); void ui.app.offsetWidth; ui.app.classList.add("temblor"); setTimeout(() => ui.app.classList.remove("temblor"), 700); } break;
       case "corte": musica.cortar(); break;
       case "silencio": musica.poner(null); break;
       case "musica": musica.poner(arg || null); break;

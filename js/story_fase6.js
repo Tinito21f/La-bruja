@@ -385,6 +385,8 @@ ${h === "marcos" ? "Lo dice sin mirarte. Con la cara levantada hacia el hueco, c
 
 ${herido === "marcos" ? `Sube. El primer peldaño. El segundo. El tercero. El cuarto, el que cedía, cede del todo.
 
+[susto]
+
 CRACK.
 
 La madera se parte y el pie de Marcos se va con ella, hasta la rodilla, y el resto de Marcos se queda colgado de los brazos, y ${atiz ? "el atizador cae a la alfombra" : "el móvil cae a la alfombra, con la linterna hacia arriba,"} con un ruido que oye toda la casa.
@@ -400,6 +402,8 @@ No está bien. Se sienta en la alfombra con el pie en alto. Y tú subes. Sola. P
 Subes detrás.
 
 Y cuando tienes la cabeza por el hueco y las manos en el borde, la trampilla cae.
+
+[portazo]
 
 CLACK.
 
@@ -444,6 +448,8 @@ Irene: No. Sube tú primera y yo me quedo mirando el hueco como una imbécil. No
 
 Y sube. El primer peldaño. El segundo. El cuarto, descalza, cede del todo.
 
+[susto]
+
 CRACK.
 
 La madera se parte y el pie de Irene se va con ella, hasta la rodilla, y el resto de Irene se queda colgado de los brazos, gritando algo que no es una palabra.
@@ -457,6 +463,8 @@ Pasa. Se sienta en la alfombra con el pie en alto y la cara gris. Y tú subes. S
 Subes detrás.
 
 Y cuando tienes la cabeza por el hueco y las manos en el borde, la trampilla cae.
+
+[portazo]
 
 CLACK.
 
@@ -503,6 +511,8 @@ Lo dices a cámara. Te sale menos gracioso que las otras veces.
 
 Subes. El primer peldaño. El segundo. El cuarto cede del todo.
 
+[susto]
+
 CRACK.
 
 La madera se parte y el pie se va con ella, hasta la rodilla, y el móvil sale volando y cae en la alfombra grabando el techo, y tú te quedas colgado de los brazos con el tobillo torcido hacia un sitio que no es el suyo.
@@ -534,6 +544,8 @@ ${h === "marcos" ? `Y antes de tocarla te llega. Con tu voz.
 Te quedas con la mano a un palmo de la madera. Un segundo. Dos. Y luego la empujas, y no sabes si has decidido tú.` : "La empujas con la palma. Cede."} La escalera baja con su traqueteo, hasta la alfombra.
 
 Subes. El primer peldaño. El segundo. El tercero. El cuarto cede del todo.
+
+[susto]
 
 CRACK.
 

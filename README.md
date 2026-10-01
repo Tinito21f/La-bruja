@@ -24,6 +24,8 @@ Saltos de prueba: `index.html#o1_ouija` (ouija), `index.html#v1_necesidades` (di
 - `assets/fondos/` — escenarios (JPEG por espacio y por nivel de horror). `assets/personajes/fichas/` — cartas de personaje. `assets/musica/` — pistas (no se suben al repositorio público).
 
 ## Directivas de escena
+Sonidos de la casa: `[golpe]` `[toc]` `[clic]` `[campanilla]` `[arrastre]` `[portazo]` `[chirrido]` `[crujido]` `[goteo]`. Sustos: `[impacto]` (solo el sonido), `[flash]` (pantallazo negro) y `[susto]` (impacto, pantallazo y temblor a la vez; uno o dos por fase, nunca más).
+
 Una línea sola entre corchetes dentro del texto dispara un efecto al llegar a ella y no se muestra:
 `[negro]` `[luz]` `[parpadeo]` `[temblor]` `[golpe]` `[toc]` `[clic]` `[campanilla]` `[arrastre]` `[corte]` (la música se corta en seco) `[silencio]` (se funde) `[musica:clave]`.
 

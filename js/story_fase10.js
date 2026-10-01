@@ -133,6 +133,8 @@ Metes la llave. Gira. Dos vueltas. Se oye el cerrojo salir con su ruido de hierr
 
 Y tiras.
 
+[golpe]
+
 Y la puerta no se abre.
 
 No está atascada. No está hinchada. Tiras y la puerta no viene, como no viene una pared. Como si al otro lado hubiera alguien empujando con el peso. Con las dos manos. Con paciencia.
@@ -220,6 +222,8 @@ ${modo(api, "nora", {
 ${inicio}
 
 Y arriba, el grifo.
+
+[goteo]
 
 Lo oyes tú primero. Siempre lo oyes tú primero: el chorro contra la porcelana, largo, y el rebosadero tragando con su ruido de garganta. El baño de arriba. La bañera que ${api.bandera("banera_llena") ? "se llenó una vez esta noche y no se vació" : "goteaba a las dos y corría a las tres y media"}.
 
@@ -444,6 +448,8 @@ Y en el espejo, tú. La versión borrada. Y detrás de ti, en el espejo, el tech
 
 Levantas la cabeza.
 
+[susto]
+
 Una mujer. En el techo. Boca abajo. Con un camisón blanco que cuelga hacia abajo, hacia ti, como cuelga la ropa tendida. Con el pelo colgando. Con la cara donde debería estar la cara y no la miras, no la miras, no puedes no mirarla.
 
 Te mira. Como se mira un fuego.
@@ -580,6 +586,8 @@ Vas a la puerta. Con las manos en el marco. Y ves lo que ve la luz que no hay: l
 
 Y baja a la grava. Y anda. Diez metros. Hacia los troncos. Y se para. Y levanta los brazos, como quien se rinde, o como quien saluda.
 
+[impacto]
+
 Y cae.
 
 Así. Sin que nadie le toque. Como cae alguien a quien le han quitado el suelo. Boca abajo en la grava, con la mano abierta hacia la casa.
@@ -677,6 +685,8 @@ Tú.
 No te has movido. Tienes las manos en el marco. Y estás en el camino, con la cara levantada hacia los faros.
 
 Y el coche gira. A la derecha. Y el pino grande, el de la entrada, a veinte metros de la puerta.
+
+[susto]
 
 El ruido lo oyes con el cuerpo.
 

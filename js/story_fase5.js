@@ -2224,7 +2224,7 @@ ${modo(api, "nora", {
 })}`;
 
       const solo = `
-[golpe]
+[susto]
 
 CLACK.
 
@@ -2493,6 +2493,8 @@ ${clack}
 Irene: Calla.
 
 Y sigue. Más. Con la bombilla encima, con el techo bajo, con el sudor de él cayéndote en la boca. Cierras los ojos. Los abres.
+
+[chirrido]
 
 Y por encima de su hombro, el armario.
 

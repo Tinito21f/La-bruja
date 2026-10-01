@@ -299,6 +299,8 @@ Y las manos.
 
 Suben. Las dos. Despacio. A la altura de tu cuello. ${N[h]}: «${R().intrusion(api, h, 3)}» Lo dice bajo, y no es a ti, y no es ${fem(h) ? "ella" : "él"}.
 
+[susto]
+
 Y cierran.
 
 ${lugar === "bano" ? `No en el cuello. En la nuca. Con la mano entera en el pelo. Y empuja. Hacia abajo. Hacia la bañera, que se llena, que ya tiene dos dedos, tres, y el agua fría, y luego caliente, como siempre en esta casa.
@@ -812,6 +814,8 @@ Nadie va a mirarla. Nadie va a girar el mando del cero al cero.` : `
 Y en la cocina, la sartén. En el fuego. Con el mando en cero. Quieta. La miras por el arco. Y la miras tanto que te parece que humea, y no humea, y sigues mirándola.`;
       const grifo = api.bandera("grifo_arriba") ? `
 Y arriba, el grifo.
+
+[goteo]
 
 Se oye desde la mesa. El chorro contra la porcelana. El baño de arriba. ${api.bandera("banera_llena") ? "La bañera, que alguien llenó, que se cerró, que está cerrada." : "El grifo que Irene cerró apretando, a las dos" + (api.sabe("marcos", "grifo_corria") ? ", y Marcos oyó a las tres y media" : "") + "."} Corriendo. Con ese ruido que hace el agua cuando lleva rato cayendo.
 
